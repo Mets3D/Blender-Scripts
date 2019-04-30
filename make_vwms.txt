@@ -1,0 +1,41 @@
+import bpy
+
+# In order to properly transfer weights from the nude body to clothes, some vertex groups should be merged into one, temporarily, while we're transfering shit.
+# This is done via Vertex Weight Mix modifiers, which can be deleted when they're no longer needed.
+
+bone_dict = {
+'pelvis' : ['Gens_Root', 'Vagoo_Root', 'Anus_Root', 'Gens_Mid', 'Butt_Mid', 
+'Vagoo_Top', 'Vagoo.L', 'Vagoo.R', 'Vagoo_Bottom', 
+'Anus_Top', 'Anus_Bottom', 
+'Anus.L.004', 'Anus.L.003', 'Anus.L.002', 'Anus.L.001', 'Anus.L', 
+'Anus.R', 'Anus.R.001', 'Anus.R.002', 'Anus.R.003', 'Anus.R.004'],
+
+'Butt.L' : ['Butt_Top.L', 'Butt_Inner.L', 'Butt_Bot.L', 'Butt_Outer.L'],
+
+'Butt.R' : ['Butt_Top.R', 'Butt_Outer.R', 'Butt_Bot.R', 'Butt_Inner.R'],
+
+'l_boob' : ['Breast_Top.L', 'Breast_Outer.L', 'Breast_Inner.L', 'Breast_Bot.L', 'Breast_Nipple.L'],
+
+'r_boob' : ['Breast_Top.R', 'Breast_Inner.R', 'Breast_Outer.R', 'Breast_Bot.R'],
+
+'l_toe' : ['Toe_Thumb1.L', 'Toe_Thumb2.L', 'Toe_Index1.L', 'Toe_Index2.L', 'Toe_Middle1.L', 'Toe_Middle2.L', 'Toe_Ring1.L', 'Toe_Ring2.L', 'Toe_Pinky1.L', 'Toe_Pinky2.L'],
+
+'r_toe' : ['Toe_Thumb1.R', 'Toe_Thumb2.R', 'Toe_Index1.R', 'Toe_Index2.R', 'Toe_Middle1.R', 'Toe_Middle2.R', 'Toe_Ring1.R', 'Toe_Ring2.R', 'Toe_Pinky1.R', 'Toe_Pinky2.R'],
+}
+
+body = bpy.data.objects['Witcher3_Female_Body']
+
+for bone_to in bone_dict.keys():
+	bones_from = bone_dict[bone_to]
+	for bone_from in bones_from:
+		mod_name = 'temp_'+bone_to+'+'+bone_from
+		vwm_mod = o.modifiers.new(mod_name, 'VERTEX_WEIGHT_MIX')
+		vwm_mod.vertex_group_a = bone_to
+		vwm_mod.vertex_group_b = bone_from
+		vwm_mod.mix_mode = 'ADD'
+		vwm_mod.mix_set = 'OR'
+
+if(False):
+	delet = [m for m in body.modifiers if m.name.startswith('temp_')]
+	for m in delet:
+		body.modifiers.remove(m)
