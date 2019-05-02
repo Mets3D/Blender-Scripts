@@ -1,5 +1,5 @@
-"Version: 2.0"
-"Date: 04/04/19"
+"Version: 2.1"
+"Date: 02/05/19"
 
 import bpy
 from bpy.props import *
@@ -25,8 +25,11 @@ import webbrowser
 	# The rig should detect when itself is a proxy and be aware of what rig it is a proxy of. Use that rig's children instead of the proxy armature's(presumably non-existent) children.
 	# It should also detect when multiple copies of itself exist. Currently the only thing that needs to be done for two rigs to work without messing each other up is to change the 'material_controller' to the correct one.
 
+def sombra_skinID(skinset, skin):
+	return skinset + (skin-1 if skinset==1 else 19) + (skin-1 if skinset==2 else skinset>2) + (skin-1 if skinset==3 else skinset>3) - 0.5
+
 def get_children_recursive(obj, ret=[]):
-	""" Return all the children and children of children of obj in a flat list. """
+	# Return all the children and children of children of obj in a flat list.
 	for c in obj.children:
 		if(c not in ret):
 			ret.append(c)
@@ -60,7 +63,7 @@ class MetsRig_BoolProperties(bpy.types.PropertyGroup):
 	)
 
 class MetsRig_Properties(bpy.types.PropertyGroup):
-	""" PropertyGroup that stores MetsRig related properties."""
+	# PropertyGroup for storing MetsRig related properties in.
 	# Character and Outfit specific properties will still be stored in their relevant Properties bones (eg. Properties_Outfit_Ciri_Default).
 	
 	@staticmethod
@@ -86,7 +89,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	def pre_depsgraph_update(cls, scene):
 		""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties.
 		"""
-
 		for rig in cls.get_rigs():
 			# Grabbing relevant data
 			mets_props = rig.data.metsrig_properties
@@ -101,11 +103,12 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			# Saving those properties into a list of dictionaries. 
 			current_props = [{}, {}, {}]
 			
-			saved_types = [int, float, str]	# Types of properties that we save for user input checks. TODO why are we saving strings?
+			saved_types = [int, float]	# Types of properties that we save for user input checks.
 			def save_props(prop_owner, list_id):
 				for p in prop_owner.keys():
 					if(p=='_RNA_UI' or p=='prev_props'): continue	# TODO this check would be redundant if we didn't save strings, and the 2nd part is already redundant due to next line.
 					if(type(prop_owner[p]) not in saved_types): continue
+					if(p=="prop_hierarchy"): continue
 					current_props[list_id][p] = prop_owner[p]
 			
 			if(character_bone):
@@ -203,12 +206,11 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				return False
 		
 		for prop_bone in [char_bone, outfit_bone]:
-			for p in o.keys():
-				prop_name = p
-				if( (p == '_RNA_UI') or (prop_name not in prop_bone) ): continue
+			for prop_name in o.keys():
+				if( (prop_name == '_RNA_UI') or (prop_name not in prop_bone) ): continue
 				
 				prop_value = prop_bone[prop_name]	# Value of the property on the properties bone. Changed by the user via the UI.
-				requirement = o[p]					# Value of the property on the object. This defines what the property's value must be in order for this object to be visible.
+				requirement = o[prop_name]					# Value of the property on the object. This defines what the property's value must be in order for this object to be visible.
 				
 				# Checking if the property value fits the requirement...
 				if(type(requirement)==int):
@@ -232,8 +234,15 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		""" Determine if an object should be visible based on its properties and the rig's current state.
 		"""
 		if('Expression' in o):
-			ret = self.determine_visibility_by_expression(o)
-			return ret
+			if( ('Hair' in o) or ('Outfit' in o) or ('Character' in o) ):
+				if( self.determine_visibility_by_properties(o) ):
+					return self.determine_visibility_by_expression(o)
+				else:
+					# This lets us combine expressions and outfits, which is mainly useful to let us debug expressions.
+					# This way, even if there is an expression, we check for hair/outfit/character first, and if those don't match, we don't have to run the expression.
+					return False
+			else:
+				return self.determine_visibility_by_expression(o)
 		elif( ('Hair' in o) or ('Outfit' in o) or ('Character' in o) ):
 			return self.determine_visibility_by_properties(o)
 		else:
@@ -266,12 +275,18 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		
 		if(len(parts) == 3):
 			expression = parts[2]
+			found_owner = False
 			if(active_outfit in prop_owners):
 				bone = outfit_bone
+				found_owner=True
 			elif(active_character in prop_owners):
 				bone = character_bone
+				found_owner=True
 			else:
 				return False
+			if(found_owner):
+				if(expression in ["True", "False"]):	# Sigh.
+					return eval(expression)
 		elif(len(parts) == 2):
 			bone = outfit_bone
 			expression = parts[1]
@@ -280,10 +295,10 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		
 		found_anything = False
 		
-		for prop in bone.keys():
-			if(prop in expression):
+		for prop_name in bone.keys():
+			if(prop_name in expression):
 				found_anything = True
-				expression = expression.replace(prop, "bone['" + prop + "']")
+				expression = expression.replace(prop_name, str(bone[prop_name]))
 
 		if(not found_anything):
 			return None
@@ -297,6 +312,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		""" Combines vertex groups with the "Mask" vertex group on all objects belonging to the rig.
 			Whether a vertex group is active or not is decided based on its name, using determine_visibility_by_name().
 		"""
+		if(obj.type!='MESH'): return
 		
 		mask_vertex_groups = [vg for vg in obj.vertex_groups if self.determine_visibility_by_name(vg, obj)]
 		final_mask_vg = obj.vertex_groups.get('Mask')
@@ -325,7 +341,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			eg. when Ciri's "Face" property changes, ensure that the "Face" value node in her material updates.
 			Also update the active texture of materials for better feedback while in Solid View.
 		"""
-		
 		# Gathering relevant data
 		rig = self.get_rig()
 		outfit_bone = rig.pose.bones.get('Properties_Outfit_'+self.metsrig_outfits)
@@ -338,7 +353,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			for k in e.keys():
 				if(k=='_RNA_UI'): continue
 				value = e[k]
-				if( type(value)==int or type(value)==float ):
+				if( type(value) in [int, float, str] ):
 					big_dict[k] = value
 				elif('IDPropertyArray' in str(type(value))):
 					big_dict[k] = value.to_list()
@@ -360,29 +375,83 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				if(ms.material.node_tree not in node_trees):
 					node_trees.append(ms.material.node_tree)
 
-		# Search for Value nodes that match the name of a property.
+		self.update_material_controller(char_bone)
+		self.update_material_controller(outfit_bone)
+
+		
+		def handle_group_node(group_node, active_texture=False):
+			""" For finding a node value connected even through reroute nodes, then muting unused texture nodes, and optionally changing the active node to this group_node's active texture. """
+			node = group_node
+			socket = None
+			# Find next connected non-reroute node.
+			while True:
+				if(len(node.inputs[0].links) > 0):
+					next_node = node.inputs[0].links[0].from_node
+					if(next_node.type!='REROUTE'):
+						socket = node.inputs[0].links[0].from_socket
+						node = next_node
+						break
+					node = next_node
+				else:
+					break
+
+			selector_value = int(socket.default_value)
+			
+			# Setting active node for the sake of visual feedback when in Solid view.
+			if(len(group_node.inputs[selector_value].links) > 0 ):
+				if(active_texture):
+					nodes.active = group_node.inputs[selector_value].links[0].from_node
+			elif(len(group_node.inputs[1].links) > 0 ):
+				if(active_texture):
+					nodes.active = group_node.inputs[1].links[0].from_node
+				selector_value = 1
+
+			nodes.active.mute=False
+
+			# Muting input texture nodes that we don't need, to help avoid hitting Eevee texture node limits.
+			for i in range(1, len(group_node.inputs)):
+				chosen_one = i==selector_value
+				if(len(group_node.inputs[i].links) > 0 ):
+					node = group_node.inputs[i].links[0].from_node
+					if(node.type=='TEX_IMAGE'):
+						node.mute = i!=selector_value
+
+		# Update Value nodes that match the name of a property.
 		for nt in node_trees:
 			nodes = nt.nodes
 			for prop_name in big_dict.keys():
+				value = big_dict[prop_name]
+
+				# Checking for expressions (If a property's value is a string starting with "=", it will be evaluated as an expression)
+				if(type(value)==str and value.startswith("=")):
+					expression = value[1:]
+					for var_name in big_dict.keys():
+						if(var_name in expression):
+							expression = expression.replace(var_name, str(big_dict[var_name]))
+					value = eval(expression)
+
+				# Fixing constants (values that shouldn't be exposed to the user but still affect materials should be prefixed with "_".)
+				if(prop_name.startswith("_")):
+					prop_name = prop_name[1:]
 				if(prop_name in nodes):
-					if(prop_name.startswith("_")): continue
+					#if(prop_name.startswith("_")): continue	# Why did I have this line?
 					n = nodes[prop_name]
 					# Setting the value of the node to the value of the corresponding property.
-					value = big_dict[prop_name]
 					if(type(value) in [int, float]):
-						n.outputs[0].default_value = value	
+						n.outputs[0].default_value = value
 					else:
 						n.inputs[0].default_value = value[0]
 						n.inputs[1].default_value = value[1]
 						n.inputs[2].default_value = value[2]
-			
+
 			### Updating active texture for the sake of visual feedback when in Solid view.
 			active_color_group = nodes.get('ACTIVE_COLOR_GROUP')
 			if(active_color_group):
-				if(len(active_color_group.inputs[0].links) > 0):
-					selector_value = int(active_color_group.inputs[0].links[0].from_socket.default_value)
-					if(len(active_color_group.inputs[selector_value].links) > 0 ):
-						nodes.active = active_color_group.inputs[selector_value].links[0].from_node
+				handle_group_node(active_color_group, True)
+				
+			for n in nodes:
+				if("SELECTOR_GROUP" in n.name):
+					handle_group_node(n)
 	
 	def update_meshes(self, context):
 		""" Executes the cloth swapping system by updating object visibilities, mask vertex groups and shape key values.
@@ -454,8 +523,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		""" Makes sure that outfit/hair bones that aren't being used are on a designated trash layer.
 			For this to work, all outfit and hair bones need to be organized into bonegroups named after the hair/outfit itself, prefixed with "Hair_" or "Outfit_" respectively.
 		"""
-		# TODO: This system doesn't allow for bones to be shared between outfits or hairs, since a bone can only be assigned a single bonegroup.
-		
 		# Gathering info
 		rig = self.get_rig()
 		outfit_bone = rig.pose.bones.get('Properties_Outfit_'+self.metsrig_outfits)
@@ -470,17 +537,20 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			if(bg==None): continue
 			
 			if('Hair' in bg.name):
-				if(active_hair == bg.name.replace("Hair_", "")):
+				hairs = bg.name.replace("Hair_", "").split(",")
+				if(active_hair in hairs ):
 					b.layers[10] = True
 				else:
 					b.layers[10] = False
 			elif('Outfit' in bg.name):
-				if(self.metsrig_outfits == bg.name.replace("Outfit_", "")):
+				outfits = bg.name.replace("Outfit_", "").split(",")
+				if(self.metsrig_outfits in outfits):
 					b.layers[9] = True
 				else:
 					b.layers[9] = False
 			elif('Character' in bg.name):
-				if(self.metsrig_chars == bg.name.replace("Character_", "")):
+				characters = bg.name.replace("Character_", "").split(",")
+				if(self.metsrig_chars in characters):
 					b.layers[8] = True
 				else:
 					b.layers[8] = False
@@ -541,8 +611,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		return items
 	
 	def hairs(self, context):
-		""" Callback function for finding the list of available hairs for the metsrig_hairs enum.
-		"""
+		""" Callback function for finding the list of available hairs for the metsrig_hairs enum. """
 		rig = self.get_rig()
 		hairs = []
 		char_bones = [b for b in rig.pose.bones if "Properties_Character_" in b.name]
@@ -560,8 +629,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		return items
 	
 	def update_body_type(self, context):
-		""" Currently used to update body shape keys.
-		"""
+		""" Currently used to update body shape keys. """
 		
 		# TODO: come up with a flexible solution for adding shape keys to the UI.
 		rig = self.get_rig()
@@ -578,9 +646,38 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				else:
 					bsk.value = 0
 	
+	def update_material_controller(self, bone):
+		# Updating material controller with this character's values.
+		rig = self.get_rig()
+		if('material_controller' in rig.data):
+			controller_nodegroup = bpy.data.node_groups.get(rig.data['material_controller'])
+			if(controller_nodegroup):
+				# To update the material controller, we set the nodegroup's input default values to the desired values.
+				# A nodegroup's input and output default_values are normally ONLY used by Blender to set said values when a new instance of the node is created.
+				# Which is to say, changing the input/output default_values won't have any effect on existing nodes.
+				# To overcome this, value nodes inside the controller material copy the values of the input/output default_values via drivers.
+				
+				# Why not just add the Value nodes themselves to the UI? Because they don't have min/max values, but nodegroup inputs/outputs do.
+				# Why hook up the input rather than the output? It makes no difference. It just made more sense to me this way.
+				#	Why not both?
+				for io in [controller_nodegroup.inputs, controller_nodegroup.outputs]:
+					for i in io:
+						prop_value = None
+						if("_" + i.name in bone):
+							prop_value = bone["_" + i.name]
+						elif(i.name in bone):
+							prop_value = bone[i.name]
+						else:
+							continue
+						if( type(prop_value) in [int, float] ):
+							i.default_value = prop_value
+						else:
+							color = prop_value.to_list()
+							color.append(1)
+							i.default_value = color
+
 	def change_outfit(self, context):
-		""" Update callback of metsrig_outfits enum.
-		"""
+		""" Update callback of metsrig_outfits enum. """
 		
 		rig = self.get_rig()
 		char_bone = rig.pose.bones.get("Properties_Character_"+self.metsrig_chars)
@@ -595,17 +692,18 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		elif('_body' in char_bone):
 			rig.data['body'] = char_bone['_body']
 		else:
-			rig.data['body'] = 0
-		
-		
+			pass
+			#rig.data['body'] = 0	#TODO make this work better...
+
 		if('Hair' in outfit_bone):
 			self.metsrig_hairs = outfit_bone['Hair']
+		else:
+			self.update_meshes(context)
+			self.update_bone_layers(context)
 		
-		self.update_node_values(context)
+		#self.update_node_values(context)
 		self.update_bool_properties(context)
-		self.update_meshes(context)
-		self.update_bone_layers(context)
-	
+
 	def change_characters(self, context):
 		""" Update callback of metsrig_chars enum.
 		"""
@@ -615,40 +713,23 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		if('Hair' in char_bone):
 			self.metsrig_hairs = char_bone['Hair'].split(", ")[0]
 		
-		# Updating material controller with this character's values.
-		if('material_controller' in rig.data):
-			controller_nodegroup = bpy.data.node_groups.get(rig.data['material_controller'])
-			if(controller_nodegroup):
-				# To update the material controller, we set the nodegroup's input default values to the desired values.
-				# A nodegroup's input and output default_values are normally ONLY used by Blender to set said values when a new instance of the node is created.
-				# Which is to say, changing the default_values won't have any effect on existing nodes.
-				# To overcome this, value nodes inside the controller material copy the values of the inputs via drivers.
-				
-				# Why not just add the Value nodes themselves to the UI? Because they don't have min/max values, but nodegroup inputs/outputs do.
-				# Why hook up the input rather than the output? It makes no difference. It just made more sense to me this way.
-				for i in controller_nodegroup.inputs:
-					if("_"+i.name in char_bone):
-						prop_value = char_bone["_" + i.name]
-						if( type(prop_value) in [int, float] ):
-							i.default_value = prop_value
-						else:
-							color = prop_value.to_list()
-							color.append(1)
-							i.default_value = color
-		
 		self.update_bone_location(context)
-		self.change_outfit(context)
-		# Currently the only character with a unique nude body is Ciri. If another character has a unique body, we'll code this properly.
+		self.change_outfit(context)				# Just to make sure the active outfit isn't None.
+
+		# TODO: Currently the only character with a unique nude body is Ciri. If another character has a unique body, we'll code this properly.
 		if(self.metsrig_chars == 'Ciri'):
 			rig.data['body_id'] = 2
 		else:
 			rig.data['body_id'] = 1
 	
+	def change_hair(self, context):
+		self.update_meshes(context)
+		self.update_bone_layers(context)
+
 	metsrig_chars: EnumProperty(
 		name="Character",
 		items=chars,
-		update=change_characters
-	)
+		update=change_characters)
 	
 	metsrig_sets: EnumProperty(
 		name="Outfit Set",
@@ -659,24 +740,20 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			('All', "All Outfits", "All outfits, including those of other characters", 3)
 		},
 		default='Character',
-		update=change_outfit
-	)
+		update=change_outfit)
 	
 	metsrig_outfits: EnumProperty(
 		name="Outfit",
 		items=outfits,
-		update=change_outfit
-	)
+		update=change_outfit)
 	
 	metsrig_hairs: EnumProperty(
 		name="Hairstyle",
 		items=hairs,
-		update=change_outfit
-	)
+		update=change_hair)
 	
 	def update_physics(self, context):
-		""" Handle input to the Physics settings found under MetsRig Extras.
-		"""
+		""" Handle input to the Physics settings found under MetsRig Extras. """
 		
 		# Saving and resetting speed multiplier
 		speed_mult = 0
@@ -736,12 +813,16 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					m.point_cache.frame_start = self.physics_cache_start
 					m.point_cache.frame_end = self.physics_cache_end
 		
+		# Toggling Physics bone constraints
+		for b in rig.pose.bones:
+			for c in b.constraints:
+				if("phys" in c.name.lower()):
+					c.mute = not self.physics_toggle
+
 		# Toggling Physics collection(s)...
-		print(rig.name)
 		for collection in get_children_recursive(bpy.context.scene.collection):
 			if(type(collection) != bpy.types.Collection): continue
 			if(rig in collection.objects[:]):
-				print(collection.objects[0].name)
 				for rig_collection in collection.children:
 					if( 'phys' in rig_collection.name.lower() ):
 						rig_collection.hide_viewport = not self.physics_toggle
@@ -752,26 +833,22 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	physics_toggle: BoolProperty(
 		name='Physics',
 		description='Toggle Physics systems (Enables Physics collection and Cloth, Mesh Deform, Surface Deform modifiers, etc)',
-		update=update_physics
-	)
+		update=update_physics)
 	physics_speed_multiplier: StringProperty(
 		name='Apply multiplier to physics speed',
 		description = 'Apply entered multiplier to physics speed. The default physics setups are made for 60FPS. If you are animating at 30FPS, enter 2 here once. If you entered 2, you have to enter 0.5 to get back to the original physics speed',
 		default="",
-		update=update_physics
-	)
+		update=update_physics)
 	physics_cache_start: IntProperty(
 		name='Physics Frame Start',
 		default=1,
 		update=update_physics,
-		min=0, max=1048573
-	)
+		min=0, max=1048573)
 	physics_cache_end: IntProperty(
 		name='Physics Frame End',
 		default=1,
 		update=update_physics,
-		min=1, max=1048574
-	)
+		min=1, max=1048574)
 
 	def update_shrinkwrap_targets(self, context):
 		""" Update the target object of any Shrinkwrap constraints named "Shrinkwrap_Anus" or "Shrinkwrap_Vagina", to match the object selected in the UI.
@@ -825,13 +902,11 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	render_modifiers: BoolProperty(
 		name='render_modifiers',
 		description='Enable SubSurf, Solidify, Bevel, etc. modifiers in the viewport',
-		update=update_render_modifiers
-	)
+		update=update_render_modifiers)
 	show_all_meshes: BoolProperty(
 		name='show_all_meshes',
 		description='Enable all child meshes of this armature',
-		update=update_meshes
-	)
+		update=update_meshes)
 	
 	def update_ik(self, context):
 		""" Callback function for FK/IK switch values.
@@ -856,42 +931,37 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 								name = "ik_fingers_right"
 							#continue	# TODO is this break right?
 							break
-				if(name.lower() in ik_prop_names):
-					c.influence = self[name.lower()]
+				if(name in ik_prop_names):
+					c.influence = getattr(self, name)
 	
 	### FK/IK Properties
 	ik_spine: FloatProperty(
 		name='FK/IK Spine',
 		default=0,
 		update=update_ik,
-		min=0, max=1
-	)
+		min=0, max=1 )
 	
 	ik_leg_left: FloatProperty(
 		name='FK/IK Left Leg',
 		default=0,
 		update=update_ik,
-		min=0, max=1
-	)
+		min=0, max=1 )
 	ik_leg_right: FloatProperty(
 		name='FK/IK Right Leg',
 		default=0,
 		update=update_ik,
-		min=0, max=1
-	)
+		min=0, max=1 )
 	
 	ik_arm_left: FloatProperty(
 		name='FK/IK Left Arm',
 		default=0,
 		update=update_ik,
-		min=0, max=1
-	)
+		min=0, max=1 )
 	ik_arm_right: FloatProperty(
 		name='FK/IK Right Arm',
 		default=0,
 		update=update_ik,
-		min=0, max=1
-	)
+		min=0, max=1 )
 	
 	ik_fingers_right: FloatProperty(
 		name='Right Fingers',
@@ -907,8 +977,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	ik_per_finger: BoolProperty(
 		name='Per Finger',
 		description='Control Ik/FK on individual fingers',
-		update=update_ik
-	)
+		update=update_ik)
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -946,12 +1015,15 @@ class MetsRigUI_Properties(MetsRigUI):
 		bool_props = data.metsrig_boolproperties
 		
 		character = mets_props.metsrig_chars
+		multiple_chars = len(mets_props.chars(context)) > 1	# Whether the rig has multiple characters. If not, we won't display Character and OutfitSet menus.
+		
 		character_properties_bone = obj.pose.bones.get("Properties_Character_"+character)
 		outfitset = mets_props.metsrig_sets
 		outfit = mets_props.metsrig_outfits
 		outfit_properties_bone = obj.pose.bones.get("Properties_Outfit_"+outfit)
 
-		layout.prop(mets_props, 'metsrig_chars')
+		if(multiple_chars):
+			layout.prop(mets_props, 'metsrig_chars')
 		
 		def add_props(prop_owner):
 			""" Add all properties of prop_owner to the layout. 
@@ -1021,7 +1093,9 @@ class MetsRigUI_Properties(MetsRigUI):
 			add_props(character_properties_bone)
 			layout.separator()
 		
-		layout.prop(mets_props, 'metsrig_sets')
+
+		if(multiple_chars):
+			layout.prop(mets_props, 'metsrig_sets')
 		layout.prop(mets_props, 'metsrig_outfits')
 		
 		if( outfit_properties_bone != None ):
@@ -1130,9 +1204,9 @@ class MetsRigUI_Extras(MetsRigUI):
 		
 		layout.row().prop(mets_props, 'metsrig_hairs')
 		
-		layout.separator()
-		
-		layout.row().prop(data, '["body"]', toggle=True, text='Body Type')
+		if("body" in data):
+			layout.separator()
+			layout.row().prop(data, '["body"]', toggle=True, text='Body Type')
 		
 		layout.separator()
 		if('anus_shrinkwrap' in data):
