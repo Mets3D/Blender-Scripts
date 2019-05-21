@@ -90,7 +90,6 @@ def transfer_weights_distance_weighted_avg(obj_from, obj_to, weights, max_verts=
 		number_of_source_verts = 1 + round( pow( (nearest_dist * dist_multiplier), 2 ) )
 		number_of_source_verts = max_verts if number_of_source_verts > max_verts else number_of_source_verts
 		
-		#print("# of verts: " + str(number_of_source_verts)) 
 		source_verts = [((nearest_idx, nearest_dist))]
 		source_verts = []	# List of vert index-distance tuples that we'll be copying the weights from.
 		
@@ -232,11 +231,6 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 			if(vgroups==None):
 				vgroups = o.vertex_groups
 			
-			# Using hard coded vertex group names. 	
-			# TODO delet this
-			# and delet bone_dict
-			# and delet vgroups list
-			# maybe. Or meaybe just leave them. Or maybe implement them as a feature. idk!
 			vgroups = [source_obj.vertex_groups.get(vgn) for vgn in vgroup_names]
 			
 			# Cleaning up vgroups
