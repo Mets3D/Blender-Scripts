@@ -1,8 +1,40 @@
+# Collection of functions that are either used by other parts of the addon, or random code snippets that I wanted to include but aren't actually used.
 
+def assign_object_and_material_ids(start=1):
+	counter = start
+
+	for o in bpy.context.selected_objects:
+		if(o.type=='MESH'):
+			o.pass_index = counter
+			counter = counter + 1
+
+	counter = start
+	for m in bpy.data.materials:
+		m.pass_index = counter
+		counter = counter + 1
+
+def connect_parent_bones():
+	# If the active object is an Armature
+	# For each bone
+	# If there is only one child
+	# Move the tail to the child's head
+	# Set Child's Connected to True
+
+	armature = bpy.context.object
+	if(armature.type != 'ARMATURE'): return
+	else:
+		bpy.ops.object.mode_set(mode="EDIT")
+		for b in armature.data.edit_bones:
+			if(len(b.children) == 1):
+				b.tail = b.children[0].head
+				#b.children[0].use_connect = True
+
+def uniform_scale():
+	for o in bpy.context.selected_objects:
+		o.dimensions = [1, 1, 1]
+		o.scale = [min(o.scale), min(o.scale), min(o.scale)]
 
 def flip_name(from_name):
-	print("")
-	print("flipping: " + from_name)
 	# based on BLI_string_flip_side_name in https://developer.blender.org/diffusion/B/browse/master/source/blender/blenlib/intern/string_utils.c
 	
 	l = len(from_name)	# Number of characters from left to right, that we still care about. At first we care about all of them.
@@ -12,7 +44,6 @@ def flip_name(from_name):
 		# Make sure there are only digits after the last period
 		after_last_period = from_name.split(".")[-1]
 		before_last_period = from_name.replace("."+after_last_period, "")
-		print("before last period: " + before_last_period)
 		all_digits = True
 		for c in after_last_period:
 			if( c not in "0123456789" ):
@@ -20,7 +51,6 @@ def flip_name(from_name):
 				break
 		# If that is so, then we don't care about the characters after this last period.
 		if(all_digits):
-			print("ends in .###")
 			l = len(before_last_period)
 	
 	# Case: Suffix or prefix R r L l separated by . - _
@@ -58,10 +88,7 @@ def flip_name(from_name):
 			new_name = "l" + name[1:]
 			break
 	
-	print("new name: " + new_name)
-	
 	if(new_name != name):
-		print("returning " + new_name + from_name[l:])
 		return new_name + from_name[l:]
 	
 	# Case: "left" or "right" with any case found anywhere in the string.
