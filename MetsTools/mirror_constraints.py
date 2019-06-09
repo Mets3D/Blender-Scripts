@@ -51,94 +51,44 @@ class XMirrorConstraints(bpy.types.Operator):
 				opp_subtarget = utils.flip_name(c.subtarget)
 				opp_c.subtarget = opp_subtarget
 				
-				# Visibility
-				opp_c.mute = c.mute
-				
-				# Influnce
-				opp_c.influence = c.influence
-				
 				if(c.type=='TRANSFORM'):
-					# TODO: Scale
-
-					# Source -> Destination mapping
-						opp_c.map_from = c.map_from
-						opp_c.map_to = c.map_to
-						
-						opp_c.map_to_x_from = c.map_to_x_from
-						opp_c.map_to_y_from = c.map_to_y_from
-						opp_c.map_to_z_from = c.map_to_z_from
-					
-					# Spaces
-						opp_c.target_space = c.target_space
-						opp_c.owner_space = c.owner_space
-					
-					# Extrapolate
-						opp_c.use_motion_extrapolate = c.use_motion_extrapolate
-					
-					#########################
-					###### TRANSFORMS #######
-					#########################
-					
 					###### SOURCES #######
 					
-					### Source Rotations
-					
-					# X Rot: Same
-						opp_c.from_min_x_rot = c.from_min_x_rot
-						opp_c.from_max_x_rot = c.from_max_x_rot
-					# Y Rot: Flipped and Inverted	(Destinations also need to be handled)
-						opp_c.from_min_y_rot = c.from_max_y_rot * -1
-						opp_c.from_max_y_rot = c.from_min_y_rot * -1
-					# Y Rot: Flipped and Inverted	(Destinations also need to be handled)
-						opp_c.from_min_z_rot = c.from_max_z_rot * -1
-						opp_c.from_max_z_rot = c.from_min_z_rot * -1
-					
 					### Source Locations
-					
-					# X Loc: Flipped and Inverted	(Destinations also need to be handled)
+					# X Loc: Flipped and Inverted
 						opp_c.from_min_x = c.from_max_x *-1
 						opp_c.from_max_x = c.from_min_x *-1
 					# Y Loc: Same
-						opp_c.from_min_y = c.from_min_y
-						opp_c.from_max_y = c.from_max_y
 					# Z Loc: Same
-						opp_c.from_min_z = c.from_min_z
-						opp_c.from_max_z = c.from_max_z
+
+					### Source Rotations
+					# X Rot: Same
+					# Y Rot: Flipped and Inverted
+						opp_c.from_min_y_rot = c.from_max_y_rot * -1
+						opp_c.from_max_y_rot = c.from_min_y_rot * -1
+					# Z Rot: Flipped and Inverted
+						opp_c.from_min_z_rot = c.from_max_z_rot * -1
+						opp_c.from_max_z_rot = c.from_min_z_rot * -1
 					
-					### Source Scales
-					# X Scale: Same
-						opp_c.from_min_x_scale = c.from_min_x_scale
-						opp_c.from_max_x_scale = c.from_max_x_scale
-					# Y Scale: Same
-						opp_c.from_min_y_scale = c.from_min_y_scale
-						opp_c.from_max_y_scale = c.from_max_y_scale
-					# Z Scale: Same
-						opp_c.from_min_z_scale = c.from_min_z_scale
-						opp_c.from_max_z_scale = c.from_max_z_scale
+					### Source Scales are same.
 					
 					###### DESTINATIONS #######
 					
 					### Destination Rotations
 					
-						### Destination Rotations when source is Location
+						### Location to Rotation
 						if(c.map_from == 'LOCATION'):
 							# X Loc to X Rot: Flipped
 							if(c.map_to_x_from == 'X'):
 								opp_c.to_min_x_rot = c.to_max_x_rot
 								opp_c.to_max_x_rot = c.to_min_x_rot
 							# X Loc to Y Rot: Same
-							if(c.map_to_y_from == 'X'):
-								opp_c.to_min_y_rot = c.to_min_y_rot
-								opp_c.to_max_y_rot = c.to_max_y_rot
 							# X Loc to Z Rot: Flipped and Inverted
 							if(c.map_to_z_from == 'X'):
 								opp_c.to_min_z_rot = c.to_max_z_rot *-1
 								opp_c.to_max_z_rot = c.to_min_z_rot *-1
 							
 							# Y Loc to X Rot: Same
-							if(c.map_to_x_from == 'Y'):
-								opp_c.to_min_x_rot = c.to_min_x_rot
-								opp_c.to_max_x_rot = c.to_max_x_rot
 							# Y Loc to Y Rot: Inverted
 							if(c.map_to_y_from == 'Y'):
 								opp_c.to_min_y_rot = c.to_min_y_rot *-1
@@ -149,9 +99,6 @@ class XMirrorConstraints(bpy.types.Operator):
 								opp_c.to_max_z_rot = c.to_max_z_rot *-1
 							
 							# Z Loc to X Rot: Same
-							if(c.map_to_x_from == 'Z'):
-								opp_c.to_min_x_rot = c.to_min_x_rot
-								opp_c.to_max_x_rot = c.to_max_x_rot
 							# Z Loc to Y Rot: Inverted
 							if(c.map_to_y_from == 'Z'):
 								opp_c.to_min_y_rot = c.to_min_y_rot *-1
@@ -161,12 +108,9 @@ class XMirrorConstraints(bpy.types.Operator):
 								opp_c.to_min_z_rot = c.to_min_z_rot *-1
 								opp_c.to_max_z_rot = c.to_max_z_rot *-1
 					
-						### Destination Rotations when source is Rotation
+						### Rotation to Rotation
 						if(c.map_from == 'ROTATION'):
 							# X Rot to X Rot: Same
-							if(c.map_to_x_from == 'X'):
-								opp_c.to_min_x_rot = c.to_min_x_rot
-								opp_c.to_max_x_rot = c.to_max_x_rot
 							# X Rot to Y Rot: Inverted
 							if(c.map_to_y_from == 'X'):
 								opp_c.to_min_y_rot = c.to_min_y_rot *-1
@@ -181,9 +125,6 @@ class XMirrorConstraints(bpy.types.Operator):
 								opp_c.to_min_x_rot = c.to_max_x_rot
 								opp_c.to_max_x_rot = c.to_min_x_rot
 							# Y Rot to Y Rot: Same
-							if(c.map_to_y_from == 'Y'):
-								opp_c.to_min_y_rot = c.to_min_y_rot
-								opp_c.to_max_y_rot = c.to_max_y_rot
 							# Y Rot to Z Rot: Flipped and Inverted
 							if(c.map_to_z_from == 'Y'):
 								opp_c.to_min_z_rot = c.to_max_z_rot * -1
@@ -202,11 +143,9 @@ class XMirrorConstraints(bpy.types.Operator):
 								opp_c.to_min_z_rot = c.to_max_z_rot * -1
 								opp_c.to_max_z_rot = c.to_min_z_rot * -1
 						
-						### Destination Rotations when source is Scale
+						### Scale to Rotation
 						if(c.map_from == 'SCALE'):
 							# ALL Scale to X Rot: Same
-								opp_c.to_min_x_rot = c.to_min_x_rot
-								opp_c.to_max_x_rot = c.to_max_x_rot
 							# All Scale to Y Rot: Inverted
 								opp_c.to_min_y_rot = c.to_min_y_rot *-1
 								opp_c.to_max_y_rot = c.to_max_y_rot *-1
@@ -214,22 +153,44 @@ class XMirrorConstraints(bpy.types.Operator):
 								opp_c.to_min_z_rot = c.to_min_z_rot *-1
 								opp_c.to_max_z_rot = c.to_max_z_rot *-1
 						
-					### Destination Locations (TODO: the parts under identical if statements could be merged of course, but it might be better to keep things separate for clarity.)
+					### Destination Locations
+						### Location to Location
+						if(c.map_from == 'LOCATION'):
+							# X Loc to X Loc: Flipped and Inverted
+							if(c.map_to_x_from == 'X'):
+								opp_c.to_min_x = c.to_max_x *-1
+								opp_c.to_max_x = c.to_min_x *-1
+							# X Loc to Y Loc: Flipped
+							if(c.map_to_y_from == 'X'):
+								opp_c.to_min_y = c.to_max_y
+								opp_c.to_max_y = c.to_min_y
+							# X Loc to Z Loc: Flipped
+							if(c.map_to_z_from == 'X'):
+								opp_c.to_min_z = c.to_max_z
+								opp_c.to_max_z = c.to_min_z
+							
+							# Y Loc to X Loc: Inverted
+							if(c.map_to_x_from == 'Y'):
+								opp_c.to_min_x = c.to_min_x *-1
+								opp_c.to_max_x = c.to_max_x *-1
+							# Y Loc to Y Loc: Same
+							# Y Loc to Z Loc: Same
+							
+							# Z Loc to X Loc: Inverted
+							if(c.map_to_x_from == 'Z'):
+								opp_c.to_min_x = c.to_min_x *-1
+								opp_c.to_max_x = c.to_max_x *-1
+							# Z Loc to Y Loc: Same
+							# Z Loc to Z Loc: Same
 						
-						### Destination Locations when source is Rotation
+						### Rotation to Location
 						if(c.map_from == 'ROTATION'):
 							# X Rot to X Loc: Inverted
 							if(c.map_to_x_from == 'X'):
 								opp_c.to_min_x = c.to_min_x * -1
 								opp_c.to_max_x = c.to_max_x * -1
 							# X Rot to Y Loc: Same
-							if(c.map_to_y_from == 'X'):
-								opp_c.to_min_y = c.to_min_y
-								opp_c.to_max_y = c.to_max_y
 							# X Rot to Z Loc: Same
-							if(c.map_to_z_from == 'X'):
-								opp_c.to_min_z = c.to_min_z
-								opp_c.to_max_z = c.to_max_z
 							
 							# Y Rot to X Loc: Flipped and Inverted
 							if(c.map_to_x_from == 'Y'):
@@ -257,61 +218,16 @@ class XMirrorConstraints(bpy.types.Operator):
 								opp_c.to_min_z = c.to_max_z
 								opp_c.to_max_z = c.to_min_z
 						
-						### Destination Locations when source is Location
-						if(c.map_from == 'LOCATION'):
-							# X Loc to X Loc: Flipped and Inverted
-							if(c.map_to_x_from == 'X'):
-								opp_c.to_min_x = c.to_max_x *-1
-								opp_c.to_max_x = c.to_min_x *-1
-							# X Loc to Y Loc: Flipped
-							if(c.map_to_y_from == 'X'):
-								opp_c.to_min_y = c.to_max_y
-								opp_c.to_max_y = c.to_min_y
-							# X Loc to Z Loc: Flipped
-							if(c.map_to_z_from == 'X'):
-								opp_c.to_min_z = c.to_max_z
-								opp_c.to_max_z = c.to_min_z
-							
-							# Y Loc to X Loc: Inverted
-							if(c.map_to_x_from == 'Y'):
-								opp_c.to_min_x = c.to_min_x *-1
-								opp_c.to_max_x = c.to_max_x *-1
-							# Y Loc to Y Loc: Same
-							if(c.map_to_y_from == 'Y'):
-								opp_c.to_min_y = c.to_min_y
-								opp_c.to_max_y = c.to_max_y
-							# Y Loc to Z Loc: Same
-							if(c.map_to_z_from == 'Y'):
-								opp_c.to_min_z = c.to_min_z
-								opp_c.to_max_z = c.to_max_z
-							
-							# Z Loc to X Loc: Inverted
-							if(c.map_to_x_from == 'Z'):
-								opp_c.to_min_x = c.to_min_x *-1
-								opp_c.to_max_x = c.to_max_x *-1
-							# Z Loc to Y Loc: Same
-							if(c.map_to_y_from == 'Z'):
-								opp_c.to_min_y = c.to_min_y
-								opp_c.to_max_y = c.to_max_y
-							# Z Loc to Z Loc: Same
-							if(c.map_to_z_from == 'Z'):
-								opp_c.to_min_z = c.to_min_z
-								opp_c.to_max_z = c.to_max_z
-						
-						### Destination Locations when source is Scale
+						### Scale to Location
 						if(c.map_from == 'SCALE'):
-							# ALL Scale to X Loc: Inverted
-								opp_c.to_min_x = c.to_min_x *-1
-								opp_c.to_max_x = c.to_max_x *-1
+							# All Scale to X Loc: Inverted
+							opp_c.to_min_x = c.to_min_x *-1
+							opp_c.to_max_x = c.to_max_x *-1
 							# All Scale to Y Loc: Same
-								opp_c.to_min_y = c.to_min_y
-								opp_c.to_max_y = c.to_max_y
 							# All Scale to Z Loc: Same
-								opp_c.to_min_z = c.to_min_z
-								opp_c.to_max_z = c.to_max_z
 					
 					### Destination Scales
-						# Destination Scales when source is Location
+						# Location to Scale
 						if(c.map_from == 'LOCATION'):
 							# X Loc to All Scale: Flipped
 							if(c.map_to_x_from == 'X'):
@@ -326,7 +242,7 @@ class XMirrorConstraints(bpy.types.Operator):
 							# Y Loc to All Scale: Same
 							# Z Loc to All Scale: Same
 						
-						# Destination Scales when source is Rotation
+						# Rotation to Scale
 						if(c.map_from == 'ROTATION'):
 							# X Rot to All Scale: Same
 							# Y Rot to All Scale: Flipped
@@ -349,6 +265,8 @@ class XMirrorConstraints(bpy.types.Operator):
 							if(c.map_to_z_from == 'Z'):
 								opp_c.to_min_z_scale = c.to_max_z_scale
 								opp_c.to_max_z_scale = c.to_min_z_scale
+						
+						# Scale to Scale is all same.
 		
 			# Mirroring Bendy Bone settings
 			opp_data_b.bbone_handle_type_start 		= data_b.bbone_handle_type_start
