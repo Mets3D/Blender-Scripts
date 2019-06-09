@@ -26,6 +26,11 @@ class XMirrorConstraints(bpy.types.Operator):
 			#TODO: mirror constraint's name.
 			#TODO: copy axis locks and rotation mode.
 
+			# would be cool if we could mirror on any axis, not just X. How on earth would that work though.
+			# Maybe this can be done as an afterthought. Consider that during X mirroring, the X axis is the "mirror" axis, the Y axis is the forward axis and Z is the up axis.
+			# If we wanted to mirror on the Y axis, it would be Y=Mirror, X = Forward, Z = Up
+			# For Z axis mirroring though, X and Y are interchangable, are they not? I mean, neither of them are strictly forward or up. One of them is FOrward and the other is Left. 
+
 			armature = context.object
 
 			flipped_name = utils.flip_name(b.name)
@@ -53,7 +58,9 @@ class XMirrorConstraints(bpy.types.Operator):
 				opp_c.influence = c.influence
 				
 				if(c.type=='TRANSFORM'):
-					# Source->Destination mapping
+					# TODO: Scale
+
+					# Source -> Destination mapping
 						opp_c.map_from = c.map_from
 						opp_c.map_to = c.map_to
 						
@@ -76,108 +83,272 @@ class XMirrorConstraints(bpy.types.Operator):
 					
 					### Source Rotations
 					
-					# X Rot: same
-						opp_c.from_max_x_rot = c.from_max_x_rot
+					# X Rot: Same
 						opp_c.from_min_x_rot = c.from_min_x_rot
-					
-					# Y Rot: Todo
-					
-					# Z Rot: flipped and inverted
-						opp_c.from_max_z_rot = c.from_min_z_rot * -1
+						opp_c.from_max_x_rot = c.from_max_x_rot
+					# Y Rot: Flipped and Inverted	(Destinations also need to be handled)
+						opp_c.from_min_y_rot = c.from_max_y_rot * -1
+						opp_c.from_max_y_rot = c.from_min_y_rot * -1
+					# Y Rot: Flipped and Inverted	(Destinations also need to be handled)
 						opp_c.from_min_z_rot = c.from_max_z_rot * -1
+						opp_c.from_max_z_rot = c.from_min_z_rot * -1
 					
-					### Source Locations (Everything is the same I think)
-						opp_c.from_min_x = c.from_min_x
-						opp_c.from_max_x = c.from_max_x
-						
+					### Source Locations
+					
+					# X Loc: Flipped and Inverted	(Destinations also need to be handled)
+						opp_c.from_min_x = c.from_max_x *-1
+						opp_c.from_max_x = c.from_min_x *-1
+					# Y Loc: Same
 						opp_c.from_min_y = c.from_min_y
 						opp_c.from_max_y = c.from_max_y
-						
+					# Z Loc: Same
 						opp_c.from_min_z = c.from_min_z
 						opp_c.from_max_z = c.from_max_z
+					
+					### Source Scales
+					# X Scale: Same
+						opp_c.from_min_x_scale = c.from_min_x_scale
+						opp_c.from_max_x_scale = c.from_max_x_scale
+					# Y Scale: Same
+						opp_c.from_min_y_scale = c.from_min_y_scale
+						opp_c.from_max_y_scale = c.from_max_y_scale
+					# Z Scale: Same
+						opp_c.from_min_z_scale = c.from_min_z_scale
+						opp_c.from_max_z_scale = c.from_max_z_scale
 					
 					###### DESTINATIONS #######
 					
 					### Destination Rotations
 					
-					### Destination Rotations when source is Rotation
-						if(c.map_from == 'ROTATION'):
-							if(c.map_to_x_from == 'X'):		# If the source is X rotation
-								# X Rot: same
-								opp_c.to_max_x_rot = c.to_max_x_rot
-								opp_c.to_min_x_rot = c.to_min_x_rot
-								
-								# Y Rot: TODO
-								
-								# Z Rot: TODO
-							
-							# Source Y Rot: TODO
-							
-							if(c.map_to_x_from == 'Z'):		# If the source is Z rotation
-								# X Rot: flipped
-								opp_c.to_max_x_rot = c.to_min_x_rot
+						### Destination Rotations when source is Location
+						if(c.map_from == 'LOCATION'):
+							# X Loc to X Rot: Flipped
+							if(c.map_to_x_from == 'X'):
 								opp_c.to_min_x_rot = c.to_max_x_rot
-								
-								# Y Rot: flipped and inverted
-								opp_c.to_max_y_rot = c.to_min_y_rot * -1
-								opp_c.to_min_y_rot = c.to_max_y_rot * -1
-								
-								# Z Rot: flipped and inverted
-								opp_c.to_max_z_rot = c.to_min_z_rot * -1
+								opp_c.to_max_x_rot = c.to_min_x_rot
+							# X Loc to Y Rot: Same
+							if(c.map_to_y_from == 'X'):
+								opp_c.to_min_y_rot = c.to_min_y_rot
+								opp_c.to_max_y_rot = c.to_max_y_rot
+							# X Loc to Z Rot: Flipped and Inverted
+							if(c.map_to_z_from == 'X'):
+								opp_c.to_min_z_rot = c.to_max_z_rot *-1
+								opp_c.to_max_z_rot = c.to_min_z_rot *-1
+							
+							# Y Loc to X Rot: Same
+							if(c.map_to_x_from == 'Y'):
+								opp_c.to_min_x_rot = c.to_min_x_rot
+								opp_c.to_max_x_rot = c.to_max_x_rot
+							# Y Loc to Y Rot: Inverted
+							if(c.map_to_y_from == 'Y'):
+								opp_c.to_min_y_rot = c.to_min_y_rot *-1
+								opp_c.to_max_y_rot = c.to_max_y_rot *-1
+							# Y Loc to Z Rot: Inverted
+							if(c.map_to_z_from == 'Y'):
+								opp_c.to_min_z_rot = c.to_min_z_rot *-1
+								opp_c.to_max_z_rot = c.to_max_z_rot *-1
+							
+							# Z Loc to X Rot: Same
+							if(c.map_to_x_from == 'Z'):
+								opp_c.to_min_x_rot = c.to_min_x_rot
+								opp_c.to_max_x_rot = c.to_max_x_rot
+							# Z Loc to Y Rot: Inverted
+							if(c.map_to_y_from == 'Z'):
+								opp_c.to_min_y_rot = c.to_min_y_rot *-1
+								opp_c.to_max_y_rot = c.to_max_y_rot *-1
+							# Z Loc to Z Rot: Inverted
+							if(c.map_to_z_from == 'Z'):
+								opp_c.to_min_z_rot = c.to_min_z_rot *-1
+								opp_c.to_max_z_rot = c.to_max_z_rot *-1
+					
+						### Destination Rotations when source is Rotation
+						if(c.map_from == 'ROTATION'):
+							# X Rot to X Rot: Same
+							if(c.map_to_x_from == 'X'):
+								opp_c.to_min_x_rot = c.to_min_x_rot
+								opp_c.to_max_x_rot = c.to_max_x_rot
+							# X Rot to Y Rot: Inverted
+							if(c.map_to_y_from == 'X'):
+								opp_c.to_min_y_rot = c.to_min_y_rot *-1
+								opp_c.to_max_y_rot = c.to_max_y_rot *-1
+							# X Rot to Z Rot: Inverted
+							if(c.map_to_z_from == 'X'):
+								opp_c.to_min_z_rot = c.to_min_z_rot *-1
+								opp_c.to_max_z_rot = c.to_max_z_rot *-1
+							
+							# Y Rot to X Rot: Flipped
+							if(c.map_to_x_from == 'Y'):
+								opp_c.to_min_x_rot = c.to_max_x_rot
+								opp_c.to_max_x_rot = c.to_min_x_rot
+							# Y Rot to Y Rot: Same
+							if(c.map_to_y_from == 'Y'):
+								opp_c.to_min_y_rot = c.to_min_y_rot
+								opp_c.to_max_y_rot = c.to_max_y_rot
+							# Y Rot to Z Rot: Flipped and Inverted
+							if(c.map_to_z_from == 'Y'):
 								opp_c.to_min_z_rot = c.to_max_z_rot * -1
+								opp_c.to_max_z_rot = c.to_min_z_rot * -1
+							
+							# Z Rot to X Rot: Flipped
+							if(c.map_to_x_from == 'Z'):
+								opp_c.to_min_x_rot = c.to_max_x_rot
+								opp_c.to_max_x_rot = c.to_min_x_rot
+							# Z Rot to Y Rot: Flipped and Inverted
+							if(c.map_to_y_from == 'Z'):
+								opp_c.to_min_y_rot = c.to_max_y_rot * -1
+								opp_c.to_max_y_rot = c.to_min_y_rot * -1
+							# Z Rot to Z Rot: Flipped and Inverted
+							if(c.map_to_z_from == 'Z'):
+								opp_c.to_min_z_rot = c.to_max_z_rot * -1
+								opp_c.to_max_z_rot = c.to_min_z_rot * -1
 						
-						### Destination Locations (TODO: the parts under identical if statements could be merged, of course)
+						### Destination Rotations when source is Scale
+						if(c.map_from == 'SCALE'):
+							# ALL Scale to X Rot: Same
+								opp_c.to_min_x_rot = c.to_min_x_rot
+								opp_c.to_max_x_rot = c.to_max_x_rot
+							# All Scale to Y Rot: Inverted
+								opp_c.to_min_y_rot = c.to_min_y_rot *-1
+								opp_c.to_max_y_rot = c.to_max_y_rot *-1
+							# All Scale to Z Rot: Inverted
+								opp_c.to_min_z_rot = c.to_min_z_rot *-1
+								opp_c.to_max_z_rot = c.to_max_z_rot *-1
+						
+					### Destination Locations (TODO: the parts under identical if statements could be merged of course, but it might be better to keep things separate for clarity.)
 						
 						### Destination Locations when source is Rotation
 						if(c.map_from == 'ROTATION'):
-							if(c.map_to_x_from == 'X'):		# If the source is X rotation
-								# X Loc: inverted
+							# X Rot to X Loc: Inverted
+							if(c.map_to_x_from == 'X'):
 								opp_c.to_min_x = c.to_min_x * -1
 								opp_c.to_max_x = c.to_max_x * -1
-								
-								# Y Loc: same
+							# X Rot to Y Loc: Same
+							if(c.map_to_y_from == 'X'):
 								opp_c.to_min_y = c.to_min_y
 								opp_c.to_max_y = c.to_max_y
-								
-								# Z Loc: same
-								opp_c.to_min_z = c.to_min_z
-								opp_c.to_max_z = c.to_max_z
-							elif(c.map_to_x_from == 'Z'):	# If the source is Z rotation
-								# X Loc: flipped and inverted
-								opp_c.to_min_x = c.to_max_x * -1
-								opp_c.to_max_x = c.to_min_x * -1
-								
-								# Y Loc: flipped
-								opp_c.to_min_y = c.to_max_y
-								opp_c.to_max_y = c.to_min_y
-								
-								# Z Loc: TODO
-								opp_c.to_min_z = c.to_min_z
-								opp_c.to_max_z = c.to_max_z
-						
-						### Destination Locations when source is Location
-						if(c.map_from == 'LOCATION'):
-							if(c.map_to_x_from == 'X'):		# If the source is X rotation
-								# X Loc: inverted
-								opp_c.to_min_x = c.to_min_x	#TODO: the comment says this should be inverted, but it isn't. Which is right?
-								opp_c.to_max_x = c.to_max_x
-								
-								# Y Loc: same
-								opp_c.to_min_y = c.to_min_y
-								opp_c.to_max_y = c.to_max_y
-								
-								# Z Loc: same
+							# X Rot to Z Loc: Same
+							if(c.map_to_z_from == 'X'):
 								opp_c.to_min_z = c.to_min_z
 								opp_c.to_max_z = c.to_max_z
 							
-							if(c.map_to_x_from == 'Y'):		# If the source is Y rotation
-								# X Loc: inverted
+							# Y Rot to X Loc: Flipped and Inverted
+							if(c.map_to_x_from == 'Y'):
+								opp_c.to_min_x = c.to_max_x * -1
+								opp_c.to_max_x = c.to_min_x * -1
+							# Y Rot to Y Loc: Flipped
+							if(c.map_to_y_from == 'Y'):
+								opp_c.to_min_y = c.to_max_y
+								opp_c.to_max_y = c.to_min_y
+							# Y Rot to Z Loc: Flipped
+							if(c.map_to_z_from == 'Y'):
+								opp_c.to_min_z = c.to_max_z
+								opp_c.to_max_z = c.to_min_z
+							
+							# Z Rot to X Loc: Flipped and inverted
+							if(c.map_to_x_from == 'Z'):
+								opp_c.to_min_x = c.to_max_x * -1
+								opp_c.to_max_x = c.to_min_x * -1
+							# Z Rot to Y Loc: Flipped
+							if(c.map_to_y_from == 'Z'):
+								opp_c.to_min_y = c.to_max_y
+								opp_c.to_max_y = c.to_min_y
+							# Z Rot to Z Loc: Flipped
+							if(c.map_to_z_from == 'Z'):
+								opp_c.to_min_z = c.to_max_z
+								opp_c.to_max_z = c.to_min_z
+						
+						### Destination Locations when source is Location
+						if(c.map_from == 'LOCATION'):
+							# X Loc to X Loc: Flipped and Inverted
+							if(c.map_to_x_from == 'X'):
+								opp_c.to_min_x = c.to_max_x *-1
+								opp_c.to_max_x = c.to_min_x *-1
+							# X Loc to Y Loc: Flipped
+							if(c.map_to_y_from == 'X'):
+								opp_c.to_min_y = c.to_max_y
+								opp_c.to_max_y = c.to_min_y
+							# X Loc to Z Loc: Flipped
+							if(c.map_to_z_from == 'X'):
+								opp_c.to_min_z = c.to_max_z
+								opp_c.to_max_z = c.to_min_z
+							
+							# Y Loc to X Loc: Inverted
+							if(c.map_to_x_from == 'Y'):
 								opp_c.to_min_x = c.to_min_x *-1
 								opp_c.to_max_x = c.to_max_x *-1
-								
-								# Y Loc: TODO
-								
-								# Z Loc: TODO
+							# Y Loc to Y Loc: Same
+							if(c.map_to_y_from == 'Y'):
+								opp_c.to_min_y = c.to_min_y
+								opp_c.to_max_y = c.to_max_y
+							# Y Loc to Z Loc: Same
+							if(c.map_to_z_from == 'Y'):
+								opp_c.to_min_z = c.to_min_z
+								opp_c.to_max_z = c.to_max_z
+							
+							# Z Loc to X Loc: Inverted
+							if(c.map_to_x_from == 'Z'):
+								opp_c.to_min_x = c.to_min_x *-1
+								opp_c.to_max_x = c.to_max_x *-1
+							# Z Loc to Y Loc: Same
+							if(c.map_to_y_from == 'Z'):
+								opp_c.to_min_y = c.to_min_y
+								opp_c.to_max_y = c.to_max_y
+							# Z Loc to Z Loc: Same
+							if(c.map_to_z_from == 'Z'):
+								opp_c.to_min_z = c.to_min_z
+								opp_c.to_max_z = c.to_max_z
+						
+						### Destination Locations when source is Scale
+						if(c.map_from == 'SCALE'):
+							# ALL Scale to X Loc: Inverted
+								opp_c.to_min_x = c.to_min_x *-1
+								opp_c.to_max_x = c.to_max_x *-1
+							# All Scale to Y Loc: Same
+								opp_c.to_min_y = c.to_min_y
+								opp_c.to_max_y = c.to_max_y
+							# All Scale to Z Loc: Same
+								opp_c.to_min_z = c.to_min_z
+								opp_c.to_max_z = c.to_max_z
+					
+					### Destination Scales
+						# Destination Scales when source is Location
+						if(c.map_from == 'LOCATION'):
+							# X Loc to All Scale: Flipped
+							if(c.map_to_x_from == 'X'):
+								opp_c.to_min_x_scale = c.to_max_x_scale
+								opp_c.to_max_x_scale = c.to_min_x_scale
+							if(c.map_to_y_from == 'X'):
+								opp_c.to_min_y_scale = c.to_max_y_scale
+								opp_c.to_max_y_scale = c.to_min_y_scale
+							if(c.map_to_z_from == 'X'):
+								opp_c.to_min_z_scale = c.to_max_z_scale
+								opp_c.to_max_z_scale = c.to_min_z_scale
+							# Y Loc to All Scale: Same
+							# Z Loc to All Scale: Same
+						
+						# Destination Scales when source is Rotation
+						if(c.map_from == 'ROTATION'):
+							# X Rot to All Scale: Same
+							# Y Rot to All Scale: Flipped
+							if(c.map_to_x_from == 'Y'):
+								opp_c.to_min_x_scale = c.to_max_x_scale
+								opp_c.to_max_x_scale = c.to_min_x_scale
+							if(c.map_to_y_from == 'Y'):
+								opp_c.to_min_y_scale = c.to_max_y_scale
+								opp_c.to_max_y_scale = c.to_min_y_scale
+							if(c.map_to_z_from == 'Y'):
+								opp_c.to_min_z_scale = c.to_max_z_scale
+								opp_c.to_max_z_scale = c.to_min_z_scale
+							# Z Rot to All Scale: Flipped
+							if(c.map_to_x_from == 'Z'):
+								opp_c.to_min_x_scale = c.to_max_x_scale
+								opp_c.to_max_x_scale = c.to_min_x_scale
+							if(c.map_to_y_from == 'Z'):
+								opp_c.to_min_y_scale = c.to_max_y_scale
+								opp_c.to_max_y_scale = c.to_min_y_scale
+							if(c.map_to_z_from == 'Z'):
+								opp_c.to_min_z_scale = c.to_max_z_scale
+								opp_c.to_max_z_scale = c.to_min_z_scale
 		
 			# Mirroring Bendy Bone settings
 			opp_data_b.bbone_handle_type_start 		= data_b.bbone_handle_type_start
