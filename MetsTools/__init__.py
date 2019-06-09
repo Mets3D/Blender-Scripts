@@ -18,6 +18,8 @@
 #	Mirror selected bones (names, transforms, constraints, drivers, settings)
 #	UnfuckSFMArmature - Could add more SFM clean-up related stuff. Probably fix/re-write the SFM to Cycles material converter. Best wait for Red Eye to improve his mdl importer though.
 # 	Copy Cloth Settings (for some reason Copy Attributes doesn't do this)
+#	Create Transformation Constraint (Automatically put the selected bone's current transforms into the destination settings of the Transformation constraint)
+
 # this __init__ and the way we register stuff could probably be a lot nicer.
 bl_info = {
 	"name": "MetsTools",
