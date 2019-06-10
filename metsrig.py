@@ -1,5 +1,5 @@
-"Version: 2.1"
-"Date: 02/05/19"
+"Version: 2.2"
+"Date: 10/06/19 (Last updated for Sombra)"
 
 import bpy
 from bpy.props import *
@@ -387,7 +387,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			while True:
 				if(len(node.inputs[0].links) > 0):
 					next_node = node.inputs[0].links[0].from_node
-					if(next_node.type!='REROUTE'):
+					if(next_node.type != 'REROUTE'):
 						socket = node.inputs[0].links[0].from_socket
 						node = next_node
 						break
@@ -406,8 +406,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					nodes.active = group_node.inputs[1].links[0].from_node
 				selector_value = 1
 
-			nodes.active.mute=False
-
 			# Muting input texture nodes that we don't need, to help avoid hitting Eevee texture node limits.
 			for i in range(1, len(group_node.inputs)):
 				chosen_one = i==selector_value
@@ -415,6 +413,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					node = group_node.inputs[i].links[0].from_node
 					if(node.type=='TEX_IMAGE'):
 						node.mute = i!=selector_value
+			
+			nodes.active.mute=False
 
 		# Update Value nodes that match the name of a property.
 		for nt in node_trees:
@@ -1317,8 +1317,8 @@ classes = (
 )
 
 from bpy.utils import register_class
-for cls in classes:
-	register_class(cls)
+for c in classes:
+	register_class(c)
 
 bpy.types.Armature.metsrig_properties = bpy.props.PointerProperty(type=MetsRig_Properties)
 bpy.types.Armature.metsrig_boolproperties = bpy.props.CollectionProperty(type=MetsRig_BoolProperties)
