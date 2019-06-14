@@ -1,5 +1,5 @@
-"Version: 2.2"
-"Date: 10/06/19 (Last updated for Sombra)"
+"Version: 2.3"
+"Date: 14/06/19 (Last updated for Sombra)"
 
 import bpy
 from bpy.props import *
@@ -26,6 +26,7 @@ import webbrowser
 	# It should also detect when multiple copies of itself exist. Currently the only thing that needs to be done for two rigs to work without messing each other up is to change the 'material_controller' to the correct one.
 
 def sombra_skinID(skinset, skin):
+	# TODO: make this obsolete.
 	return skinset + (skin-1 if skinset==1 else 19) + (skin-1 if skinset==2 else skinset>2) + (skin-1 if skinset==3 else skinset>3) - 0.5
 
 def get_children_recursive(obj, ret=[]):
@@ -68,8 +69,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	
 	@staticmethod
 	def get_rigs():
-		""" Find all MetsRigs in the current view layer.
-		"""
+		""" Find all MetsRigs in the current view layer. """
 		ret = []
 		armatures = [o for o in bpy.context.view_layer.objects if o.type=='ARMATURE']
 		for o in armatures:
@@ -87,8 +87,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	
 	@classmethod
 	def pre_depsgraph_update(cls, scene):
-		""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties.
-		"""
+		""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
 		for rig in cls.get_rigs():
 			# Grabbing relevant data
 			mets_props = rig.data.metsrig_properties
@@ -141,8 +140,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 
 	@classmethod
 	def post_depsgraph_update(cls, scene):
-		"""Runs after every depsgraph update. If any user input to the rig properties was detected by pre_depsgraph_update(), this will call update_meshes().
-		"""
+		"""Runs after every depsgraph update. If any user input to the rig properties was detected by pre_depsgraph_update(), this will call update_meshes(). """
 		for rig in cls.get_rigs():
 			if(rig.data['update'] == 1):
 				rig.data.metsrig_properties.update_meshes(bpy.context)
@@ -186,8 +184,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			return False
 	
 	def determine_visibility_by_properties(self, o):
-		""" Determine whether an object should be visible by matching its custom properties to the active character and outfit properties.
-		"""
+		""" Determine whether an object should be visible by matching its custom properties to the active character and outfit properties. """
 		rig = self.get_rig()
 		char_bone = rig.pose.bones.get("Properties_Character_"+self.metsrig_chars)
 		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+self.metsrig_outfits)
@@ -231,8 +228,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		return True
 		
 	def determine_object_visibility(self, o):
-		""" Determine if an object should be visible based on its properties and the rig's current state.
-		"""
+		""" Determine if an object should be visible based on its properties and the rig's current state. """
 		if('Expression' in o):
 			if( ('Hair' in o) or ('Outfit' in o) or ('Character' in o) ):
 				if( self.determine_visibility_by_properties(o) ):
@@ -252,7 +248,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		""" Determine whether the passed vertex group or shape key should be enabled, based on its name and the properties of the currently active outfit.
 			Naming convention example: M:Ciri_Default:Corset==1*Top==1
 			m: The vertex group or shape key (or anything with a "name").
-			"""
+		"""
 		
 		if("M:" not in m.name):
 			return None
@@ -389,6 +385,10 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					next_node = node.inputs[0].links[0].from_node
 					if(next_node.type != 'REROUTE'):
 						socket = node.inputs[0].links[0].from_socket
+						if(next_node.type == 'GROUP'):
+							# We will assume this is our special Material Controller nodegroup, whose nodetree input default values are exposed to the UI under Extras->Materials.
+							# More info about this very confusing system is in update_material_controller().
+							socket = next_node.node_tree.inputs[socket.name]
 						node = next_node
 						break
 					node = next_node
@@ -454,8 +454,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					handle_group_node(n)
 	
 	def update_meshes(self, context):
-		""" Executes the cloth swapping system by updating object visibilities, mask vertex groups and shape key values.
-		"""
+		""" Executes the cloth swapping system by updating object visibilities, mask vertex groups and shape key values. """
 		
 		# TODO: This is kind of in a weird place here. I'm only calling it from here because post_depsgraph_update calls update_meshes.
 		# TODO: The only reason it's weird is because it's weird that we're giving special treatment to specifically body shape keys. Maybe at some point, when we need to, we can allow for any kind of shape key selector to be thrown into the UI, or generic shape keys to be assigned to characters/outfits, or something like that...
@@ -579,8 +578,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					new_bool.rig = rig
 	
 	def outfits(self, context):
-		""" Callback function for finding the list of available outfits for the metsrig_outfits enum.
-		"""
+		""" Callback function for finding the list of available outfits for the metsrig_outfits enum. """
 		rig = self.get_rig()
 		chars = [self.metsrig_chars]
 		if(self.metsrig_sets == 'Generic'):
@@ -601,8 +599,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		return items
 	
 	def chars(self, context):
-		""" Callback function for finding the list of available chars for the metsrig_chars enum.
-		"""
+		""" Callback function for finding the list of available chars for the metsrig_chars enum. """
 		items = []
 		chars = [b.name.replace("Properties_Character_", "") for b in self.get_rig().pose.bones if "Properties_Character_" in b.name]
 		for char in chars:
@@ -659,7 +656,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				
 				# Why not just add the Value nodes themselves to the UI? Because they don't have min/max values, but nodegroup inputs/outputs do.
 				# Why hook up the input rather than the output? It makes no difference. It just made more sense to me this way.
-				#	Why not both?
 				for io in [controller_nodegroup.inputs, controller_nodegroup.outputs]:
 					for i in io:
 						prop_value = None
@@ -705,8 +701,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		self.update_bool_properties(context)
 
 	def change_characters(self, context):
-		""" Update callback of metsrig_chars enum.
-		"""
+		""" Update callback of metsrig_chars enum. """
 		rig = self.get_rig()
 		char_bone = rig.pose.bones.get("Properties_Character_"+self.metsrig_chars)
 		
@@ -851,8 +846,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		min=1, max=1048574)
 
 	def update_shrinkwrap_targets(self, context):
-		""" Update the target object of any Shrinkwrap constraints named "Shrinkwrap_Anus" or "Shrinkwrap_Vagina", to match the object selected in the UI.
-		"""
+		""" Update the target object of any Shrinkwrap constraints named "Shrinkwrap_Anus" or "Shrinkwrap_Vagina", to match the object selected in the UI. """
 		
 		rig = self.get_rig()
 	
@@ -884,8 +878,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		update=update_shrinkwrap_targets)
 	
 	def update_render_modifiers(self, context):
-		""" Callback function for render_modifiers. Toggles SubSurf, Solidify, Bevel modifiers according to input from the UI.
-		"""
+		""" Callback function for render_modifiers. Toggles SubSurf, Solidify, Bevel modifiers according to input from the UI. """
 		
 		for o in get_children_recursive(self.get_rig()):
 			try:	# Try block is here because for some reason if an object is deleted by user, this throws an error.
@@ -992,20 +985,17 @@ class MetsRigUI(bpy.types.Panel):
 	
 	@staticmethod
 	def safe_prop(ui, data, property, text="", text_ctxt="", translate=True, icon='NONE', expand=False, slider=False, toggle=False, icon_only=False, event=False, full_event=False, emboss=True, index=-1, icon_value=0):
-		""" I often want to call layout.prop() without raising an exception if the property doesn't exist.
-		"""
-		# TODO: Do I still?
+		""" For calling layout.prop() without raising an exception if the property doesn't exist. """
 		
 		if(hasattr(data, property) or property[2:-2] in data):
-			# TODO: Isn't this redundant? can't we just replace empty strings with None?
-			if(text!=""):	# Passing an empty string into prop(text) is not the same as passing None.
+			if(text!=""):	# Passing an empty string into prop(text) is not the same as not passing anything.
 				return ui.prop(data, property, text=text, text_ctxt=text_ctxt, translate=translate, icon=icon, expand=expand, slider=slider, toggle=toggle, icon_only=icon_only, event=event, full_event=full_event, emboss=emboss, index=index, icon_value=icon_value)
 			else:
 				return ui.prop(data, property, text_ctxt=text_ctxt, translate=translate, icon=icon, expand=expand, slider=slider, toggle=toggle, icon_only=icon_only, event=event, full_event=full_event, emboss=emboss, index=index, icon_value=icon_value)
 		
 class MetsRigUI_Properties(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_properties"
-	bl_label = "Characters and Outfits"
+	bl_label = "Outfits"
 
 	def draw(self, context):
 		layout = self.layout
@@ -1023,6 +1013,7 @@ class MetsRigUI_Properties(MetsRigUI):
 		outfit_properties_bone = obj.pose.bones.get("Properties_Outfit_"+outfit)
 
 		if(multiple_chars):
+			bl_label = "Characters and Outfits"
 			layout.prop(mets_props, 'metsrig_chars')
 		
 		def add_props(prop_owner):
