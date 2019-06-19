@@ -1,5 +1,5 @@
-"Version: 2.3"
-"Date: 14/06/19 (Last updated for Sombra)"
+"Version: 2.5"
+"Date: 19/06/19 (Last updated for Witcher)"
 
 import bpy
 from bpy.props import *
@@ -9,6 +9,11 @@ import webbrowser
 
 # Witcher3 Hairs
 	# We'll probably want to rename hairs, eg. from "Ciri_Default" to "Hair_Long_03" or whatever, since hairs aren't unique to a single character.
+
+# prop_hierarchy: allow for nested children
+# Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
+#	Except some objects get masked to make other versions of themselves, so some objects would have multiple masks to enable depending on rig properties.
+
 
 # Optimization
 	# Could try limiting update_meshes() and update_node_values() to only worry about changed properties.
@@ -24,10 +29,6 @@ import webbrowser
 # Linking/Appending
 	# The rig should detect when itself is a proxy and be aware of what rig it is a proxy of. Use that rig's children instead of the proxy armature's(presumably non-existent) children.
 	# It should also detect when multiple copies of itself exist. Currently the only thing that needs to be done for two rigs to work without messing each other up is to change the 'material_controller' to the correct one.
-
-def sombra_skinID(skinset, skin):
-	# TODO: make this obsolete.
-	return skinset + (skin-1 if skinset==1 else 19) + (skin-1 if skinset==2 else skinset>2) + (skin-1 if skinset==3 else skinset>3) - 0.5
 
 def get_children_recursive(obj, ret=[]):
 	# Return all the children and children of children of obj in a flat list.
@@ -78,9 +79,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		return ret
 	
 	def get_rig(self):
-		""" Find the rig that is using this instance.
-			Why not just check context.object? Callback functions get called even when the rig is not selected.
-		"""
+		""" Find the rig that is using this instance. """
 		for rig in self.get_rigs():
 			if(rig.data.metsrig_properties == self):
 				return rig
@@ -149,7 +148,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	def determine_visibility_by_expression(self, o):
 		""" Determine whether an object should be visible based on its Expression custom property.
 			Expressions will recognize any character or outfit property names as variables.
-			eg. "Outfit=='Ciri_Default' * Hood==1"
+			'Character', 'Outfit' and 'Hair' are special variables that will correspond to the currently selected things.
+			Example expression: "Outfit=='Ciri_Default' and Hood==1"
 			o: object to determine stuff on.
 		"""
 		rig = self.get_rig()
@@ -229,6 +229,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		
 	def determine_object_visibility(self, o):
 		""" Determine if an object should be visible based on its properties and the rig's current state. """
+
 		if('Expression' in o):
 			if( ('Hair' in o) or ('Outfit' in o) or ('Character' in o) ):
 				if( self.determine_visibility_by_properties(o) ):
@@ -247,7 +248,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	def determine_visibility_by_name(self, m, obj=None):
 		""" Determine whether the passed vertex group or shape key should be enabled, based on its name and the properties of the currently active outfit.
 			Naming convention example: M:Ciri_Default:Corset==1*Top==1
-			m: The vertex group or shape key (or anything with a "name").
+			m: The vertex group or shape key (or anything with a "name" property).
+			THIS CODE IS REALLY FUCKING BAD
 		"""
 		
 		if("M:" not in m.name):
@@ -374,7 +376,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		self.update_material_controller(char_bone)
 		self.update_material_controller(outfit_bone)
 
-		
 		def handle_group_node(group_node, active_texture=False):
 			""" For finding a node value connected even through reroute nodes, then muting unused texture nodes, and optionally changing the active node to this group_node's active texture. """
 			node = group_node
@@ -383,20 +384,32 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			while True:
 				if(len(node.inputs[0].links) > 0):
 					next_node = node.inputs[0].links[0].from_node
-					if(next_node.type != 'REROUTE'):
-						socket = node.inputs[0].links[0].from_socket
-						if(next_node.type == 'GROUP'):
-							# We will assume this is our special Material Controller nodegroup, whose nodetree input default values are exposed to the UI under Extras->Materials.
+					
+					if(next_node.type == 'REROUTE'):
+						node = next_node
+						continue
+					elif(next_node.type == 'GROUP'):
+						if('material_controller' in rig.data and 
+						next_node.node_tree.name == rig.data.material_controller):
+							# If this is our special Material Controller nodegroup, whose nodetree input default values are exposed to the UI under Extras->Materials.
 							# More info about this very confusing system is in update_material_controller().
 							socket = next_node.node_tree.inputs[socket.name]
+							break
+					elif(next_node.type == 'VALUE'):
 						node = next_node
+						socket = node.outputs[0]
 						break
-					node = next_node
+					else:
+						break
 				else:
 					break
 
-			selector_value = int(socket.default_value)
-			
+			selector_value = 1
+			if(n):
+				selector_value = int(socket.default_value)
+			else:
+				print("Warning: Selector value not found - Node probably not connected properly?")
+				group_node.label = 'Unconnected Selector'
 			# Setting active node for the sake of visual feedback when in Solid view.
 			if(len(group_node.inputs[selector_value].links) > 0 ):
 				if(active_texture):
@@ -453,10 +466,32 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				if("SELECTOR_GROUP" in n.name):
 					handle_group_node(n)
 	
+	def update_proxies(self, context):
+		# This is WIP code, doesn't work properly yet. TODO (non-proxy mesh doesn't get unhidden)
+		# Note: Proxy meshes must be named NameOfObject_Proxy.
+		
+		rig = self.get_rig()
+		use_proxy = rig.data.metsrig_properties.use_proxy
+		objs = get_children_recursive(rig)
+		for o in objs:
+			if('_Proxy' in o.name):
+				not_proxy_name = o.name.split("_Proxy")[0]
+				not_proxy = next((x for x in objs if x.name == not_proxy_name), None)
+				if(not_proxy):
+					if(not_proxy.hide_viewport):		# If the base object is hidden to begin with, the proxy should also be hidden.
+						o.hide_viewport = True
+					else:						# If the base object is visible
+						if(use_proxy):			# And proxy is enabled
+							not_proxy.hide_viewport = True # Hide the base object
+							o.hide_viewport = False # Unhide the proxy
+				else:
+					print("Warning: Proxy object has no base object: " + o.name)
+					o.hide_viewport = True
+
 	def update_meshes(self, context):
 		""" Executes the cloth swapping system by updating object visibilities, mask vertex groups and shape key values. """
 		
-		# TODO: This is kind of in a weird place here. I'm only calling it from here because post_depsgraph_update calls update_meshes.
+		# TODO: This is kind of in a weird place here. It belongs more in change_character() or change_outfit(), but I think putting it there causes an infinite loop of depsgraph update triggers. TODO: Still? So I'm calling it from here because post_depsgraph_update calls update_meshes.
 		# TODO: The only reason it's weird is because it's weird that we're giving special treatment to specifically body shape keys. Maybe at some point, when we need to, we can allow for any kind of shape key selector to be thrown into the UI, or generic shape keys to be assigned to characters/outfits, or something like that...
 		self.update_body_type(context)
 		
@@ -483,13 +518,14 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			for child in obj.children:
 				do_child(rig, child, hide)
 		
-		# Gathering relevant data
 		hide = False if self.show_all_meshes else None
 		
 		rig = self.get_rig()
 		# Recursively determining object visibilities
 		for child in rig.children:
 			do_child(rig, child, hide)
+		
+		#self.update_proxies(context)
 			
 	def update_bone_location(self, context):
 		""" Custom bone locations for each character can be specified in any bone in the rig, by adding a custom property to the bone named "BoneName_CharacterName".
@@ -498,6 +534,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		"""
 		
 		rig = self.get_rig()
+		rig.data.use_mirror_x = False	# TODO: Currently only the Witcher rig uses this function, and that rig is assymetrical. This causes this function to break stuff if mirroring is turned on. In the future, might need to turn this into a "symmetry" property.
 		orig_mode = rig.mode
 		bpy.ops.object.mode_set(mode='EDIT')
 		
@@ -506,16 +543,16 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		# Moving the bones
 		for b in rig.pose.bones:
 			# The custom properties' names that store the bone locations are prefixed with the bone's name, eg. "Eye.L_Yennefer"
-			# This is necessary because of this bug: https://developer.blender.org/T61386 
+			# This is necessary because of this bug: https://developer.blender.org/T61386
 			# If it ever gets fixed, next line can be changed (along with the custom property names)
 			chars = [p.replace(b.name + "_", "") for p in b.keys()]	
 			if(active_character not in chars): continue
 			edit_bone = rig.data.edit_bones.get(b.name)
 			char_vector = b[b.name + "_" + active_character].to_list()
-			tail_relative = edit_bone.tail - edit_bone.head
+			offset = edit_bone.tail - edit_bone.head
 			edit_bone.head = char_vector
-			edit_bone.tail = edit_bone.head + tail_relative
-		
+			edit_bone.tail = edit_bone.head + offset
+
 		bpy.ops.object.mode_set(mode=orig_mode)
 	
 	def update_bone_layers(self, context):
@@ -900,6 +937,10 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='show_all_meshes',
 		description='Enable all child meshes of this armature',
 		update=update_meshes)
+	use_proxy: BoolProperty(
+		name='use_proxy',
+		description='Use Proxy Meshes',
+		update=update_meshes)
 	
 	def update_ik(self, context):
 		""" Callback function for FK/IK switch values.
@@ -1211,6 +1252,8 @@ class MetsRigUI_Extras(MetsRigUI):
 		layout.row().prop(mets_props, 'show_all_meshes', text='Enable All Meshes', toggle=True)
 		render_modifiers = mets_props.render_modifiers
 		layout.row().prop(mets_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
+		use_proxy = mets_props.use_proxy
+		layout.row().prop(mets_props, 'use_proxy', text='Use Proxies', toggle=True)
 
 class MetsRigUI_Extras_Materials(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras_materials"
