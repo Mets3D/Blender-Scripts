@@ -1,5 +1,5 @@
 "Version: 2.5"
-"Date: 19/06/19 (Last updated for Witcher)"
+"Date: 27/06/19 (Last updated for Alice)"
 
 import bpy
 from bpy.props import *
@@ -728,6 +728,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			pass
 			#rig.data['body'] = 0	#TODO make this work better...
 
+		if('Hair' in char_bone):
+			self.metsrig_hairs = char_bone['Hair'].split(", ")[0]
 		if('Hair' in outfit_bone):
 			self.metsrig_hairs = outfit_bone['Hair']
 		else:
@@ -741,9 +743,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		""" Update callback of metsrig_chars enum. """
 		rig = self.get_rig()
 		char_bone = rig.pose.bones.get("Properties_Character_"+self.metsrig_chars)
-		
-		if('Hair' in char_bone):
-			self.metsrig_hairs = char_bone['Hair'].split(", ")[0]
 		
 		self.update_bone_location(context)
 		self.change_outfit(context)				# Just to make sure the active outfit isn't None.
