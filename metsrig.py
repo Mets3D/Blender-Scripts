@@ -1,5 +1,5 @@
-"Version: 2.5"
-"Date: 27/06/19 (Last updated for Alice)"
+"Version: 2.6"
+"Date: 04/07/19 (Last updated for Alice)"
 
 import bpy
 from bpy.props import *
@@ -1088,7 +1088,7 @@ class MetsRigUI_Properties(MetsRigUI):
 							bp = bool_props[parent_prop_name_without_values]
 							layout.prop(bp, 'value', toggle=True, text=bp.name, icon=icon)
 						else:
-							layout.prop(prop_owner, '["'+parent_prop_name_without_values+'"]')
+							layout.prop(prop_owner, '["'+parent_prop_name_without_values+'"]', slider=True)
 					
 					# Marking parent prop as done drawing.
 					props_done.append(parent_prop_name_without_values)
@@ -1114,7 +1114,7 @@ class MetsRigUI_Properties(MetsRigUI):
 				if( prop_name in props_done or prop_name.startswith("_") ): continue
 				# Int Props
 				if(prop_name not in bool_props and type(prop_owner[prop_name]) in [int, float] ):
-					layout.prop(prop_owner, '["'+prop_name+'"]')
+					layout.prop(prop_owner, '["'+prop_name+'"]', slider=True)
 			# Bool Props
 			for bp in bool_props:
 				if(bp.name in prop_owner.keys() and bp.name not in props_done):
