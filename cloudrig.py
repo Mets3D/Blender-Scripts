@@ -1058,6 +1058,12 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		description='Cycle between Right Leg IK Parents',
 		min=0,
 		max=3)
+	
+	# Head Look
+	head_look: BoolProperty(
+		name='Head Look',
+		description='Head Look',
+		update=update_ik)
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -1245,6 +1251,8 @@ class MetsRigUI_IKFK(MetsRigUI):
 		rig = context.object
 		mets_props = rig.data.metsrig_properties
 		
+		# TODO improve the overall organization for all these buttons.
+		
 		### FK/IK Switch Sliders
 		layout.label(text='FK/IK Switches')
 
@@ -1326,6 +1334,19 @@ class MetsRigUI_IKFK(MetsRigUI):
 		pole_row = layout.row()
 		pole_row.column().prop(mets_props, 'ik_pole_follow_hands', toggle=True, text='Arms')
 		pole_row.column().prop(mets_props, 'ik_pole_follow_feet', toggle=True, text='Legs')
+
+		# Head & Neck Settings
+		layout.label(text='Head Settings')
+		head_bone = rig.data.bones.get("AIM-Head")
+		neck_bone = rig.data.bones.get("DEF-Neck")
+		head_pose_bone = rig.pose.bones.get("AIM-Head")
+		aim_constraint = head_pose_bone.constraints.get('head_look')
+		if(neck_bone):
+			layout.row().prop(neck_bone, 'use_inherit_rotation', toggle=True, text='Neck Hinge')
+		if(head_bone):
+			layout.row().prop(head_bone, 'use_inherit_rotation', toggle=True, text='Head Hinge')
+			if(aim_constraint):
+				layout.row().prop(mets_props, 'head_look', toggle=True, text='Head Look')
 
 class MetsRigUI_Extras(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras"
