@@ -107,12 +107,12 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			
 			if(character_bone):
 				save_props(character_bone, 0)
-			else:
-				print("Warning: Character bone for " + mets_props.metsrig_chars + " not found. It needs to be named 'Properties_Character_CharName'.")
+			#else:
+			#	print("Warning: Character bone for " + mets_props.metsrig_chars + " not found. It needs to be named 'Properties_Character_CharName'.")
 			if(outfit_bone):
 				save_props(outfit_bone, 1)
-			else:
-				print("Warning: Outfit bone for " + mets_props.metsrig_outfits + " not found. It should be named 'Properties_Outfit_OutfitName' and its parent should be the character bone.")
+			#else:
+			#	print("Warning: Outfit bone for " + mets_props.metsrig_outfits + " not found. It should be named 'Properties_Outfit_OutfitName' and its parent should be the character bone.")
 			save_props(rig.data, 2)
 			
 			# Retrieving the list of dictionaries from the ID Property - have to use to_dict() on each dictionary due to the way ID properties... are.
@@ -474,12 +474,12 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				not_proxy_name = o.name.split("_Proxy")[0]
 				not_proxy = next((x for x in objs if x.name == not_proxy_name), None)
 				if(not_proxy):
-					if(not_proxy.hide_viewport):		# If the base object is hidden to begin with, the proxy should also be hidden.
+					if(not_proxy.hide_viewport):			# If the base object is hidden to begin with, the proxy should also be hidden.
 						o.hide_viewport = True
-					else:						# If the base object is visible
-						if(use_proxy):			# And proxy is enabled
-							not_proxy.hide_viewport = True # Hide the base object
-							o.hide_viewport = False # Unhide the proxy
+					else:									# If the base object is visible
+						if(use_proxy):						# And proxy is enabled
+							not_proxy.hide_viewport = True 	# Hide the base object
+							o.hide_viewport = False 		# Unhide the proxy
 				else:
 					print("Warning: Proxy object has no base object: " + o.name)
 					o.hide_viewport = True
@@ -624,7 +624,11 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		items = []
 		for i, outfit in enumerate(outfits):
 			items.append((outfit, outfit, outfit, i))	# Identifier, name, description, can all be the character name.
-			
+		
+		# If no outfits were found, don't return an empty list so the console doesn't spam "'0' matches no enum" warnings.
+		if(items==[]):
+			return [(('identifier', 'name', 'description'))]
+		
 		return items
 	
 	def chars(self, context):
@@ -634,6 +638,11 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		for char in chars:
 			if(char=='Generic'): continue
 			items.append((char, char, char))
+		
+		# If no characters were found, don't return an empty list so the console doesn't spam "'0' matches no enum" warnings.
+		if(items==[]):
+			return [(('identifier', 'name', 'description'))]
+		
 		return items
 	
 	def hairs(self, context):
@@ -1056,6 +1065,7 @@ class MetsRigUI(bpy.types.Panel):
 		if(context.object != None and
 			context.object in get_rigs()):
 				return True
+		return False
 	
 	def draw(self, context):
 		layout = self.layout
@@ -1063,6 +1073,30 @@ class MetsRigUI(bpy.types.Panel):
 class MetsRigUI_Properties(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_properties"
 	bl_label = "Outfits"
+
+	@classmethod
+	def poll(cls, context):
+		if(not super().poll(context)):
+			return False
+		# Only display this panel if there is either an outfit with options, multiple outfits, or multiple characters.
+		obj = context.object
+		data = obj.data
+		mets_props = data.metsrig_properties
+		bool_props = data.metsrig_boolproperties
+		multiple_chars = len(mets_props.chars(context)) > 1	# Whether the rig has multiple characters. If not, we won't display Character and OutfitSet menus.
+		multiple_outfits = len(mets_props.outfits(context)) > 1
+		outfit_properties_bone = obj.pose.bones.get("Properties_Outfit_"+mets_props.metsrig_outfits)
+		character_properties_bone = obj.pose.bones.get("Properties_Character_"+mets_props.metsrig_chars)
+		outfit_properties_exist = False
+		character_properties_exist = False
+		if(outfit_properties_bone):
+			keys = [k for k in outfit_properties_bone.keys() if not k.startswith("_")]
+			outfit_properties_exist = len(keys) > 0
+		if(character_properties_bone):
+			keys = [k for k in character_properties_bone.keys() if not k.startswith("_")]
+			character_properties_exist = len(keys) > 0
+
+		return multiple_chars or multiple_outfits or outfit_properties_exist or character_properties_exist
 
 	def draw(self, context):
 		layout = self.layout
@@ -1072,7 +1106,7 @@ class MetsRigUI_Properties(MetsRigUI):
 		bool_props = data.metsrig_boolproperties
 		
 		character = mets_props.metsrig_chars
-		multiple_chars = len(mets_props.chars(context)) > 1	# Whether the rig has multiple characters. If not, we won't display Character and OutfitSet menus.
+		multiple_chars = len(mets_props.chars(context)) > 1
 		
 		character_properties_bone = obj.pose.bones.get("Properties_Character_"+character)
 		outfitset = mets_props.metsrig_sets
@@ -1398,7 +1432,7 @@ class MetsRigUI_Links(MetsRigUI):
 		layout.operator('ops.open_link', text="Blender Chat").url = self.url_blender_chat
 	
 classes = (
-	#MetsRigUI_Properties, 
+	MetsRigUI_Properties, 
 	MetsRigUI_Layers, 
 	MetsRigUI_IKFK, 
 	MetsRigUI_Extras, 
