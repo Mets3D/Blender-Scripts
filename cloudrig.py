@@ -1,11 +1,15 @@
-"Version: 1.0"
-"03/07/19"
+"Version: 1.1"
+"05/07/19"
 
 import bpy
 from bpy.props import *
 from mathutils import Vector
 import time
 import webbrowser
+
+#TODO:
+# Physics settings should only show up if a Physics collection is specified in the armature's custom properties. This could be called 'phys_collection'.
+# Instead of checking for any collection named 'phys' belonging to the armature's collection(which is super dirty), we should check for any collection in the scene matching the value of that custom property.
 
 # prop_hierarchy: allow for nested children
 # Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
@@ -1350,8 +1354,13 @@ class MetsRigUI_Extras_Materials(MetsRigUI):
 	
 	@classmethod
 	def poll(cls, context):
+		if(not super().poll(context)):
+			return False
 		rig = context.object
-		return 'material_controller' in rig.data
+		if('material_controller' not in rig.data):
+			return False
+		mat_ctr_name = rig.data['material_controller']
+		return bpy.data.node_groups.get(str(mat_ctr_name)) != None
 		
 	def draw(self, context):
 		layout = self.layout
