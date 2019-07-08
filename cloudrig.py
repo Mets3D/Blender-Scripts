@@ -911,34 +911,38 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		for b in rig.pose.bones:
 			for c in b.constraints:
 				name = c.name.lower()
-
-				if(not self.ik_per_finger):
-					for fn in finger_names:
-						if(fn in name):
-							if("_ik.l" in name):
-								name = name.replace(fn+"_ik.l", "ik_fingers_left")
-							elif("_ik.r" in name):
-								name = name.replace(fn+"_ik.R", "ik_fingers_right")
-							break
 				
 				if(hasattr(self, name)):
 					result = getattr(self, name)
 					c.mute = result<=0
-					c.influence = result
 					continue
 				
-				if(", " in name):
-					names = name.split(", ")
-					result = 1.0
-					for n in names:
-						if(hasattr(self, n)):
-							value = getattr(self, n)
-							if(value==0):
-								result=0
+				names = name.split(", ")
+				result = 1.0
+				found = False
+				for n in names:
+					if(not self.ik_per_finger):
+						for fn in finger_names:
+							if(fn in n):
+								if("_ik.l" in n):
+									found=True
+									n = n.replace(fn+"_ik.l", "ik_fingers_left")
+								elif("_ik.r" in n):
+									found=True
+									n = n.replace(fn+"_ik.R", "ik_fingers_right")
 								break
-							result = result * value
+
+					if(hasattr(self, n)):
+						found=True
+						value = getattr(self, n)
+						if(value==0):
+							result=0
+							break
+						result = result * value
+				if(found):
 					c.mute = result<=0
-					c.influence = result
+					if(result not in [0, 1]):
+						c.influence = result
 	
 	### FK/IK Properties ###
 
@@ -992,10 +996,13 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='Stretchy Arms',
 		description='Ik Stretch Arms',
 		update=update_ik)
-	
 	ik_stretch_legs: BoolProperty(
 		name='Stretchy Legs',
 		description='Ik Stretch Legs',
+		update=update_ik)
+	ik_stretch_spine: BoolProperty(
+		name='Stretchy Spine',
+		description='Ik Stretch Spine',
 		update=update_ik)
 
 	# IK Hinge
@@ -1221,25 +1228,25 @@ class MetsRigUI_Layers(MetsRigUI):
 		
 		row_face = layout.row()
 		row_face.column().prop(data, 'layers', index=3, toggle=True, text='Face Controls')
-		row_face.column().prop(data, 'layers', index=19, toggle=True, text='Face Deform')
+		#row_face.column().prop(data, 'layers', index=19, toggle=True, text='Face Deform')
 		
 		row_fingers = layout.row()
-		row_fingers.column().prop(data, 'layers', index=4, toggle=True, text='Finger Controls')
-		row_fingers.column().prop(data, 'layers', index=20, toggle=True, text='Finger Deform')
+		row_fingers.column().prop(data, 'layers', index=21, toggle=True, text='Finger FK')
+		row_fingers.column().prop(data, 'layers', index=22, toggle=True, text='Finger IK')
+		row_fingers.column().prop(data, 'layers', index=23, toggle=True, text='Finger Stretch')
 		
 		layout.row().prop(data, 'layers', index=5, toggle=True, text='Hair')
 		layout.row().prop(data, 'layers', index=6, toggle=True, text='Clothes')
 		
 		layout.separator()
-		
-		layout.row().prop(data, 'layers', index=29, toggle=True, text='IK Mechanism')
-		
-		layout.separator()
-		
-		row_deform = layout.row()
-		row_deform.prop(data, 'layers', index=30, toggle=True, text='Deform Main')
-		row_deform.prop(data, 'layers', index=31, toggle=True, text='Deform Secondary')
-		row_deform.prop(data, 'layers', index=28, toggle=True, text='Deform Unused')
+		if(False):
+			dev_box = layout.box()
+
+			dev_box.row().prop(data, 'layers', index=29, toggle=True, text='IK Mechanism')
+			
+			row_deform = dev_box.row()
+			row_deform.prop(data, 'layers', index=30, toggle=True, text='Deform Main')
+			row_deform.prop(data, 'layers', index=31, toggle=True, text='Deform Adjust')
 
 class MetsRigUI_IKFK(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_ik"
@@ -1282,12 +1289,12 @@ class MetsRigUI_IKFK(MetsRigUI):
 					found=False
 					for b in rig.pose.bones:
 						for c in b.constraints:
-							if(c.name.lower() == cn+sn):
-								clean_name = c.name.lower().capitalize()
+							if(cn+sn in c.name.lower()):
+								clean_name = cn+sn
 								if(clean_name.endswith("_ik.l")):
-									clean_name = "L " + clean_name.replace("_ik.l", "")
+									clean_name = "L " + clean_name.replace("_ik.l", "").capitalize()
 								if(clean_name.endswith("_ik.r")):
-									clean_name = "R " + clean_name.replace("_ik.r", "")
+									clean_name = "R " + clean_name.replace("_ik.r", "").capitalize()
 								finger_row.prop(c, 'influence', slider=True, text=clean_name)
 								found=True
 								break
@@ -1300,6 +1307,7 @@ class MetsRigUI_IKFK(MetsRigUI):
 		
 		# IK Stretch
 		layout.label(text='IK Stretch')
+		layout.row().prop(mets_props, 'ik_stretch_spine', toggle=True, text='Stretchy Spine')
 		layout.row().prop(mets_props, 'ik_stretch_arms', toggle=True, text='Stretchy Arms')
 		layout.row().prop(mets_props, 'ik_stretch_legs', toggle=True, text='Stretchy Legs')
 
