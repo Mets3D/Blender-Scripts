@@ -919,35 +919,32 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		finger_names = ["thumb", "index", "middle", "ring", "pinky"]
 		for b in rig.pose.bones:
 			for c in b.constraints:
-				name = c.name.lower()
+				# Handling the constraint name as an expression, where any metsrig property name can be referenced by its name.
+				expression = c.name.lower()
 				
-				if(hasattr(self, name)):
-					result = getattr(self, name)
-					c.mute = result<=0
-					c.influence = result
-					continue
+				# For fingers, when per-finger IK is disabled, we want to replace them with the overall fingers_left/right variable
+				if(not self.ik_per_finger):
+					for fn in finger_names:
+						if(fn in expression):
+							if("_ik.l" in expression):
+								expression = expression.replace(fn+"_ik.l", "ik_fingers_left")
+							elif("_ik.r" in name):
+								expression = expression.replace(fn+"_ik.R", "ik_fingers_right")
+							break
 				
-				names = name.split(", ")
-				result = 1.0
-				found = False
-				for n in names:
-					if(not self.ik_per_finger):
-						for fn in finger_names:
-							if(fn in n):
-								if("_ik.l" in n):
-									found=True
-									n = n.replace(fn+"_ik.l", "ik_fingers_left")
-								elif("_ik.r" in n):
-									found=True
-									n = n.replace(fn+"_ik.R", "ik_fingers_right")
-								break
-					if(hasattr(self, n)):
-						found=True
-						value = getattr(self, n)
-						result = result * value
-				if(found):
-					c.mute = result<=0
+				# Replacing variable names with their values
+				metsprops = rig.data.metsrig_properties
+				for k in metsprops.keys():
+					expression = expression.replace(k, str(metsprops[k]))
+				
+				# Evaluating the expression and setting the constraint influence to the result
+				try:
+					result = eval(expression)
 					c.influence = result
+					c.mute = result <= 0
+				except:
+					pass	# Most constraints will fail, since most constraints don't have expressions in their names. This makes error handling, well, non-existent, which is not ideal. TODO.
+				
 	
 	### FK/IK Properties ###
 
