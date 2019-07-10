@@ -11,6 +11,16 @@ import webbrowser
 # Physics settings should only show up if a Physics collection is specified in the armature's custom properties. This could be called 'phys_collection'.
 # Instead of checking for any collection named 'phys' belonging to the armature's collection(which is super dirty), we should check for any collection in the scene matching the value of that custom property.
 
+# Modularity
+# The rig script and UI should start functioning as soon as the metsrig custom property is added to the armature.
+# Every other information should be able to be provided without the rig creator having to hard code it(although some python syntax will probably have to be used in the custom properties), such as characters, outfits, bone layer names and layout(TODO).
+
+# Constraints
+# TODO: If a constraint has multiple "names" but is meant to have an influence other than 0 or 1, and only its visibility should be toggled, the influence gets changed anyways.
+# Might need to do a thing where the constraint name is instead an expression for the influence. This would make more sense considering other things as well.
+# Alternatively, these constraints could just have a driver on their influence that forces it to a constant value.
+# But at that point, we might as well just have a driver on the influence that sets the damn influence. But that wouldn't align with the modular design of the rig which is still WIP.
+
 # prop_hierarchy: allow for nested children
 # Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
 #	Except some objects get masked to make other versions of themselves, so some objects would have multiple masks to enable depending on rig properties.
@@ -904,7 +914,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			Finger IK constraints must be named according to the 'finger_names' list and ending in .L/.R, eg. "Thumb_IK.L".
 			Hinge IK constraints must be named according to the 'hinge_prop_names'.
 		"""
-
 		rig = self.get_rig()
 		
 		finger_names = ["thumb", "index", "middle", "ring", "pinky"]
@@ -915,6 +924,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				if(hasattr(self, name)):
 					result = getattr(self, name)
 					c.mute = result<=0
+					c.influence = result
 					continue
 				
 				names = name.split(", ")
@@ -931,18 +941,13 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 									found=True
 									n = n.replace(fn+"_ik.R", "ik_fingers_right")
 								break
-
 					if(hasattr(self, n)):
 						found=True
 						value = getattr(self, n)
-						if(value==0):
-							result=0
-							break
 						result = result * value
 				if(found):
 					c.mute = result<=0
-					if(result not in [0, 1]):
-						c.influence = result
+					c.influence = result
 	
 	### FK/IK Properties ###
 
@@ -1000,9 +1005,11 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='Stretchy Legs',
 		description='Ik Stretch Legs',
 		update=update_ik)
-	ik_stretch_spine: BoolProperty(
+	ik_stretch_spine: FloatProperty(
 		name='Stretchy Spine',
 		description='Ik Stretch Spine',
+		min=0,
+		max=1,
 		update=update_ik)
 
 	# IK Hinge
@@ -1071,6 +1078,11 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='Head Look',
 		description='Head Look',
 		update=update_ik)
+	head_target_parents: IntProperty(
+		name='Head Target Parent',
+		description='Cycle between Head Target Parents',
+		min=0,
+		max=2)
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -1307,7 +1319,7 @@ class MetsRigUI_IKFK(MetsRigUI):
 		
 		# IK Stretch
 		layout.label(text='IK Stretch')
-		layout.row().prop(mets_props, 'ik_stretch_spine', toggle=True, text='Stretchy Spine')
+		layout.row().prop(mets_props, 'ik_stretch_spine', slider=True, text='Stretchy Spine')
 		layout.row().prop(mets_props, 'ik_stretch_arms', toggle=True, text='Stretchy Arms')
 		layout.row().prop(mets_props, 'ik_stretch_legs', toggle=True, text='Stretchy Legs')
 
@@ -1320,7 +1332,27 @@ class MetsRigUI_IKFK(MetsRigUI):
 		foot_row.column().prop(mets_props, 'ik_hinge_foot_left', toggle=True, text='Left Foot')
 		foot_row.column().prop(mets_props, 'ik_hinge_foot_right', toggle=True, text='Right Foot')
 
-		# IK Hinge
+		# FK Hinge
+		left_fk_shoulder_bone = rig.data.bones.get('FK-Shoulder.L')
+		left_fk_thigh_bone = rig.data.bones.get('FK-Thigh.L')
+		right_fk_shoulder_bone = rig.data.bones.get('FK-Shoulder.R')
+		right_fk_thigh_bone = rig.data.bones.get('FK-Thigh.R')
+		if(right_fk_shoulder_bone or right_fk_thigh_bone or left_fk_shoulder_bone or left_fk_thigh_bone):
+			layout.label(text='FK Hinge')
+			if(left_fk_shoulder_bone or right_fk_shoulder_bone):
+				arm_row = layout.row()
+				if(left_fk_shoulder_bone):
+					arm_row.column().prop(left_fk_shoulder_bone, 'use_inherit_rotation', toggle=True, text='Left Arm')
+				if(right_fk_shoulder_bone):
+					arm_row.column().prop(right_fk_shoulder_bone, 'use_inherit_rotation', toggle=True, text='Right Arm')
+			if(left_fk_thigh_bone or right_fk_thigh_bone):
+				leg_row = layout.row()
+				if(left_fk_thigh_bone):
+					leg_row.column().prop(left_fk_thigh_bone, 'use_inherit_rotation', toggle=True, text='Left Leg')
+				if(right_fk_thigh_bone):
+					leg_row.column().prop(right_fk_thigh_bone, 'use_inherit_rotation', toggle=True, text='Right Leg')
+
+		# IK Auto Clavicle
 		layout.label(text='IK Auto Clavicle')
 		hand_row = layout.row()
 		hand_row.column().prop(mets_props, 'ik_auto_clav_left', toggle=True, text='Left Clavicle')
@@ -1355,6 +1387,8 @@ class MetsRigUI_IKFK(MetsRigUI):
 			layout.row().prop(head_bone, 'use_inherit_rotation', toggle=True, text='Head Hinge')
 			if(aim_constraint):
 				layout.row().prop(mets_props, 'head_look', toggle=True, text='Head Look')
+		head_parents = ['Root', 'Pelvis', 'Chest', 'Neck', 'Head']
+		layout.row().prop(mets_props, 'head_target_parents', slider=True, text='Head Target Parent ['+head_parents[mets_props.head_target_parents] + "]")
 
 class MetsRigUI_Extras(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras"
