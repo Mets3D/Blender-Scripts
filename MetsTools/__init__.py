@@ -43,10 +43,11 @@ from . import join_as_shape_key_by_uvs
 from . import force_apply_mirror
 from . import rename_skeleton_to_metsrig
 from . import mirror_constraints
+from . import make_right_vgroups
 
 def register():
 	from bpy.utils import register_class
-	create_lightmap_uvs.register()
+	#create_lightmap_uvs.register()
 	mark_sharp_by_autosmooth.register()
 	make_physics_bones.register()
 	cleanup_blend.register()
@@ -59,6 +60,7 @@ def register():
 	force_apply_mirror.register()
 	rename_skeleton_to_metsrig.register()
 	mirror_constraints.register()
+	make_right_vgroups.register()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.append(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.append(draw_func_MarkSharpByAutoSmooth)
@@ -66,7 +68,7 @@ def register():
 
 def unregister():
 	from bpy.utils import unregister_class
-	create_lightmap_uvs.unregister()
+	#create_lightmap_uvs.unregister()
 	mark_sharp_by_autosmooth.unregister()
 	make_physics_bones.unregister()
 	cleanup_blend.unregister()
@@ -79,6 +81,7 @@ def unregister():
 	force_apply_mirror.unregister()
 	rename_skeleton_to_metsrig.unregister()
 	mirror_constraints.unregister()
+	make_right_vgroups.unregister()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.remove(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.remove(draw_func_MarkSharpByAutoSmooth)

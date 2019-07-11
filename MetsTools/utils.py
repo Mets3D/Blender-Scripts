@@ -34,9 +34,11 @@ def uniform_scale():
 		o.dimensions = [1, 1, 1]
 		o.scale = [min(o.scale), min(o.scale), min(o.scale)]
 
-def flip_name(from_name):
+def flip_name(from_name, only=True, must_change=False):
 	# based on BLI_string_flip_side_name in https://developer.blender.org/diffusion/B/browse/master/source/blender/blenlib/intern/string_utils.c
-	
+	# If only==True, only replace one occurrence of the side identifier in the string, eg. "Left_Eyelid.L" would become "Left_Eyelid.R", if only==False, it will return "Right_Eyelid.R"
+	# if must_change==True, raise an error if the string couldn't be flipped.
+
 	l = len(from_name)	# Number of characters from left to right, that we still care about. At first we care about all of them.
 	
 	# Handling .### cases
@@ -102,11 +104,16 @@ def flip_name(from_name):
 	for list_idx in range(1, 3):
 		for side_idx, side in enumerate(lists[list_idx]):
 			if(side in name):
-				# If it occurs more than once, only replace the last occurrence.
-				before_last_side = "".join(name.split(side)[:-1])
-				after_last_side = name.split(side)[-1]
 				opp_side = lists[list_idx-1][side_idx]
-				return before_last_side + opp_side + after_last_side + from_name[l:]
+				if(only):
+					# If it occurs more than once, only replace the last occurrence.
+					before_last_side = "".join(name.split(side)[:-1])
+					after_last_side = name.split(side)[-1]
+					return before_last_side + opp_side + after_last_side + from_name[l:]
+				else:
+					# Replace all occurences.
+					return name.replace(side, opp_side)
 	
-	# If nothing was found, return the original string.
+	# If nothing was found, return the original string, unless something must be found.
+	assert must_change==False, "Failed to flip string: " + from_name
 	return from_name

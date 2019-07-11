@@ -50,14 +50,14 @@ flip_z = False
 armature = bpy.context.object
 bones = armature.pose.bones
 
-from_bone = bpy.context.active_bone.name						# Bone to copy drivers from
-to_bones = bpy.context.selected_pose_bones						# Bones to copy drivers to
+from_bone = bpy.context.active_bone					# Bone to copy drivers from
+to_bones = bpy.context.selected_pose_bones			# Bones to copy drivers to
 
 for to_bone in to_bones:
-	if(to_bone.name == from_bone):continue
+	if(to_bone is from_bone):continue
 
 	for d in armature.animation_data.drivers:					# Look through every driver on the armature
-		if('pose.bones["' + from_bone + '"]' in d.data_path):	# If the driver belongs to the active bone
+		if('pose.bones["' + from_bone.name + '"]' in d.data_path):	# If the driver belongs to the active bone
 			### Copying driver to selected bone...
 			
 			# The way drivers on bones work is weird af. You have to create the driver relative to the bone, but you have to read the driver relative to the armature. So d.data_path might look like "pose.bones["bone_name"].bone_property" but when we create a driver we just need the "bone_property" part.

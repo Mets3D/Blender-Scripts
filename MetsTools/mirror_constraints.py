@@ -12,6 +12,9 @@ def copy_attributes(from_thing, to_thing):
 			except AttributeError:	# Read Only properties
 				continue
 
+def mirror_drivers(from_bone, to_bone, property):
+
+
 class XMirrorConstraints(bpy.types.Operator):
 	""" Mirror constraints to the opposite of all selected bones. """
 	bl_idname = "armature.x_mirror_constraints"
@@ -20,34 +23,37 @@ class XMirrorConstraints(bpy.types.Operator):
 
 	def execute(self, context):
 		for b in context.selected_pose_bones:
-			#TODO: Finish adding all the constraint types.
 			#TODO: Should also make sure constraints are in the correct order. - They should already be, though. Are we not wiping constraints before copying them? I thought we did.
 			#TODO: Make a separate operator for "splitting" constraints in left/right parts. (by halving their influence, then mirror copying them onto the same bone)
-			#TODO: mirror constraint's name.
-			#TODO: copy axis locks and rotation mode.
-
-			# would be cool if we could mirror on any axis, not just X. How on earth would that work though.
-			# Maybe this can be done as an afterthought. Consider that during X mirroring, the X axis is the "mirror" axis, the Y axis is the forward axis and Z is the up axis.
-			# If we wanted to mirror on the Y axis, it would be Y=Mirror, X = Forward, Z = Up
-			# For Z axis mirroring though, X and Y are interchangable, are they not? I mean, neither of them are strictly forward or up. One of them is FOrward and the other is Left. 
+			#TODO: Mirror drivers...
 
 			armature = context.object
 
 			flipped_name = utils.flip_name(b.name)
 			opp_b = armature.pose.bones.get(flipped_name)
+			opp_b.rotation_mode = b.rotation_mode
+			opp_b.lock_rotation = b.lock_rotation
+			opp_b.lock_rotation_w = b.lock_rotation_w
+			opp_b.lock_scale = b.lock_scale
+			opp_b.lock_location = b.lock_location
 			
 			data_b = armature.data.bones.get(b.name)
 			opp_data_b = armature.data.bones.get(opp_b.name)
 
+			# Wipe any existing constraints on the opposite side bone.
+			for c in opp_b.constraints:
+				opp_b.constraints.remove(c)
+
+			# Mirror constraints.
 			for c in b.constraints:
-				opp_c = opp_b.constraints.get(c.name)
-				if(not opp_c): 
-					opp_c = opp_b.constraints.new(type=c.type)
+				flipped_constraint_name = utils.flip_name(c.name, only=False)
+				opp_c = opp_b.constraints.new(type=c.type)
+				opp_c.name = flipped_constraint_name
 				
 				copy_attributes(c, opp_c)
 					
 				# Targets
-				opp_c.target = c.target # TODO: could argue that this should be attempted to be flipped as well.
+				opp_c.target = c.target # TODO: could argue that this should be attempted to be flipped as well, but for current use cases this is the armature object 100% of the time.
 				opp_subtarget = utils.flip_name(c.subtarget)
 				opp_c.subtarget = opp_subtarget
 				
