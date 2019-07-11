@@ -120,12 +120,14 @@ class XMirrorConstraints(bpy.types.Operator):
 				copy_attributes(c, opp_c)
 				
 				mirror_drivers(b, opp_b, c, opp_c)
-
 				# Targets
 				opp_c.target = c.target # TODO: could argue that this should be attempted to be flipped as well, but for current use cases this is the armature object 100% of the time.
-				opp_subtarget = utils.flip_name(c.subtarget)
-				opp_c.subtarget = opp_subtarget
+				opp_c.subtarget = utils.flip_name(c.subtarget)
 				
+				if(c.type=='IK'):
+					opp_c.pole_target = c.pole_target
+					opp_c.pole_subtarget = utils.flip_name(c.subtarget)
+
 				if(c.type=='TRANSFORM'):
 					###### SOURCES #######
 					
