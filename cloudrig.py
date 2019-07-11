@@ -1039,13 +1039,17 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		update=update_ik)
 	
 	# IK Pole Follow
-	ik_pole_follow_hands: BoolProperty(
+	ik_pole_follow_hands: FloatProperty(
 		name='IK Poles Follow Hands',
 		description='IK Poles Follow Hands',
+		min=0,
+		max=1,
 		update=update_ik)
-	ik_pole_follow_feet: BoolProperty(
+	ik_pole_follow_feet: FloatProperty(
 		name='IK Poles Follow Feet',
 		description='IK Poles Follow Feet',
+		min=0,
+		max=1,
 		update=update_ik)
 
 	# IK Parents (These values are currently just used by drivers on Child Of constraints, since update_ik() doesn't support integer checks atm.)
@@ -1369,8 +1373,8 @@ class MetsRigUI_IKFK(MetsRigUI):
 		# IK Pole Follow
 		layout.label(text='IK Pole Follow')
 		pole_row = layout.row()
-		pole_row.column().prop(mets_props, 'ik_pole_follow_hands', toggle=True, text='Arms')
-		pole_row.column().prop(mets_props, 'ik_pole_follow_feet', toggle=True, text='Legs')
+		pole_row.column().prop(mets_props, 'ik_pole_follow_hands', slider=True, text='Arms')
+		pole_row.column().prop(mets_props, 'ik_pole_follow_feet', slider=True, text='Legs')
 
 		# Head & Neck Settings
 		layout.label(text='Head Settings')
