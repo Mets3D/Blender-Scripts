@@ -14,28 +14,32 @@ def copy_attributes(from_thing, to_thing):
 			except AttributeError:	# Read Only properties
 				continue
 
-def mirror_drivers(from_bone, to_bone, from_constraint=None, to_constraint=None):
+def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constraint=None):
 	# Creates a mirrored driver on to_bone. from_bone and to_bone should be pose bones. (Won't work on edit bones, maybe it should, TODO)
 	# If from_constraint is specified, to_constraint also must be.
 	# If from_constraint is specified, only drivers belonging to that constraint will be copied, not drivers belonging directly to bone properties.
 	# TODO: This is pretty confusing, but the to_bone and to_constraint must be passed as parameters, because it doesn't feel safe to try to guess them from inside the function.
 	# Could do from_data_path, to_data_path, maybe, and do the data path acrobatics outside this function.
 
-	for d in context.object.animation_data.drivers:					# Look through every driver on the armature
+	for d in armature.animation_data.drivers:					# Look through every driver on the armature
 		if('pose.bones["' + from_bone.name + '"]' in d.data_path):	# If the driver belongs to the active bone
+			if("constraints[" in d.data_path and from_constraint==None): continue
 			if(from_constraint and from_constraint.name not in d.data_path): continue
 			
 			### Copying mirrored driver to target bone...
 			
+			print("")
+			print(d.data_path)
 			# The way drivers on bones work is weird af. You have to create the driver relative to the bone, but you have to read the driver relative to the armature. So d.data_path might look like "pose.bones["bone_name"].bone_property" but when we create a driver we just need the "bone_property" part.
-			data_path_from_bone = d.data_path.split("].")[1:]
+			data_path_from_bone = d.data_path.split("].", 1)[1]
 			to_bone.driver_remove(data_path_from_bone)
 			new_d = None
-			if(".constraints[" not in data_path):
-				new_d = to_bone.driver_add(data_path_from_bone)
-			else:
-				data_path_from_constraint = data_path_from_bone.split("]")[1:]
+			if("constraints[" in data_path_from_bone):
+				data_path_from_constraint = data_path_from_bone.split("].", 1)[1]
 				new_d = to_constraint.driver_add(data_path_from_constraint)
+			else:
+				new_d = to_bone.driver_add(data_path_from_bone)
+				
 			expression = d.driver.expression
 
 			# Copy the variables
@@ -52,7 +56,7 @@ def mirror_drivers(from_bone, to_bone, from_constraint=None, to_constraint=None)
 					new_target_bone = utils.flip_name(target_bone)
 					to_var.targets[i].id 				= from_var.targets[i].id
 					to_var.targets[i].bone_target 		= new_target_bone
-					to_var.targets[i].data_path 		= from_var.targets[i].data_path#.replace(fb, to_bones[i])
+					to_var.targets[i].data_path 		= utils.flip_name(from_var.targets[i].data_path, only=False)
 					to_var.targets[i].transform_type 	= from_var.targets[i].transform_type
 					to_var.targets[i].transform_space 	= from_var.targets[i].transform_space
 					# TODO: If transform is X Rotation, have a "mirror" option, to invert it in the expression. Better yet, detect if the new_target_bone is the opposite of the original.
@@ -102,7 +106,7 @@ class XMirrorConstraints(bpy.types.Operator):
 			opp_b.lock_scale = b.lock_scale
 			opp_b.lock_location = b.lock_location
 			
-			mirror_drivers(b, opp_b)
+			mirror_drivers(context.object, b, opp_b)
 
 			data_b = armature.data.bones.get(b.name)
 			opp_data_b = armature.data.bones.get(opp_b.name)
@@ -115,18 +119,18 @@ class XMirrorConstraints(bpy.types.Operator):
 			for c in b.constraints:
 				flipped_constraint_name = utils.flip_name(c.name, only=False)
 				opp_c = opp_b.constraints.new(type=c.type)
-				opp_c.name = flipped_constraint_name
-
 				copy_attributes(c, opp_c)
+				opp_c.name = flipped_constraint_name
 				
-				mirror_drivers(b, opp_b, c, opp_c)
+				mirror_drivers(context.object, b, opp_b, c, opp_c)
 				# Targets
-				opp_c.target = c.target # TODO: could argue that this should be attempted to be flipped as well, but for current use cases this is the armature object 100% of the time.
-				opp_c.subtarget = utils.flip_name(c.subtarget)
+				#opp_c.target = c.target # TODO: could argue that this should be attempted to be flipped as well, but for current use cases this is the armature object 100% of the time.
+				if(hasattr(opp_c, 'subtarget')):
+					opp_c.subtarget = utils.flip_name(c.subtarget)
 				
 				if(c.type=='IK'):
 					opp_c.pole_target = c.pole_target
-					opp_c.pole_subtarget = utils.flip_name(c.subtarget)
+					opp_c.pole_subtarget = utils.flip_name(c.pole_subtarget)
 
 				if(c.type=='TRANSFORM'):
 					###### SOURCES #######

@@ -55,65 +55,42 @@ def flip_name(from_name, only=True, must_change=False):
 		if(all_digits):
 			l = len(before_last_period)
 	
-	# Case: Suffix or prefix R r L l separated by . - _
-	name = from_name[:l]
-	new_name = name
-	separators = ".-_"
-	for s in separators:
-		# Suffixes
-		if(s+"L" == name[-2:]):
-			new_name = name[:-1] + 'R'
-			break
-		if(s+"R" == name[-2:]):
-			new_name = name[:-1] + 'L'
-			break
-			
-		if(s+"l" == name[-2:]):
-			new_name = name[:-1] + 'r'
-			break
-		if(s+"r" == name[-2:]):
-			new_name = name[:-1] + 'l'
-			break
-		
-		# Prefixes
-		if("L"+s == name[:2]):
-			new_name = "R" + name[1:]
-			break
-		if("R"+s == name[:2]):
-			new_name = "L" + name[1:]
-			break
-		
-		if("l"+s == name[:2]):
-			new_name = "r" + name[1:]
-			break
-		if("r"+s == name[:2]):
-			new_name = "l" + name[1:]
-			break
+	new_name = from_name[:l]
 	
-	if(new_name != name):
-		return new_name + from_name[l:]
+	left = 				['left',  'Left',  'LEFT', 	'.l', 	  '.L', 		'_l', 				'_L',				'-l',	   '-L', 	'l.', 	   'L.',	'l_', 			 'L_', 			  'l-', 	'L-']
+	right_placehold = 	['*rgt*', '*Rgt*', '*RGT*', '*dotl*', '*dotL*', 	'*underscorel*', 	'*underscoreL*', 	'*dashl*', '*dashL', '*ldot*', '*Ldot', '*lunderscore*', '*Lunderscore*', '*ldash*','*Ldash*']
+	right = 			['right', 'Right', 'RIGHT', '.r', 	  '.R', 		'_r', 				'_R',				'-r',	   '-R', 	'r.', 	   'R.',	'r_', 			 'R_', 			  'r-', 	'R-']
 	
-	# Case: "left" or "right" with any case found anywhere in the string.
+	def flip_sides(list_from, list_to, new_name):
+		for side_idx, side in enumerate(list_from):
+			opp_side = list_to[side_idx]
+			if(only):
+				# Only look at prefix/suffix.
+				if(new_name.startswith(side)):
+					new_name = new_name[len(side):]+opp_side
+					break
+				elif(new_name.endswith(side)):
+					new_name = new_name[:-len(side)]+opp_side
+					break
+			else:
+				if("-" not in side and "_" not in side):	# When it comes to searching the middle of a string, sides must Strictly a full word or separated with . otherwise we would catch stuff like "_leg" and turn it into "_reg".
+					# Replace all occurences and continue checking for keywords.
+					new_name = new_name.replace(side, opp_side)
+					continue
+		return new_name
 	
-	left = ['left', 'Left', 'LEFT']
-	right = ['right', 'Right', 'RIGHT']
+	new_name = flip_sides(left, right_placehold, new_name)
+	new_name = flip_sides(right, left, new_name)
+	new_name = flip_sides(right_placehold, right, new_name)
 	
-	lists = [left, right, left]	# To get the opposite side, we just get lists[i-1]. No duplicate code, yay!
+	# Re-adding .###
+	new_name = new_name + from_name[l:]
 	
-	# Trying to find any left/right string.
-	for list_idx in range(1, 3):
-		for side_idx, side in enumerate(lists[list_idx]):
-			if(side in name):
-				opp_side = lists[list_idx-1][side_idx]
-				if(only):
-					# If it occurs more than once, only replace the last occurrence.
-					before_last_side = "".join(name.split(side)[:-1])
-					after_last_side = name.split(side)[-1]
-					return before_last_side + opp_side + after_last_side + from_name[l:]
-				else:
-					# Replace all occurences.
-					return name.replace(side, opp_side)
+	print("")
+	print(from_name)
+	print(new_name)
+
+	if(must_change):
+		assert new_name != from_name, "Failed to flip string: " + from_name
 	
-	# If nothing was found, return the original string, unless something must be found.
-	assert must_change==False, "Failed to flip string: " + from_name
-	return from_name
+	return new_name
