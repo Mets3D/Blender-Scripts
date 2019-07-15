@@ -928,8 +928,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 						if(fn in expression):
 							if("_ik.l" in expression):
 								expression = expression.replace(fn+"_ik.l", "ik_fingers_left")
-							elif("_ik.r" in name):
-								expression = expression.replace(fn+"_ik.R", "ik_fingers_right")
+							elif("_ik.r" in expression):
+								expression = expression.replace(fn+"_ik.r", "ik_fingers_right")
 							break
 				
 				# Replacing variable names with their values

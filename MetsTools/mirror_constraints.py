@@ -1,4 +1,5 @@
 import bpy
+from math import *
 from . import utils
 
 def copy_attributes(from_thing, to_thing):
@@ -131,7 +132,8 @@ class XMirrorConstraints(bpy.types.Operator):
 				if(c.type=='IK'):
 					opp_c.pole_target = c.pole_target
 					opp_c.pole_subtarget = utils.flip_name(c.pole_subtarget)
-
+					opp_c.pole_angle = (-pi/2) - (c.pole_angle + pi/2)
+					
 				if(c.type=='TRANSFORM'):
 					###### SOURCES #######
 					

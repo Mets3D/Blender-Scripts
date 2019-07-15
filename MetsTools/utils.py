@@ -85,10 +85,6 @@ def flip_name(from_name, only=True, must_change=False):
 	
 	# Re-adding .###
 	new_name = new_name + from_name[l:]
-	
-	print("")
-	print(from_name)
-	print(new_name)
 
 	if(must_change):
 		assert new_name != from_name, "Failed to flip string: " + from_name
