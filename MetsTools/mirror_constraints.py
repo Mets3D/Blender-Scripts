@@ -21,6 +21,7 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 	# If from_constraint is specified, only drivers belonging to that constraint will be copied, not drivers belonging directly to bone properties.
 	# TODO: This is pretty confusing, but the to_bone and to_constraint must be passed as parameters, because it doesn't feel safe to try to guess them from inside the function.
 	# Could do from_data_path, to_data_path, maybe, and do the data path acrobatics outside this function.
+	if(not armature.animation_data): return
 
 	for d in armature.animation_data.drivers:					# Look through every driver on the armature
 		if('pose.bones["' + from_bone.name + '"]' in d.data_path):	# If the driver belongs to the active bone
@@ -91,6 +92,10 @@ class XMirrorConstraints(bpy.types.Operator):
 	bl_label = "X Mirror Selected Bones' Constraints"
 	bl_options = {'REGISTER', 'UNDO'}
 
+	@classmethod
+	def poll(cls, context):
+		return context.object.mode=='POSE'
+
 	def execute(self, context):
 		for b in context.selected_pose_bones:
 			#TODO: Should also make sure constraints are in the correct order. - They should already be, though. Are we not wiping constraints before copying them? I thought we did.
@@ -101,6 +106,8 @@ class XMirrorConstraints(bpy.types.Operator):
 
 			flipped_name = utils.flip_name(b.name)
 			opp_b = armature.pose.bones.get(flipped_name)
+			if(not opp_b): continue
+			if(opp_b == b): continue
 			opp_b.rotation_mode = b.rotation_mode
 			opp_b.lock_rotation = b.lock_rotation
 			opp_b.lock_rotation_w = b.lock_rotation_w
@@ -123,12 +130,27 @@ class XMirrorConstraints(bpy.types.Operator):
 				copy_attributes(c, opp_c)
 				opp_c.name = flipped_constraint_name
 				
-				mirror_drivers(context.object, b, opp_b, c, opp_c)
 				# Targets
 				#opp_c.target = c.target # TODO: could argue that this should be attempted to be flipped as well, but for current use cases this is the armature object 100% of the time.
 				if(hasattr(opp_c, 'subtarget')):
 					opp_c.subtarget = utils.flip_name(c.subtarget)
 				
+				if(opp_c.type=='CHILD_OF' and opp_c.target!=None):
+					org_influence = opp_c.influence
+					org_active = armature.data.bones.active
+					opp_c.influence = 1
+					
+					armature.data.bones.active = opp_data_b
+
+					# https://developer.blender.org/T39891#222496
+					context_py = bpy.context.copy()
+					context_py["constraint"] = opp_c
+					bpy.ops.constraint.childof_set_inverse(context_py, constraint=opp_c.name, owner='BONE')
+
+					#opp_c.influence = org_influence
+					opp_c.influence=0
+					armature.data.bones.active = org_active
+
 				if(c.type=='IK'):
 					opp_c.pole_target = c.pole_target
 					opp_c.pole_subtarget = utils.flip_name(c.pole_subtarget)
@@ -350,6 +372,8 @@ class XMirrorConstraints(bpy.types.Operator):
 								opp_c.to_max_z_scale = c.to_min_z_scale
 						
 						# Scale to Scale is all same.
+				
+				mirror_drivers(context.object, b, opp_b, c, opp_c)
 		
 			# Mirroring Bendy Bone settings
 			opp_data_b.bbone_handle_type_start 		= data_b.bbone_handle_type_start
