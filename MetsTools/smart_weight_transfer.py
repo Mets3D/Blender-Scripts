@@ -19,7 +19,8 @@ def build_weight_dict(obj, vgroups=None, mask_vgroup=None, bone_combine_dict=Non
 		vgroups: If passed, skip groups that aren't in vgroups.
 		bone_combine_dict: Can be specified if we want some bones to be merged into others, eg. passing in {'Toe_Main' : ['Toe1', 'Toe2', 'Toe3']} will combine the weights in the listed toe bones into Toe_Main. You would do this when transferring weights from a model of actual feet onto shoes.
 	"""
-	
+	if(bone_combine_dict==""):
+		bone_combine_dict = None
 	weight_dict = {}	# {vert index : [('vgroup_name', vgroup_value), ...], ...}
 	
 	if(vgroups==None):
@@ -36,15 +37,16 @@ def build_weight_dict(obj, vgroups=None, mask_vgroup=None, bone_combine_dict=Non
 			except:
 				pass
 			
-			# Adding the weights from any sub-vertexgroups defined in bone_combine_dict
-			if(vg.name in bone_combine_dict.keys()):
-				for sub_vg_name in bone_combine_dict[vg.name]:
-					sub_vg = obj.vertex_groups.get(sub_vg_name)
-					if(sub_vg==None): continue
-					try:
-						w = w + sub_vg.weight(v.index)
-					except RuntimeError:
-						pass
+			if(bone_combine_dict):
+				# Adding the weights from any sub-vertexgroups defined in bone_combine_dict
+				if(vg.name in bone_combine_dict.keys()):
+					for sub_vg_name in bone_combine_dict[vg.name]:
+						sub_vg = obj.vertex_groups.get(sub_vg_name)
+						if(sub_vg==None): continue
+						try:
+							w = w + sub_vg.weight(v.index)
+						except RuntimeError:
+							pass
 			
 			if(w==0): continue
 			
@@ -125,7 +127,7 @@ def smart_transfer_weights(obj_from, obj_to, weights, max_verts=30, max_dist=10,
 				target_vg = obj_to.vertex_groups.new(name=vg_avg)
 			target_vg.add([v.index], vgroup_weights[vg_avg]/weights_sum, 'REPLACE')
 	
-	bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
+	#bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
 
 w3_bone_dict_str = """{
 	'Hip_Def' : ['Gens_Root', 'Vagoo_Root', 'Anus_Root', 'Gens_Mid', 'Butt_Mid', 
@@ -200,9 +202,9 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 
 	@classmethod
 	def poll(cls, context):
-		return (context.object is not None) and (context.object.mode=='WEIGHT_PAINT')
+		return (context.object is not None)# and (context.object.mode=='WEIGHT_PAINT')
 	
-	def draw(self, context):
+	def draw_smart_weight_transfer(self, context):
 		operator = self.layout.operator(SmartWeightTransferOperator.bl_idname, text=SmartWeightTransferOperator.bl_label)
 
 	def execute(self, context):
@@ -215,13 +217,13 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 		source_obj = context.object
 		for o in context.selected_objects:
 			if(o==source_obj or o.type!='MESH'): continue
-			bpy.ops.object.mode_set(mode='OBJECT')
-			bpy.ops.object.select_all(action='DESELECT')
+			#bpy.ops.object.mode_set(mode='OBJECT')
+			#bpy.ops.object.select_all(action='DESELECT')
 			
 			vgroups = []
 			error = ""
 			if(self.opt_source_vgroups == "ALL"):
-				vgroups = o.vertex_groups
+				vgroups = source_obj.vertex_groups
 				error = "the source has no vertex groups."
 			elif(self.opt_source_vgroups == "SELECTED"):
 				assert context.selected_pose_bones, "No selected pose bones to transfer from."
@@ -257,9 +259,9 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 def register():
 	from bpy.utils import register_class
 	register_class(SmartWeightTransferOperator)
-	bpy.types.VIEW3D_MT_paint_weight.append(SmartWeightTransferOperator.draw)
+	bpy.types.VIEW3D_MT_paint_weight.append(SmartWeightTransferOperator.draw_smart_weight_transfer)
 
 def unregister():
 	from bpy.utils import unregister_class
 	unregister_class(SmartWeightTransferOperator)
-	bpy.types.VIEW3D_MT_paint_weight.remove(SmartWeightTransferOperator.draw)
+	bpy.types.VIEW3D_MT_paint_weight.remove(SmartWeightTransferOperator.draw_smart_weight_transfer)
