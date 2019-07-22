@@ -21,6 +21,16 @@ import webbrowser
 # Alternatively, these constraints could just have a driver on their influence that forces it to a constant value.
 # But at that point, we might as well just have a driver on the influence that sets the damn influence. But that wouldn't align with the modular design of the rig which is still WIP.
 
+# Applying the rig to other characters
+# There should be a "Fix stuff" button/operator, that does the following:
+#	- Reset stretch contraints
+#	- Fix bone rolls(How??)
+#	- Update magic numbers (STR- bones and more in the future)
+
+# UX
+# Add a toggle under Extras for object selectability.
+# I want the MetsRig panel to show up even when the active object is not a MetsRig armature. In this case, it would show a list of MetsRig armatures found in the scene, and allow you to pin one of them to the panel. If there is only one found, automatically pin that one.
+
 # prop_hierarchy: allow for nested children
 # Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
 #	Except some objects get masked to make other versions of themselves, so some objects would have multiple masks to enable depending on rig properties.
@@ -48,7 +58,6 @@ def get_children_recursive(obj, ret=[]):
 		ret = get_children_recursive(c, ret)
 	
 	return ret
-
 
 def get_rigs():
 	""" Find all MetsRigs in the current view layer. """
@@ -612,9 +621,9 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			if(prop_owner==None): continue
 			for p in prop_owner.keys():
 				if( type(prop_owner[p]) != int or p.startswith("_") ): continue
-				min = prop_owner['_RNA_UI'].to_dict()[p]['min']
-				max = prop_owner['_RNA_UI'].to_dict()[p]['max']
-				if(min==0 and max==1):
+				my_min = prop_owner['_RNA_UI'].to_dict()[p]['min']
+				my_max = prop_owner['_RNA_UI'].to_dict()[p]['max']
+				if(my_min==0 and my_max==1):
 					new_bool = bool_props.add()
 					new_bool.name = p
 					new_bool.value = prop_owner[p]
@@ -1178,9 +1187,9 @@ class MetsRigUI_Properties(MetsRigUI):
 					if(parent_prop_name_without_values not in props_done):
 						if(parent_prop_name_without_values in bool_props):
 							bp = bool_props[parent_prop_name_without_values]
-							layout.prop(bp, 'value', toggle=True, text=bp.name, icon=icon)
+							layout.prop(bp, 'value', toggle=True, text=bp.name.replace("_", " "), icon=icon)
 						else:
-							layout.prop(prop_owner, '["'+parent_prop_name_without_values+'"]', slider=True)
+							layout.prop(prop_owner, '["'+parent_prop_name_without_values+'"]', slider=True, text=parent_prop_name_without_values.replace("_", " "))
 					
 					# Marking parent prop as done drawing.
 					props_done.append(parent_prop_name_without_values)
@@ -1206,11 +1215,11 @@ class MetsRigUI_Properties(MetsRigUI):
 				if( prop_name in props_done or prop_name.startswith("_") ): continue
 				# Int Props
 				if(prop_name not in bool_props and type(prop_owner[prop_name]) in [int, float] ):
-					layout.prop(prop_owner, '["'+prop_name+'"]', slider=True)
+					layout.prop(prop_owner, '["'+prop_name+'"]', slider=True, text=prop_name.replace("_", " "))
 			# Bool Props
 			for bp in bool_props:
 				if(bp.name in prop_owner.keys() and bp.name not in props_done):
-					layout.prop(bp, 'value', toggle=True, text=bp.name)
+					layout.prop(bp, 'value', toggle=True, text=bp.name.replace("_", " "))
 		
 		if( character_properties_bone != None ):
 			add_props(character_properties_bone)
@@ -1473,9 +1482,9 @@ class MetsRigUI_Extras_Physics(MetsRigUI):
 		layout.operator("ptcache.free_bake_all", text="Delete All Bakes")
 
 class Link_Button(bpy.types.Operator):
-	"""Open links in a web browser."""
+	"""Open a link in a web browser"""
 	bl_idname = "ops.open_link"
-	bl_label = "Open Link in web browser"
+	bl_label = "Open a link in web browser"
 	bl_options = {'REGISTER'}
 	
 	url: StringProperty(name='URL',
@@ -1499,10 +1508,15 @@ class MetsRigUI_Links(MetsRigUI):
 	def draw(self, context):
 		layout = self.layout
 		
-		layout.operator('ops.open_link', text="Blender Cloud").url = self.url_cloud
-		layout.operator('ops.open_link', text="Blender Dev Fund").url = self.url_dev_fund
-		layout.operator('ops.open_link', text="Blender Dev Blog").url = self.url_dev_blog
-		layout.operator('ops.open_link', text="Blender Chat").url = self.url_blender_chat
+		cloud_button = layout.operator('ops.open_link', text="Blender Cloud")
+		cloud_button.url = self.url_cloud
+		#cloud_button.description = "Subscribe to the Blender Cloud!" #TODO: Can I have unique descriptions per button? I think not, but would be nice.
+		fund_button = layout.operator('ops.open_link', text="Blender Dev Fund")
+		fund_button.url = self.url_dev_fund
+		blog_button = layout.operator('ops.open_link', text="Blender Dev Blog")
+		blog_button.url = self.url_dev_blog
+		chat_button = layout.operator('ops.open_link', text="Blender Chat")
+		chat_button.url = self.url_blender_chat
 	
 classes = (
 	MetsRigUI_Properties, 
