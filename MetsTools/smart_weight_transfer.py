@@ -188,9 +188,11 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 		default=True, 
 		description="Wipe original vertex groups before transferring. Recommended. Does not wipe vertex groups that aren't being transferred in the first place")
 	
-	opt_expand: IntProperty(name="Expand dong", 
+	opt_expand: IntProperty(name="Expand", 
 		default=2, 
-		description="Higher is smoother")
+		min=0,
+		max=5,
+		description="Expand source vertex pool - Higher values give smoother weights but calculations can take extremely long")
 	
 	def get_vgroups(self, context):
 		items = [('None', 'None', 'None')]
