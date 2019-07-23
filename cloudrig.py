@@ -1,5 +1,5 @@
 "Version: 1.1"
-"05/07/19"
+"23/07/19"
 
 import bpy
 from bpy.props import *
@@ -14,21 +14,16 @@ import webbrowser
 # Modularity
 # The rig script and UI should start functioning as soon as the metsrig custom property is added to the armature.
 # Every other information should be able to be provided without the rig creator having to hard code it(although some python syntax will probably have to be used in the custom properties), such as characters, outfits, bone layer names and layout(TODO).
-
-# Constraints
-# TODO: If a constraint has multiple "names" but is meant to have an influence other than 0 or 1, and only its visibility should be toggled, the influence gets changed anyways.
-# Might need to do a thing where the constraint name is instead an expression for the influence. This would make more sense considering other things as well.
-# Alternatively, these constraints could just have a driver on their influence that forces it to a constant value.
-# But at that point, we might as well just have a driver on the influence that sets the damn influence. But that wouldn't align with the modular design of the rig which is still WIP.
+# Things that rely on hard coded bone or constraint names are fine, but there shouldn't be an error when these things are not found, they simply should just not show up in the UI.
+# These hard coded names should be documented at some point.
 
 # Applying the rig to other characters
 # There should be a "Fix stuff" button/operator, that does the following:
 #	- Reset stretch contraints
 #	- Fix bone rolls(How??)
-#	- Update magic numbers (STR- bones and more in the future)
+#	- Update magic numbers (STR- bones, Soft IK (IK Stretch values) and more in the future)
 
 # UX
-# Add a toggle under Extras for object selectability.
 # I want the MetsRig panel to show up even when the active object is not a MetsRig armature. In this case, it would show a list of MetsRig armatures found in the scene, and allow you to pin one of them to the panel. If there is only one found, automatically pin that one.
 
 # prop_hierarchy: allow for nested children
@@ -50,15 +45,6 @@ import webbrowser
 	# The rig should detect when itself is a proxy and be aware of what rig it is a proxy of. Use that rig's children instead of the proxy armature's(presumably non-existent) children.
 	# It should also detect when multiple copies of itself exist. Currently the only thing that needs to be done for two rigs to work without messing each other up is to change the 'material_controller' to the correct one.
 
-def get_children_recursive(obj, ret=[]):
-	# Return all the children and children of children of obj in a flat list.
-	for c in obj.children:
-		if(c not in ret):
-			ret.append(c)
-		ret = get_children_recursive(c, ret)
-	
-	return ret
-
 def get_rigs():
 	""" Find all MetsRigs in the current view layer. """
 	ret = []
@@ -66,6 +52,24 @@ def get_rigs():
 	for o in armatures:
 		if("metsrig") in o.data:
 			ret.append(o)
+	if(len(ret)==0):
+		ret = [None]
+	return ret
+
+bpy.context.scene['metsrig_pinned'] = get_rigs()[0]
+def get_pinned_rig(context):
+	# The pinned rig should store the most recently selected metsrig. Can be None, only when no metsrigs are in the scene.
+	if(context.object in get_rigs()):
+		bpy.context.scene['metsrig_pinned'] = context.object
+	return bpy.context.scene['metsrig_pinned']
+
+def get_children_recursive(obj, ret=[]):
+	# Return all the children and children of children of obj in a flat list.
+	for c in obj.children:
+		if(c not in ret):
+			ret.append(c)
+		ret = get_children_recursive(c, ret)
+	
 	return ret
 
 class MetsRig_BoolProperties(bpy.types.PropertyGroup):
@@ -101,6 +105,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		""" Find the rig that is using this instance. """
 		for rig in get_rigs():
 			if(rig.data.metsrig_properties == self):
+				pinned_rig = rig
 				return rig
 	
 	@classmethod
@@ -514,6 +519,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			# Recursive function to control item visibilities.
 			# The object hierarchy assumes that if an object is disabled, all its children should be disabled, that's why this is done recursively.
 			
+			obj.hide_select = not self.global_mesh_selectability
+
 			visible = None
 			if(hide!=None):
 				visible = not hide
@@ -629,6 +636,35 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					new_bool.value = prop_owner[p]
 					new_bool.rig = rig
 	
+	def update_material_controller(self, bone):
+		# Updating material controller with this character's values.
+		rig = self.get_rig()
+		if('material_controller' in rig.data):
+			controller_nodegroup = bpy.data.node_groups.get(rig.data['material_controller'])
+			if(controller_nodegroup):
+				# To update the material controller, we set the nodegroup's input default values to the desired values.
+				# A nodegroup's input and output default_values are normally ONLY used by Blender to set said values when a new instance of the node is created.
+				# Which is to say, changing the input/output default_values won't have any effect on existing nodes.
+				# To overcome this, value nodes inside the controller material copy the values of the input/output default_values via drivers.
+				
+				# Why not just add the Value nodes themselves to the UI? Because they don't have min/max values, but nodegroup inputs/outputs do.
+				# Why hook up the input rather than the output? It makes no difference. It just made more sense to me this way.
+				for io in [controller_nodegroup.inputs, controller_nodegroup.outputs]:
+					for i in io:
+						prop_value = None
+						if("_" + i.name in bone):
+							prop_value = bone["_" + i.name]
+						elif(i.name in bone):
+							prop_value = bone[i.name]
+						else:
+							continue
+						if( type(prop_value) in [int, float] ):
+							i.default_value = prop_value
+						else:
+							color = prop_value.to_list()
+							color.append(1)
+							i.default_value = color
+
 	def outfits(self, context):
 		""" Callback function for finding the list of available outfits for the metsrig_outfits enum. """
 		rig = self.get_rig()
@@ -686,35 +722,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			items.append((hair, hair, hair))
 		return items
 	
-	def update_material_controller(self, bone):
-		# Updating material controller with this character's values.
-		rig = self.get_rig()
-		if('material_controller' in rig.data):
-			controller_nodegroup = bpy.data.node_groups.get(rig.data['material_controller'])
-			if(controller_nodegroup):
-				# To update the material controller, we set the nodegroup's input default values to the desired values.
-				# A nodegroup's input and output default_values are normally ONLY used by Blender to set said values when a new instance of the node is created.
-				# Which is to say, changing the input/output default_values won't have any effect on existing nodes.
-				# To overcome this, value nodes inside the controller material copy the values of the input/output default_values via drivers.
-				
-				# Why not just add the Value nodes themselves to the UI? Because they don't have min/max values, but nodegroup inputs/outputs do.
-				# Why hook up the input rather than the output? It makes no difference. It just made more sense to me this way.
-				for io in [controller_nodegroup.inputs, controller_nodegroup.outputs]:
-					for i in io:
-						prop_value = None
-						if("_" + i.name in bone):
-							prop_value = bone["_" + i.name]
-						elif(i.name in bone):
-							prop_value = bone[i.name]
-						else:
-							continue
-						if( type(prop_value) in [int, float] ):
-							i.default_value = prop_value
-						else:
-							color = prop_value.to_list()
-							color.append(1)
-							i.default_value = color
-
 	def change_outfit(self, context):
 		""" Update callback of metsrig_outfits enum. """
 		
@@ -914,6 +921,10 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='use_proxy',
 		description='Use Proxy Meshes',
 		update=update_meshes)
+	global_mesh_selectability: BoolProperty(
+		name='global_mesh_selectability',
+		description='Mesh Selectability',
+		update=update_meshes)
 
 	def update_ik(self, context):
 		""" Callback function for FK/IK settings.
@@ -954,7 +965,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				except:
 					pass	# Most constraints will fail, since most constraints don't have expressions in their names. This makes error handling, well, non-existent, which is not ideal. TODO.
 				
-	
 	### FK/IK Properties ###
 
 	### FK/IK Switches
@@ -1101,10 +1111,7 @@ class MetsRigUI(bpy.types.Panel):
 	
 	@classmethod
 	def poll(cls, context):
-		if(context.object != None and
-			context.object in get_rigs()):
-				return True
-		return False
+		return bpy.context.scene['metsrig_pinned'] != None
 	
 	def draw(self, context):
 		layout = self.layout
@@ -1118,7 +1125,7 @@ class MetsRigUI_Properties(MetsRigUI):
 		if(not super().poll(context)):
 			return False
 		# Only display this panel if there is either an outfit with options, multiple outfits, or multiple characters.
-		obj = context.object
+		obj = get_pinned_rig(context)
 		data = obj.data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
@@ -1139,7 +1146,7 @@ class MetsRigUI_Properties(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		obj = context.object
+		obj = get_pinned_rig(context)
 		data = obj.data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
@@ -1239,7 +1246,7 @@ class MetsRigUI_Layers(MetsRigUI):
 	def draw(self, context):
 		layout = self.layout
 		
-		data = context.object.data
+		data = get_pinned_rig(context).data
 		
 		row_ik = layout.row()
 		row_ik.column().prop(data, 'layers', index=0, toggle=True, text='Main IK Controls')
@@ -1277,7 +1284,7 @@ class MetsRigUI_IKFK(MetsRigUI):
 	def draw(self, context):
 		layout = self.layout
 		column = layout.column()
-		rig = context.object
+		rig = get_pinned_rig(context)
 		mets_props = rig.data.metsrig_properties
 		
 		# TODO improve the overall organization for all these buttons.
@@ -1406,7 +1413,7 @@ class MetsRigUI_Extras(MetsRigUI):
 	
 	def draw(self, context):
 		layout = self.layout
-		data = context.object.data
+		data = get_pinned_rig(context).data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
 		
@@ -1419,6 +1426,7 @@ class MetsRigUI_Extras(MetsRigUI):
 		layout.row().prop(mets_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
 		use_proxy = mets_props.use_proxy
 		layout.row().prop(mets_props, 'use_proxy', text='Use Proxies', toggle=True)
+		layout.row().prop(mets_props, 'global_mesh_selectability', text='Mesh Selectability', toggle=True)
 
 class MetsRigUI_Extras_Materials(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras_materials"
@@ -1429,7 +1437,7 @@ class MetsRigUI_Extras_Materials(MetsRigUI):
 	def poll(cls, context):
 		if(not super().poll(context)):
 			return False
-		rig = context.object
+		rig = get_pinned_rig(context)
 		if('material_controller' not in rig.data):
 			return False
 		mat_ctr_name = rig.data['material_controller']
@@ -1437,7 +1445,7 @@ class MetsRigUI_Extras_Materials(MetsRigUI):
 		
 	def draw(self, context):
 		layout = self.layout
-		data = context.object.data
+		data = get_pinned_rig(context).data
 		
 		if('material_controller' in data):
 			material_controller = bpy.data.node_groups.get(data['material_controller'])
@@ -1457,13 +1465,13 @@ class MetsRigUI_Extras_Physics(MetsRigUI):
 	bl_parent_id = "OBJECT_PT_metsrig_ui_extras"
 	
 	def draw_header(self, context):
-		data = context.object.data
+		data = get_pinned_rig(context).data
 		mets_props = data.metsrig_properties
 		layout = self.layout
 		layout.prop(mets_props, "physics_toggle", text="")
 	
 	def draw(self, context):
-		data = context.object.data
+		data = get_pinned_rig(context).data
 		mets_props = data.metsrig_properties
 		layout = self.layout
 		

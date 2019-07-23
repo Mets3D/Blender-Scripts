@@ -2,6 +2,10 @@ import bpy
 from math import *
 from . import utils
 
+# TODO: Mirror IK Solver settings.
+# When mirroring from right to left side, it seems like it doesn't flip names correctly, and also doesn't delete existing constraints.
+# Child Of constraints' inverse matrices still don't always seem right.
+
 def copy_attributes(from_thing, to_thing):
 	# TODO: Could and probably should make this optinally recursive.
 	# Could be useful for copying drivers.
