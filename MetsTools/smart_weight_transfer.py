@@ -2,9 +2,9 @@ bl_info = {
 	"name": "Distance Weighted Weight Transfer",
 	"description": "Smart Transfer Weights operator",
 	"author": "Mets 3D",
-	"version": (1, 2),
+	"version": (2, 0),
 	"blender": (2, 80, 0),
-	"location": "Search -> Smart Weight Transfer",	# TODO: Add to Weights menu.
+	"location": "Search -> Smart Weight Transfer",
 	"category": "Object"
 }
 
@@ -13,6 +13,7 @@ import mathutils
 from mathutils import Vector
 import math
 from bpy.props import *
+import bmesh
 
 def build_weight_dict(obj, vgroups=None, mask_vgroup=None, bone_combine_dict=None):
 	""" Builds and returns a dictionary that matches the vertex indicies of the object to a list of tuples containing the vertex group names that the vertex belongs to, and the weight of the vertex in that group.
@@ -71,32 +72,47 @@ def build_kdtree(obj):
 	kd.balance()
 	return kd
 
-def smart_transfer_weights(obj_from, obj_to, weights, max_verts=30, max_dist=10, dist_multiplier=1000, ):
+def smart_transfer_weights(obj_from, obj_to, weights, expand=2):
 	""" Smart Vertex Weight Transfer.
 		The number of nearby verts which it searches for depends on how far the nearest vert is. (This is controlled by max_verts, max_dist and dist_multiplier)
 		This means if a very close vert is found, it won't look for any more verts.
 		If the nearest vert is quite far away(or dist_multiplier is set high), it will average the influences of a larger number few verts.
 		The averaging of the influences is also weighted by their distance, so that a vertex which is twice as far away will contribute half as much influence to the final result.
 		weights: a dictionary of vertex weights that needs to be built with build_weight_dict().
+		expand: How many times the "selection" should be expanded around the nearest vert, to collect more verts whose weights will be averaged. 0 is like default weight transfer.
 	"""
+	# TODO: because we normalize at the end, it also means we are expecting the input weighs to be normalized. So we should call a normalize all automatically.
+
+	# Assuming obj_from is at least selected, but probably active. (Shouldn't matter thanks to multi-edit mode?)
+	bpy.ops.object.mode_set(mode='EDIT')
+	bm = bmesh.from_edit_mesh(obj_from.data)
+	
 	kd = build_kdtree(obj_from)
 	
 	for v in obj_to.data.vertices:
 		# Finding the nearest vertex on source object
 		nearest_co, nearest_idx, nearest_dist = kd.find(v.co)
+		
+		# Find neighbouring verts to the nearest vert. Save their index to this list. Will later turn it into a list of (index, distance) tuples.
+		source_vert_indices = [nearest_idx]
+		
+		bm.verts.ensure_lookup_table()
+		bmv = bm.verts[nearest_idx]
 
-		# Determine how many verts in total should be checked, based on the distance of the closest vert.
-		number_of_source_verts = 1 + round( pow( (nearest_dist * dist_multiplier), 2 ) )
-		number_of_source_verts = max_verts if number_of_source_verts > max_verts else number_of_source_verts
-		
-		
-		# Find the previously calculated amount of nearest verts. Save their index and distance to a list of (index, distance) tuples.
+		for i in range(0, expand):
+			new_indices = []
+			for v_idx in source_vert_indices:
+				cur_bmv = bm.verts[v_idx]
+				for e in cur_bmv.link_edges:
+					v_other = e.other_vert(cur_bmv)
+					if(v_other.index not in source_vert_indices):
+						new_indices.append(v_other.index)
+			source_vert_indices.extend(new_indices)
+
 		source_verts = []
-		
-		for(co, index, dist) in kd.find_n(v.co, number_of_source_verts):
-			if( (index not in weights) or (dist > max_dist) ):	# If the found vert doesn't have any weights OR is too far away
-				continue
-			source_verts.append((index, dist))
+		for vi in source_vert_indices:
+			distance = (v.co - bm.verts[vi].co).length
+			source_verts.append((vi, distance))
 		
 		# Sort valid verts by distance (least to most distance)
 		source_verts.sort(key=lambda tup: tup[1])
@@ -108,6 +124,7 @@ def smart_transfer_weights(obj_from, obj_to, weights, max_verts=30, max_dist=10,
 			# The closest vert's weights are multiplied by the farthest vert's distance, and vice versa. The 2nd closest will use the 2nd farthest, etc.
 			# Note: The magnitude of the distance vectors doesn't matter because at the end they will be normalized anyways.
 			pair_distance = source_verts[-i-1][1]
+			if(vert[0] not in weights): continue
 			for vg_name, vg_weight in weights[vert[0]]:
 				new_weight = vg_weight * pair_distance
 				if(vg_name not in vgroup_weights):
@@ -154,7 +171,7 @@ w3_bone_dict_str = """{
 w3_vgroups = ['Hip_Def', 'Butt_Mid', 'Neck_Def', 'Head_Def', 'Breast.R', 'Breast.L', 'Clavicle_Def.R', 'Clavicle_Adjust.R', 'Clavicle_Def.L', 'Clavicle_Adjust.L', 'Spine3_Def', 'Spine2_Def', 'Spine1_Def', 'Adjust_Knee.R', 'Twist_Leg_2.R', 'Twist_Leg_1.R', 'Foot_Def.R', 'Toes_Def.R', 'Toe_Def.R', 'Butt.R', 'Thigh_Def.R', 'Twist_Leg_3.R', 'Adjust_Thigh_Front.R', 'Adjust_Thigh_Side.R', 'Twist_Leg_4.R', 'Adjust_Knee.L', 'Twist_Leg_2.L', 'Twist_Leg_1.L', 'Foot_Def.L', 'Toes_Def.L', 'Toe_Def.L', 'Butt.L', 'Thigh_Def.L', 'Twist_Leg_3.L', 'Adjust_Thigh_Front.L', 'Adjust_Thigh_Side.L', 'Twist_Leg_4.L', 'Elbow_Def.R', 'Adjust_Elbow_Lower.R', 'Shoulder_Def.R', 'Adjust_Elbow_Upper.R', 'Twist_Arm_5.R', 'Twist_Arm_6.R', 'Twist_Arm_2.R', 'Twist_Arm_1.R', 'Twist_Arm_4.R', 'Twist_Arm_3.R', 'Hand_Def.R', 'Elbow_Def.L', 'Adjust_Elbow_Lower.L', 'Shoulder_Def.L', 'Adjust_Elbow_Upper.L', 'Twist_Arm_5.L', 'Twist_Arm_6.L', 'Twist_Arm_1.L', 'Twist_Arm_2.L', 'Twist_Arm_4.L', 'Twist_Arm_3.L', 'Hand_Def.L']
 
 class SmartWeightTransferOperator(bpy.types.Operator):
-	"""Transfer weights from active to selected objects based on weighted vert distances."""
+	""" Transfer weights from active to selected objects based on weighted vert distances """
 	bl_idname = "object.smart_weight_transfer"
 	bl_label = "Smart Transfer Weights"
 	bl_options = {'REGISTER', 'UNDO'}
@@ -171,17 +188,9 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 		default=True, 
 		description="Wipe original vertex groups before transferring. Recommended. Does not wipe vertex groups that aren't being transferred in the first place")
 	
-	opt_max_verts: IntProperty(name="Max considered verts", 
-		default=5, 
-		description="Increase this if your mesh is very high poly or decrease for very low poly. Set to 1 will give the same result as the built-in Transfer Weights operator")
-	
-	opt_max_dist: FloatProperty(name="Max distance", 
-		default=1000, 
-		description="Higher values allow weights from further away verts to contribute to the result.")
-	
-	opt_dist_multiplier: FloatProperty(name="Smoothness", 
-		default=1000, 
-		description="Higher values will consider more verts based on the distance of the closest vert. Has less effect on verts that are close to the source mesh. If the source and the target mesh are exactly the same, this has no effect. Increasing this after a certain point will have no effect since the maximum allowed verts will be reached before the maximum distance")
+	opt_expand: IntProperty(name="Expand dong", 
+		default=2, 
+		description="Higher is smoother")
 	
 	def get_vgroups(self, context):
 		items = [('None', 'None', 'None')]
@@ -201,8 +210,8 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 	@classmethod
 	def poll(cls, context):
 		return (context.object is not None) and (context.object.mode=='WEIGHT_PAINT')
-	
-	def draw(self, context):
+
+	def draw_SmartWeightTransfer(self, context):
 		operator = self.layout.operator(SmartWeightTransferOperator.bl_idname, text=SmartWeightTransferOperator.bl_label)
 
 	def execute(self, context):
@@ -221,7 +230,7 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 			vgroups = []
 			error = ""
 			if(self.opt_source_vgroups == "ALL"):
-				vgroups = o.vertex_groups
+				vgroups = source_obj.vertex_groups
 				error = "the source has no vertex groups."
 			elif(self.opt_source_vgroups == "SELECTED"):
 				assert context.selected_pose_bones, "No selected pose bones to transfer from."
@@ -247,7 +256,7 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 			mask_vgroup = o.vertex_groups.get(self.opt_mask_vgroup)
 			
 			weights = build_weight_dict(source_obj, vgroups, mask_vgroup, bone_dict)
-			smart_transfer_weights(source_obj, o, weights, self.opt_max_verts, self.opt_max_dist, self.opt_dist_multiplier)
+			smart_transfer_weights(source_obj, o, weights, self.opt_expand)
 			
 			bpy.context.view_layer.objects.active = o
 			bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
@@ -257,9 +266,9 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 def register():
 	from bpy.utils import register_class
 	register_class(SmartWeightTransferOperator)
-	bpy.types.VIEW3D_MT_paint_weight.append(SmartWeightTransferOperator.draw)
+	bpy.types.VIEW3D_MT_paint_weight.append(SmartWeightTransferOperator.draw_SmartWeightTransfer)
 
 def unregister():
 	from bpy.utils import unregister_class
 	unregister_class(SmartWeightTransferOperator)
-	bpy.types.VIEW3D_MT_paint_weight.remove(SmartWeightTransferOperator.draw)
+	bpy.types.VIEW3D_MT_paint_weight.remove(SmartWeightTransferOperator.draw_SmartWeightTransfer)
