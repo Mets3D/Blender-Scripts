@@ -1,4 +1,4 @@
-"Version: 1.1"
+"Version: 1.2"
 "23/07/19"
 
 import bpy
@@ -22,9 +22,6 @@ import webbrowser
 #	- Reset stretch contraints
 #	- Fix bone rolls(How??)
 #	- Update magic numbers (STR- bones, Soft IK (IK Stretch values) and more in the future)
-
-# UX
-# I want the MetsRig panel to show up even when the active object is not a MetsRig armature. In this case, it would show a list of MetsRig armatures found in the scene, and allow you to pin one of them to the panel. If there is only one found, automatically pin that one.
 
 # prop_hierarchy: allow for nested children
 # Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
@@ -55,13 +52,6 @@ def get_rigs():
 	if(len(ret)==0):
 		ret = [None]
 	return ret
-
-bpy.context.scene['metsrig_pinned'] = get_rigs()[0]
-def get_pinned_rig(context):
-	# The pinned rig should store the most recently selected metsrig. Can be None, only when no metsrigs are in the scene.
-	if(context.object in get_rigs()):
-		bpy.context.scene['metsrig_pinned'] = context.object
-	return bpy.context.scene['metsrig_pinned']
 
 def get_children_recursive(obj, ret=[]):
 	# Return all the children and children of children of obj in a flat list.
@@ -111,6 +101,15 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	@classmethod
 	def pre_depsgraph_update(cls, scene):
 		""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
+		
+		def update_pinned_rig(scene):
+			# The pinned rig should store the most recently selected metsrig.
+			if(bpy.context.object in get_rigs()):
+				scene['metsrig_pinned'] = bpy.context.object
+			if(scene['metsrig_pinned'] == None):
+				scene['metsrig_pinned'] = get_rigs()[0] # Can be None, only when no metsrigs are in the scene.
+			return scene['metsrig_pinned']
+		
 		for rig in get_rigs():
 			# Grabbing relevant data
 			mets_props = rig.data.metsrig_properties
@@ -1125,7 +1124,8 @@ class MetsRigUI_Properties(MetsRigUI):
 		if(not super().poll(context)):
 			return False
 		# Only display this panel if there is either an outfit with options, multiple outfits, or multiple characters.
-		obj = get_pinned_rig(context)
+		obj = context.scene['metsrig_pinned']
+		if(not obj): return False
 		data = obj.data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
@@ -1146,7 +1146,7 @@ class MetsRigUI_Properties(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		obj = get_pinned_rig(context)
+		obj = context.scene['metsrig_pinned']
 		data = obj.data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
@@ -1246,7 +1246,7 @@ class MetsRigUI_Layers(MetsRigUI):
 	def draw(self, context):
 		layout = self.layout
 		
-		data = get_pinned_rig(context).data
+		data = context.scene['metsrig_pinned'].data
 		
 		row_ik = layout.row()
 		row_ik.column().prop(data, 'layers', index=0, toggle=True, text='Main IK Controls')
@@ -1284,7 +1284,7 @@ class MetsRigUI_IKFK(MetsRigUI):
 	def draw(self, context):
 		layout = self.layout
 		column = layout.column()
-		rig = get_pinned_rig(context)
+		rig = context.scene['metsrig_pinned']
 		mets_props = rig.data.metsrig_properties
 		
 		# TODO improve the overall organization for all these buttons.
@@ -1413,7 +1413,7 @@ class MetsRigUI_Extras(MetsRigUI):
 	
 	def draw(self, context):
 		layout = self.layout
-		data = get_pinned_rig(context).data
+		data = context.scene['metsrig_pinned'].data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
 		
@@ -1437,7 +1437,7 @@ class MetsRigUI_Extras_Materials(MetsRigUI):
 	def poll(cls, context):
 		if(not super().poll(context)):
 			return False
-		rig = get_pinned_rig(context)
+		rig = context.scene['metsrig_pinned']
 		if('material_controller' not in rig.data):
 			return False
 		mat_ctr_name = rig.data['material_controller']
@@ -1445,7 +1445,7 @@ class MetsRigUI_Extras_Materials(MetsRigUI):
 		
 	def draw(self, context):
 		layout = self.layout
-		data = get_pinned_rig(context).data
+		data = context.scene['metsrig_pinned'].data
 		
 		if('material_controller' in data):
 			material_controller = bpy.data.node_groups.get(data['material_controller'])
@@ -1465,13 +1465,13 @@ class MetsRigUI_Extras_Physics(MetsRigUI):
 	bl_parent_id = "OBJECT_PT_metsrig_ui_extras"
 	
 	def draw_header(self, context):
-		data = get_pinned_rig(context).data
+		data = context.scene['metsrig_pinned'].data
 		mets_props = data.metsrig_properties
 		layout = self.layout
 		layout.prop(mets_props, "physics_toggle", text="")
 	
 	def draw(self, context):
-		data = get_pinned_rig(context).data
+		data = context.scene['metsrig_pinned'].data
 		mets_props = data.metsrig_properties
 		layout = self.layout
 		
