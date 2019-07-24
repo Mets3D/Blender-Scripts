@@ -925,13 +925,13 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		description='Mesh Selectability',
 		update=update_meshes)
 
-	def update_ik(self, context):
-		""" Callback function for FK/IK settings.
-			For this to work (All case-insensitive):
-			Constraints must be named according to the property names they should be toggled by.
-			A constraint can have more than one name, separated by a comma and a space, eg. "ik_stretch_arms, ik_arm_left". The behaviour will be like an AND statement, so the constraint is only enabled when both properties are enabled. (This is WIP, and the final form of this will probably end up being slapping expressions into constraint names...)
+	def update_constraints(self, context):
+		""" Callback function for FK/IK settings and more.
+			Constraint names can be expressions with access to metsrig variables. Eg a constraint could be called:
+			"ik_leg_left * ik_stretch_legs"
+			The result of the expression would be the Influence of the constraint.
+
 			Finger IK constraints must be named according to the 'finger_names' list and ending in .L/.R, eg. "Thumb_IK.L".
-			Hinge IK constraints must be named according to the 'hinge_prop_names'.
 		"""
 		rig = self.get_rig()
 		
@@ -959,144 +959,157 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				# Evaluating the expression and setting the constraint influence to the result
 				try:
 					result = eval(expression)
+				except:
+					continue	# Most constraints will fail, since most constraints don't have expressions in their names. This makes error handling, well, non-existent, which is not ideal. TODO?
+				if(c.type == 'ARMATURE'):
+					# For Armature Constraints, instead of changing the influence, the expression result will decide which target is enabled and which is not.
+					# We use Armature Constraints as if they were a multi-child-of constraint (with the added benefit of not having to worry about inverse matrices)
+
+					# When the expression result is 0, we want the first target to be active.
+					# The total weights in the constraint would never go below 0.
+					# If the expression result is not a whole number, we want to subtract mod(1) from the top weight and add the same amount to the bottom weight.
+
+					for t in c.targets:
+						t.weight = 0
+					index = max(0, min(len(c.targets)-1, int(result)))	# Find the target index by truncating the expression result and clamping it between 0 and the number of targets.
+					weight = result - (index-1)
+					c.targets[index].weight = weight
+				else:
 					c.influence = result
 					c.mute = result <= 0
-				except:
-					pass	# Most constraints will fail, since most constraints don't have expressions in their names. This makes error handling, well, non-existent, which is not ideal. TODO.
-				
 	### FK/IK Properties ###
 
 	### FK/IK Switches
 	ik_spine: FloatProperty(
 		name='FK/IK Spine',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	
 	ik_leg_left: FloatProperty(
 		name='FK/IK Left Leg',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	ik_leg_right: FloatProperty(
 		name='FK/IK Right Leg',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	
 	ik_arm_left: FloatProperty(
 		name='FK/IK Left Arm',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	ik_arm_right: FloatProperty(
 		name='FK/IK Right Arm',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	
 	ik_fingers_right: FloatProperty(
 		name='Right Fingers',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	ik_fingers_left: FloatProperty(
 		name='Left Fingers',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	
 	ik_per_finger: BoolProperty(
 		name='Per Finger',
 		description='Control Ik/FK on individual fingers',
-		update=update_ik)
+		update=update_constraints)
 	
 	### IK Stretch
 	ik_stretch_arms: BoolProperty(
 		name='Stretchy Arms',
 		description='Ik Stretch Arms',
-		update=update_ik)
+		update=update_constraints)
 	ik_stretch_legs: BoolProperty(
 		name='Stretchy Legs',
 		description='Ik Stretch Legs',
-		update=update_ik)
+		update=update_constraints)
 	ik_stretch_spine: FloatProperty(
 		name='Stretchy Spine',
 		description='Ik Stretch Spine',
 		min=0,
 		max=1,
-		update=update_ik)
+		update=update_constraints)
 
 	# IK Hinge
 	ik_hinge_hand_left: BoolProperty(
 		name='Left Hand Hinge',
 		description='Left Hand Hinge',
-		update=update_ik)
+		update=update_constraints)
 	ik_hinge_hand_right: BoolProperty(
 		name='Right Hand Hinge',
 		description='Right Hand Hinge',
-		update=update_ik)
+		update=update_constraints)
 	
 	ik_hinge_foot_left: BoolProperty(
 		name='Left Foot Hinge',
 		description='Left Foot Hinge',
-		update=update_ik)
+		update=update_constraints)
 	ik_hinge_foot_right: BoolProperty(
 		name='Right Foot Hinge',
 		description='Right Foot Hinge',
-		update=update_ik)
+		update=update_constraints)
 	
 	# IK Auto Clavicle
 	ik_auto_clav_left: BoolProperty(
 		name='Left Automatic IK Clavicle',
 		description='Left Automatic IK Clavicle',
-		update=update_ik)
+		update=update_constraints)
 	ik_auto_clav_right: BoolProperty(
 		name='Right Automatic IK Clavicle',
 		description='Right Automatic IK Clavicle',
-		update=update_ik)
+		update=update_constraints)
 	
 	# IK Pole Follow
-	ik_pole_follow_hands: FloatProperty(
+	ik_pole_follow_hands: BoolProperty(
 		name='IK Poles Follow Hands',
 		description='IK Poles Follow Hands',
-		min=0,
-		max=1,
-		update=update_ik)
-	ik_pole_follow_feet: FloatProperty(
+		update=update_constraints)
+	ik_pole_follow_feet: BoolProperty(
 		name='IK Poles Follow Feet',
 		description='IK Poles Follow Feet',
-		min=0,
-		max=1,
-		update=update_ik)
+		update=update_constraints)
 
-	# IK Parents (These values are currently just used by drivers on Child Of constraints, since update_ik() doesn't support integer checks atm.)
+	# IK Parents
 	ik_parents_arm_left: IntProperty(
 		name='Left Arm IK Parent',
 		description='Cycle between Left Arm IK Parents',
 		min=0,
-		max=3)
+		max=3,
+		update=update_constraints)
 	ik_parents_arm_right: IntProperty(
 		name='Right Arm IK Parent',
 		description='Cycle between Right Arm IK Parents',
 		min=0,
-		max=3)
+		max=3,
+		update=update_constraints)
 	ik_parents_leg_left: IntProperty(
 		name='Left Leg IK Parent',
 		description='Cycle between Left Leg IK Parents',
 		min=0,
-		max=3)
+		max=3,
+		update=update_constraints)
 	ik_parents_leg_right: IntProperty(
 		name='Right Leg IK Parent',
 		description='Cycle between Right Leg IK Parents',
 		min=0,
-		max=3)
+		max=3,
+		update=update_constraints)
 	
 	# Head Look
 	head_look: BoolProperty(
 		name='Head Look',
 		description='Head Look',
-		update=update_ik)
+		update=update_constraints)
 	head_target_parents: IntProperty(
 		name='Head Target Parent',
 		description='Cycle between Head Target Parents',
@@ -1389,8 +1402,8 @@ class MetsRigUI_IKFK(MetsRigUI):
 		# IK Pole Follow
 		layout.label(text='IK Pole Follow')
 		pole_row = layout.row()
-		pole_row.column().prop(mets_props, 'ik_pole_follow_hands', slider=True, text='Arms')
-		pole_row.column().prop(mets_props, 'ik_pole_follow_feet', slider=True, text='Legs')
+		pole_row.column().prop(mets_props, 'ik_pole_follow_hands', toggle=True, text='Arms')
+		pole_row.column().prop(mets_props, 'ik_pole_follow_feet', toggle=True, text='Legs')
 
 		# Head & Neck Settings
 		layout.label(text='Head Settings')
