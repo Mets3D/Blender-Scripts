@@ -34,8 +34,6 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 			
 			### Copying mirrored driver to target bone...
 			
-			print("")
-			print(d.data_path)
 			# The way drivers on bones work is weird af. You have to create the driver relative to the bone, but you have to read the driver relative to the armature. So d.data_path might look like "pose.bones["bone_name"].bone_property" but when we create a driver we just need the "bone_property" part.
 			data_path_from_bone = d.data_path.split("].", 1)[1]
 			to_bone.driver_remove(data_path_from_bone)
@@ -53,11 +51,8 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 				to_var = new_d.driver.variables.new()
 				to_var.type = from_var.type
 				to_var.name = from_var.name
-				print(to_var.name)
 				
 				for i in range(len(from_var.targets)):
-					print(from_var.targets[i].transform_type)
-					
 					target_bone = from_var.targets[i].bone_target
 					new_target_bone = utils.flip_name(target_bone)
 					to_var.targets[i].id 				= from_var.targets[i].id
@@ -88,7 +83,6 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 			
 			# Copy the expression
 			new_d.driver.expression = expression
-			print(expression)
 
 class XMirrorConstraints(bpy.types.Operator):
 	""" Mirror constraints to the opposite of all selected bones. """
