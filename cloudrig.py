@@ -941,11 +941,15 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		rig = self.get_rig()
 		
 		finger_names = ["thumb", "index", "middle", "ring", "pinky"]
+		debug_constraints = []
 		for b in rig.pose.bones:
 			for c in b.constraints:
 				# Handling the constraint name as an expression, where any metsrig property name can be referenced by its name.
 				expression = c.name.lower()
-				
+				if(c.name in debug_constraints):
+					print("Printing debug info for constraint: " + c.name)
+
+
 				# For fingers, when per-finger IK is disabled, we want to replace them with the overall fingers_left/right variable
 				if(not self.ik_per_finger):
 					for fn in finger_names:
@@ -965,6 +969,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				try:
 					result = eval(expression)
 				except:
+					if(c.name in debug_constraints):
+						print("Expression result: " + str(result))
 					continue	# Most constraints will fail, since most constraints don't have expressions in their names. This makes error handling, well, non-existent, which is not ideal. TODO?
 				if(c.type == 'ARMATURE'):
 					# For Armature Constraints, instead of changing the influence, the expression result will decide which target is enabled and which is not.
@@ -1119,7 +1125,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='Head Target Parent',
 		description='Cycle between Head Target Parents',
 		min=0,
-		max=2)
+		max=2,
+		update=update_constraints)
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
