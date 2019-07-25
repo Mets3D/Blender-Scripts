@@ -139,14 +139,21 @@ class XMirrorConstraints(bpy.types.Operator):
 				if(hasattr(opp_c, 'subtarget')):
 					opp_c.subtarget = utils.flip_name(c.subtarget)
 				
+				if(opp_c.type=='ARMATURE'):
+					for i, t in enumerate(c.targets):
+						opp_c.targets.new()
+						flipped_target = bpy.data.objects.get( utils.flip_name(c.targets[i].target.name) )
+						opp_c.targets[i].target = flipped_target
+						flipped_subtarget = utils.flip_name(c.targets[i].subtarget)
+						opp_c.targets[i].subtarget = flipped_subtarget
+
 				if(opp_c.type=='CHILD_OF' and opp_c.target!=None):
 					org_influence = opp_c.influence
 					org_active = armature.data.bones.active
-					opp_c.influence = 1
 					
+					# Setting inverse matrix based on https://developer.blender.org/T39891#222496 but it doesn't seem to work. Maybe because the drivers don't get deleted before being re-mirrored? Therefore influence=1 doesn't work. TODO.
 					armature.data.bones.active = opp_data_b
-
-					# https://developer.blender.org/T39891#222496
+					opp_c.influence = 1
 					context_py = bpy.context.copy()
 					context_py["constraint"] = opp_c
 					bpy.ops.constraint.childof_set_inverse(context_py, constraint=opp_c.name, owner='BONE')

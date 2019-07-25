@@ -23,6 +23,11 @@ import webbrowser
 #	- Fix bone rolls(How??)
 #	- Update magic numbers (STR- bones, Soft IK (IK Stretch values) and more in the future)
 
+# UX
+# Stereo Properties
+# I'd like to implement a class which generates left/right side properties or whatever I give it. It would also be able to draw itself such that by default it is one large button to toggle both the left/right sides, and a small button to split the functionality up into left/right buttons. If the small button is toggled off, it turns back into one big button.
+# Would this make more clutter or help reduce it? I don't know. Either way, low prio.
+
 # prop_hierarchy: allow for nested children
 # Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
 #	Except some objects get masked to make other versions of themselves, so some objects would have multiple masks to enable depending on rig properties.
