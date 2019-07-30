@@ -1,5 +1,5 @@
-"Version: 1.1"
-"05/07/19"
+"Version: 1.2"
+"23/07/19"
 
 import bpy
 from bpy.props import *
@@ -14,12 +14,19 @@ import webbrowser
 # Modularity
 # The rig script and UI should start functioning as soon as the metsrig custom property is added to the armature.
 # Every other information should be able to be provided without the rig creator having to hard code it(although some python syntax will probably have to be used in the custom properties), such as characters, outfits, bone layer names and layout(TODO).
+# Things that rely on hard coded bone or constraint names are fine, but there shouldn't be an error when these things are not found, they simply should just not show up in the UI.
+# These hard coded names should be documented at some point.
 
-# Constraints
-# TODO: If a constraint has multiple "names" but is meant to have an influence other than 0 or 1, and only its visibility should be toggled, the influence gets changed anyways.
-# Might need to do a thing where the constraint name is instead an expression for the influence. This would make more sense considering other things as well.
-# Alternatively, these constraints could just have a driver on their influence that forces it to a constant value.
-# But at that point, we might as well just have a driver on the influence that sets the damn influence. But that wouldn't align with the modular design of the rig which is still WIP.
+# Applying the rig to other characters
+# There should be a "Fix stuff" button/operator, that does the following:
+#	- Reset stretch contraints
+#	- Fix bone rolls(How??)
+#	- Update magic numbers (STR- bones, Soft IK (IK Stretch values) and more in the future)
+
+# UX
+# Stereo Properties
+# I'd like to implement a class which generates left/right side properties or whatever I give it. It would also be able to draw itself such that by default it is one large button to toggle both the left/right sides, and a small button to split the functionality up into left/right buttons. If the small button is toggled off, it turns back into one big button.
+# Would this make more clutter or help reduce it? I don't know. Either way, low prio.
 
 # prop_hierarchy: allow for nested children
 # Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
@@ -40,16 +47,6 @@ import webbrowser
 	# The rig should detect when itself is a proxy and be aware of what rig it is a proxy of. Use that rig's children instead of the proxy armature's(presumably non-existent) children.
 	# It should also detect when multiple copies of itself exist. Currently the only thing that needs to be done for two rigs to work without messing each other up is to change the 'material_controller' to the correct one.
 
-def get_children_recursive(obj, ret=[]):
-	# Return all the children and children of children of obj in a flat list.
-	for c in obj.children:
-		if(c not in ret):
-			ret.append(c)
-		ret = get_children_recursive(c, ret)
-	
-	return ret
-
-
 def get_rigs():
 	""" Find all MetsRigs in the current view layer. """
 	ret = []
@@ -57,6 +54,17 @@ def get_rigs():
 	for o in armatures:
 		if("metsrig") in o.data:
 			ret.append(o)
+	if(len(ret)==0):
+		ret = [None]
+	return ret
+
+def get_children_recursive(obj, ret=[]):
+	# Return all the children and children of children of obj in a flat list.
+	for c in obj.children:
+		if(c not in ret):
+			ret.append(c)
+		ret = get_children_recursive(c, ret)
+	
 	return ret
 
 class MetsRig_BoolProperties(bpy.types.PropertyGroup):
@@ -92,11 +100,21 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		""" Find the rig that is using this instance. """
 		for rig in get_rigs():
 			if(rig.data.metsrig_properties == self):
+				pinned_rig = rig
 				return rig
 	
 	@classmethod
 	def pre_depsgraph_update(cls, scene):
 		""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
+		
+		def update_pinned_rig(scene):
+			# The pinned rig should store the most recently selected metsrig.
+			if(bpy.context.object in get_rigs()):
+				scene['metsrig_pinned'] = bpy.context.object
+			if(scene['metsrig_pinned'] == None):
+				scene['metsrig_pinned'] = get_rigs()[0] # Can be None, only when no metsrigs are in the scene.
+			return scene['metsrig_pinned']
+		
 		for rig in get_rigs():
 			# Grabbing relevant data
 			mets_props = rig.data.metsrig_properties
@@ -505,6 +523,8 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			# Recursive function to control item visibilities.
 			# The object hierarchy assumes that if an object is disabled, all its children should be disabled, that's why this is done recursively.
 			
+			obj.hide_select = not self.global_mesh_selectability
+
 			visible = None
 			if(hide!=None):
 				visible = not hide
@@ -612,14 +632,43 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			if(prop_owner==None): continue
 			for p in prop_owner.keys():
 				if( type(prop_owner[p]) != int or p.startswith("_") ): continue
-				min = prop_owner['_RNA_UI'].to_dict()[p]['min']
-				max = prop_owner['_RNA_UI'].to_dict()[p]['max']
-				if(min==0 and max==1):
+				my_min = prop_owner['_RNA_UI'].to_dict()[p]['min']
+				my_max = prop_owner['_RNA_UI'].to_dict()[p]['max']
+				if(my_min==0 and my_max==1):
 					new_bool = bool_props.add()
 					new_bool.name = p
 					new_bool.value = prop_owner[p]
 					new_bool.rig = rig
 	
+	def update_material_controller(self, bone):
+		# Updating material controller with this character's values.
+		rig = self.get_rig()
+		if('material_controller' in rig.data):
+			controller_nodegroup = bpy.data.node_groups.get(rig.data['material_controller'])
+			if(controller_nodegroup):
+				# To update the material controller, we set the nodegroup's input default values to the desired values.
+				# A nodegroup's input and output default_values are normally ONLY used by Blender to set said values when a new instance of the node is created.
+				# Which is to say, changing the input/output default_values won't have any effect on existing nodes.
+				# To overcome this, value nodes inside the controller material copy the values of the input/output default_values via drivers.
+				
+				# Why not just add the Value nodes themselves to the UI? Because they don't have min/max values, but nodegroup inputs/outputs do.
+				# Why hook up the input rather than the output? It makes no difference. It just made more sense to me this way.
+				for io in [controller_nodegroup.inputs, controller_nodegroup.outputs]:
+					for i in io:
+						prop_value = None
+						if("_" + i.name in bone):
+							prop_value = bone["_" + i.name]
+						elif(i.name in bone):
+							prop_value = bone[i.name]
+						else:
+							continue
+						if( type(prop_value) in [int, float] ):
+							i.default_value = prop_value
+						else:
+							color = prop_value.to_list()
+							color.append(1)
+							i.default_value = color
+
 	def outfits(self, context):
 		""" Callback function for finding the list of available outfits for the metsrig_outfits enum. """
 		rig = self.get_rig()
@@ -677,35 +726,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			items.append((hair, hair, hair))
 		return items
 	
-	def update_material_controller(self, bone):
-		# Updating material controller with this character's values.
-		rig = self.get_rig()
-		if('material_controller' in rig.data):
-			controller_nodegroup = bpy.data.node_groups.get(rig.data['material_controller'])
-			if(controller_nodegroup):
-				# To update the material controller, we set the nodegroup's input default values to the desired values.
-				# A nodegroup's input and output default_values are normally ONLY used by Blender to set said values when a new instance of the node is created.
-				# Which is to say, changing the input/output default_values won't have any effect on existing nodes.
-				# To overcome this, value nodes inside the controller material copy the values of the input/output default_values via drivers.
-				
-				# Why not just add the Value nodes themselves to the UI? Because they don't have min/max values, but nodegroup inputs/outputs do.
-				# Why hook up the input rather than the output? It makes no difference. It just made more sense to me this way.
-				for io in [controller_nodegroup.inputs, controller_nodegroup.outputs]:
-					for i in io:
-						prop_value = None
-						if("_" + i.name in bone):
-							prop_value = bone["_" + i.name]
-						elif(i.name in bone):
-							prop_value = bone[i.name]
-						else:
-							continue
-						if( type(prop_value) in [int, float] ):
-							i.default_value = prop_value
-						else:
-							color = prop_value.to_list()
-							color.append(1)
-							i.default_value = color
-
 	def change_outfit(self, context):
 		""" Update callback of metsrig_outfits enum. """
 		
@@ -905,23 +925,31 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='use_proxy',
 		description='Use Proxy Meshes',
 		update=update_meshes)
+	global_mesh_selectability: BoolProperty(
+		name='global_mesh_selectability',
+		description='Mesh Selectability',
+		update=update_meshes)
 
-	def update_ik(self, context):
-		""" Callback function for FK/IK settings.
-			For this to work (All case-insensitive):
-			Constraints must be named according to the property names they should be toggled by.
-			A constraint can have more than one name, separated by a comma and a space, eg. "ik_stretch_arms, ik_arm_left". The behaviour will be like an AND statement, so the constraint is only enabled when both properties are enabled. (This is WIP, and the final form of this will probably end up being slapping expressions into constraint names...)
+	def update_constraints(self, context):
+		""" Callback function for FK/IK settings and more.
+			Constraint names can be expressions with access to metsrig variables. Eg a constraint could be called:
+			"ik_leg_left * ik_stretch_legs"
+			The result of the expression would be the Influence of the constraint.
+
 			Finger IK constraints must be named according to the 'finger_names' list and ending in .L/.R, eg. "Thumb_IK.L".
-			Hinge IK constraints must be named according to the 'hinge_prop_names'.
 		"""
 		rig = self.get_rig()
 		
 		finger_names = ["thumb", "index", "middle", "ring", "pinky"]
+		debug_constraints = []
 		for b in rig.pose.bones:
 			for c in b.constraints:
 				# Handling the constraint name as an expression, where any metsrig property name can be referenced by its name.
 				expression = c.name.lower()
-				
+				if(c.name in debug_constraints):
+					print("Printing debug info for constraint: " + c.name)
+
+
 				# For fingers, when per-finger IK is disabled, we want to replace them with the overall fingers_left/right variable
 				if(not self.ik_per_finger):
 					for fn in finger_names:
@@ -940,150 +968,165 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				# Evaluating the expression and setting the constraint influence to the result
 				try:
 					result = eval(expression)
+				except:
+					if(c.name in debug_constraints):
+						print("Expression result: " + str(result))
+					continue	# Most constraints will fail, since most constraints don't have expressions in their names. This makes error handling, well, non-existent, which is not ideal. TODO?
+				if(c.type == 'ARMATURE'):
+					# For Armature Constraints, instead of changing the influence, the expression result will decide which target is enabled and which is not.
+					# We use Armature Constraints as if they were a multi-child-of constraint (with the added benefit of not having to worry about inverse matrices)
+
+					# When the expression result is 0, we want the first target to be active.
+					# The total weights in the constraint would never go below 0.
+					# If the expression result is not a whole number, we want to subtract mod(1) from the top weight and add the same amount to the bottom weight.
+
+					for t in c.targets:
+						t.weight = 0
+					index = max(0, min(len(c.targets)-1, int(result)))	# Find the target index by truncating the expression result and clamping it between 0 and the number of targets.
+					weight = result - (index-1)
+					c.targets[index].weight = weight
+				else:
 					c.influence = result
 					c.mute = result <= 0
-				except:
-					pass	# Most constraints will fail, since most constraints don't have expressions in their names. This makes error handling, well, non-existent, which is not ideal. TODO.
-				
-	
 	### FK/IK Properties ###
 
 	### FK/IK Switches
 	ik_spine: FloatProperty(
 		name='FK/IK Spine',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	
 	ik_leg_left: FloatProperty(
 		name='FK/IK Left Leg',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	ik_leg_right: FloatProperty(
 		name='FK/IK Right Leg',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	
 	ik_arm_left: FloatProperty(
 		name='FK/IK Left Arm',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	ik_arm_right: FloatProperty(
 		name='FK/IK Right Arm',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	
 	ik_fingers_right: FloatProperty(
 		name='Right Fingers',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	ik_fingers_left: FloatProperty(
 		name='Left Fingers',
 		default=0,
-		update=update_ik,
+		update=update_constraints,
 		min=0, max=1 )
 	
 	ik_per_finger: BoolProperty(
 		name='Per Finger',
 		description='Control Ik/FK on individual fingers',
-		update=update_ik)
+		update=update_constraints)
 	
 	### IK Stretch
 	ik_stretch_arms: BoolProperty(
 		name='Stretchy Arms',
 		description='Ik Stretch Arms',
-		update=update_ik)
+		update=update_constraints)
 	ik_stretch_legs: BoolProperty(
 		name='Stretchy Legs',
 		description='Ik Stretch Legs',
-		update=update_ik)
+		update=update_constraints)
 	ik_stretch_spine: FloatProperty(
 		name='Stretchy Spine',
 		description='Ik Stretch Spine',
 		min=0,
 		max=1,
-		update=update_ik)
+		update=update_constraints)
 
 	# IK Hinge
 	ik_hinge_hand_left: BoolProperty(
 		name='Left Hand Hinge',
 		description='Left Hand Hinge',
-		update=update_ik)
+		update=update_constraints)
 	ik_hinge_hand_right: BoolProperty(
 		name='Right Hand Hinge',
 		description='Right Hand Hinge',
-		update=update_ik)
+		update=update_constraints)
 	
 	ik_hinge_foot_left: BoolProperty(
 		name='Left Foot Hinge',
 		description='Left Foot Hinge',
-		update=update_ik)
+		update=update_constraints)
 	ik_hinge_foot_right: BoolProperty(
 		name='Right Foot Hinge',
 		description='Right Foot Hinge',
-		update=update_ik)
+		update=update_constraints)
 	
 	# IK Auto Clavicle
 	ik_auto_clav_left: BoolProperty(
 		name='Left Automatic IK Clavicle',
 		description='Left Automatic IK Clavicle',
-		update=update_ik)
+		update=update_constraints)
 	ik_auto_clav_right: BoolProperty(
 		name='Right Automatic IK Clavicle',
 		description='Right Automatic IK Clavicle',
-		update=update_ik)
+		update=update_constraints)
 	
 	# IK Pole Follow
-	ik_pole_follow_hands: FloatProperty(
+	ik_pole_follow_hands: BoolProperty(
 		name='IK Poles Follow Hands',
 		description='IK Poles Follow Hands',
-		min=0,
-		max=1,
-		update=update_ik)
-	ik_pole_follow_feet: FloatProperty(
+		update=update_constraints)
+	ik_pole_follow_feet: BoolProperty(
 		name='IK Poles Follow Feet',
 		description='IK Poles Follow Feet',
-		min=0,
-		max=1,
-		update=update_ik)
+		update=update_constraints)
 
-	# IK Parents (These values are currently just used by drivers on Child Of constraints, since update_ik() doesn't support integer checks atm.)
+	# IK Parents
 	ik_parents_arm_left: IntProperty(
 		name='Left Arm IK Parent',
 		description='Cycle between Left Arm IK Parents',
 		min=0,
-		max=3)
+		max=3,
+		update=update_constraints)
 	ik_parents_arm_right: IntProperty(
 		name='Right Arm IK Parent',
 		description='Cycle between Right Arm IK Parents',
 		min=0,
-		max=3)
+		max=3,
+		update=update_constraints)
 	ik_parents_leg_left: IntProperty(
 		name='Left Leg IK Parent',
 		description='Cycle between Left Leg IK Parents',
 		min=0,
-		max=3)
+		max=3,
+		update=update_constraints)
 	ik_parents_leg_right: IntProperty(
 		name='Right Leg IK Parent',
 		description='Cycle between Right Leg IK Parents',
 		min=0,
-		max=3)
+		max=3,
+		update=update_constraints)
 	
 	# Head Look
 	head_look: BoolProperty(
 		name='Head Look',
 		description='Head Look',
-		update=update_ik)
+		update=update_constraints)
 	head_target_parents: IntProperty(
 		name='Head Target Parent',
 		description='Cycle between Head Target Parents',
 		min=0,
-		max=2)
+		max=2,
+		update=update_constraints)
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -1092,10 +1135,7 @@ class MetsRigUI(bpy.types.Panel):
 	
 	@classmethod
 	def poll(cls, context):
-		if(context.object != None and
-			context.object in get_rigs()):
-				return True
-		return False
+		return bpy.context.scene['metsrig_pinned'] != None
 	
 	def draw(self, context):
 		layout = self.layout
@@ -1109,7 +1149,8 @@ class MetsRigUI_Properties(MetsRigUI):
 		if(not super().poll(context)):
 			return False
 		# Only display this panel if there is either an outfit with options, multiple outfits, or multiple characters.
-		obj = context.object
+		obj = context.scene['metsrig_pinned']
+		if(not obj): return False
 		data = obj.data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
@@ -1130,7 +1171,7 @@ class MetsRigUI_Properties(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		obj = context.object
+		obj = context.scene['metsrig_pinned']
 		data = obj.data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
@@ -1178,9 +1219,9 @@ class MetsRigUI_Properties(MetsRigUI):
 					if(parent_prop_name_without_values not in props_done):
 						if(parent_prop_name_without_values in bool_props):
 							bp = bool_props[parent_prop_name_without_values]
-							layout.prop(bp, 'value', toggle=True, text=bp.name, icon=icon)
+							layout.prop(bp, 'value', toggle=True, text=bp.name.replace("_", " "), icon=icon)
 						else:
-							layout.prop(prop_owner, '["'+parent_prop_name_without_values+'"]', slider=True)
+							layout.prop(prop_owner, '["'+parent_prop_name_without_values+'"]', slider=True, text=parent_prop_name_without_values.replace("_", " "))
 					
 					# Marking parent prop as done drawing.
 					props_done.append(parent_prop_name_without_values)
@@ -1206,11 +1247,11 @@ class MetsRigUI_Properties(MetsRigUI):
 				if( prop_name in props_done or prop_name.startswith("_") ): continue
 				# Int Props
 				if(prop_name not in bool_props and type(prop_owner[prop_name]) in [int, float] ):
-					layout.prop(prop_owner, '["'+prop_name+'"]', slider=True)
+					layout.prop(prop_owner, '["'+prop_name+'"]', slider=True, text=prop_name.replace("_", " "))
 			# Bool Props
 			for bp in bool_props:
 				if(bp.name in prop_owner.keys() and bp.name not in props_done):
-					layout.prop(bp, 'value', toggle=True, text=bp.name)
+					layout.prop(bp, 'value', toggle=True, text=bp.name.replace("_", " "))
 		
 		if( character_properties_bone != None ):
 			add_props(character_properties_bone)
@@ -1230,7 +1271,7 @@ class MetsRigUI_Layers(MetsRigUI):
 	def draw(self, context):
 		layout = self.layout
 		
-		data = context.object.data
+		data = context.scene['metsrig_pinned'].data
 		
 		row_ik = layout.row()
 		row_ik.column().prop(data, 'layers', index=0, toggle=True, text='Main IK Controls')
@@ -1268,7 +1309,7 @@ class MetsRigUI_IKFK(MetsRigUI):
 	def draw(self, context):
 		layout = self.layout
 		column = layout.column()
-		rig = context.object
+		rig = context.scene['metsrig_pinned']
 		mets_props = rig.data.metsrig_properties
 		
 		# TODO improve the overall organization for all these buttons.
@@ -1373,8 +1414,8 @@ class MetsRigUI_IKFK(MetsRigUI):
 		# IK Pole Follow
 		layout.label(text='IK Pole Follow')
 		pole_row = layout.row()
-		pole_row.column().prop(mets_props, 'ik_pole_follow_hands', slider=True, text='Arms')
-		pole_row.column().prop(mets_props, 'ik_pole_follow_feet', slider=True, text='Legs')
+		pole_row.column().prop(mets_props, 'ik_pole_follow_hands', toggle=True, text='Arms')
+		pole_row.column().prop(mets_props, 'ik_pole_follow_feet', toggle=True, text='Legs')
 
 		# Head & Neck Settings
 		layout.label(text='Head Settings')
@@ -1397,7 +1438,7 @@ class MetsRigUI_Extras(MetsRigUI):
 	
 	def draw(self, context):
 		layout = self.layout
-		data = context.object.data
+		data = context.scene['metsrig_pinned'].data
 		mets_props = data.metsrig_properties
 		bool_props = data.metsrig_boolproperties
 		
@@ -1410,6 +1451,7 @@ class MetsRigUI_Extras(MetsRigUI):
 		layout.row().prop(mets_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
 		use_proxy = mets_props.use_proxy
 		layout.row().prop(mets_props, 'use_proxy', text='Use Proxies', toggle=True)
+		layout.row().prop(mets_props, 'global_mesh_selectability', text='Mesh Selectability', toggle=True)
 
 class MetsRigUI_Extras_Materials(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras_materials"
@@ -1420,7 +1462,7 @@ class MetsRigUI_Extras_Materials(MetsRigUI):
 	def poll(cls, context):
 		if(not super().poll(context)):
 			return False
-		rig = context.object
+		rig = context.scene['metsrig_pinned']
 		if('material_controller' not in rig.data):
 			return False
 		mat_ctr_name = rig.data['material_controller']
@@ -1428,7 +1470,7 @@ class MetsRigUI_Extras_Materials(MetsRigUI):
 		
 	def draw(self, context):
 		layout = self.layout
-		data = context.object.data
+		data = context.scene['metsrig_pinned'].data
 		
 		if('material_controller' in data):
 			material_controller = bpy.data.node_groups.get(data['material_controller'])
@@ -1448,13 +1490,13 @@ class MetsRigUI_Extras_Physics(MetsRigUI):
 	bl_parent_id = "OBJECT_PT_metsrig_ui_extras"
 	
 	def draw_header(self, context):
-		data = context.object.data
+		data = context.scene['metsrig_pinned'].data
 		mets_props = data.metsrig_properties
 		layout = self.layout
 		layout.prop(mets_props, "physics_toggle", text="")
 	
 	def draw(self, context):
-		data = context.object.data
+		data = context.scene['metsrig_pinned'].data
 		mets_props = data.metsrig_properties
 		layout = self.layout
 		
@@ -1473,9 +1515,9 @@ class MetsRigUI_Extras_Physics(MetsRigUI):
 		layout.operator("ptcache.free_bake_all", text="Delete All Bakes")
 
 class Link_Button(bpy.types.Operator):
-	"""Open links in a web browser."""
+	"""Open a link in a web browser"""
 	bl_idname = "ops.open_link"
-	bl_label = "Open Link in web browser"
+	bl_label = "Open a link in web browser"
 	bl_options = {'REGISTER'}
 	
 	url: StringProperty(name='URL',
@@ -1499,10 +1541,15 @@ class MetsRigUI_Links(MetsRigUI):
 	def draw(self, context):
 		layout = self.layout
 		
-		layout.operator('ops.open_link', text="Blender Cloud").url = self.url_cloud
-		layout.operator('ops.open_link', text="Blender Dev Fund").url = self.url_dev_fund
-		layout.operator('ops.open_link', text="Blender Dev Blog").url = self.url_dev_blog
-		layout.operator('ops.open_link', text="Blender Chat").url = self.url_blender_chat
+		cloud_button = layout.operator('ops.open_link', text="Blender Cloud")
+		cloud_button.url = self.url_cloud
+		#cloud_button.description = "Subscribe to the Blender Cloud!" #TODO: Can I have unique descriptions per button? I think not, but would be nice.
+		fund_button = layout.operator('ops.open_link', text="Blender Dev Fund")
+		fund_button.url = self.url_dev_fund
+		blog_button = layout.operator('ops.open_link', text="Blender Dev Blog")
+		blog_button.url = self.url_dev_blog
+		chat_button = layout.operator('ops.open_link', text="Blender Chat")
+		chat_button.url = self.url_blender_chat
 	
 classes = (
 	MetsRigUI_Properties, 

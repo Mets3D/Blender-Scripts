@@ -2,6 +2,10 @@ import bpy
 from math import *
 from . import utils
 
+# TODO: Mirror IK Solver settings.
+# When mirroring from right to left side, it seems like it doesn't flip names correctly, and also doesn't delete existing constraints.
+# Child Of constraints' inverse matrices still don't always seem right.
+
 def copy_attributes(from_thing, to_thing):
 	# TODO: Could and probably should make this optinally recursive.
 	# Could be useful for copying drivers.
@@ -30,8 +34,6 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 			
 			### Copying mirrored driver to target bone...
 			
-			print("")
-			print(d.data_path)
 			# The way drivers on bones work is weird af. You have to create the driver relative to the bone, but you have to read the driver relative to the armature. So d.data_path might look like "pose.bones["bone_name"].bone_property" but when we create a driver we just need the "bone_property" part.
 			data_path_from_bone = d.data_path.split("].", 1)[1]
 			to_bone.driver_remove(data_path_from_bone)
@@ -49,11 +51,8 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 				to_var = new_d.driver.variables.new()
 				to_var.type = from_var.type
 				to_var.name = from_var.name
-				print(to_var.name)
 				
 				for i in range(len(from_var.targets)):
-					print(from_var.targets[i].transform_type)
-					
 					target_bone = from_var.targets[i].bone_target
 					new_target_bone = utils.flip_name(target_bone)
 					to_var.targets[i].id 				= from_var.targets[i].id
@@ -84,7 +83,6 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 			
 			# Copy the expression
 			new_d.driver.expression = expression
-			print(expression)
 
 class XMirrorConstraints(bpy.types.Operator):
 	""" Mirror constraints to the opposite of all selected bones. """
@@ -135,14 +133,21 @@ class XMirrorConstraints(bpy.types.Operator):
 				if(hasattr(opp_c, 'subtarget')):
 					opp_c.subtarget = utils.flip_name(c.subtarget)
 				
+				if(opp_c.type=='ARMATURE'):
+					for i, t in enumerate(c.targets):
+						opp_c.targets.new()
+						flipped_target = bpy.data.objects.get( utils.flip_name(c.targets[i].target.name) )
+						opp_c.targets[i].target = flipped_target
+						flipped_subtarget = utils.flip_name(c.targets[i].subtarget)
+						opp_c.targets[i].subtarget = flipped_subtarget
+
 				if(opp_c.type=='CHILD_OF' and opp_c.target!=None):
 					org_influence = opp_c.influence
 					org_active = armature.data.bones.active
-					opp_c.influence = 1
 					
+					# Setting inverse matrix based on https://developer.blender.org/T39891#222496 but it doesn't seem to work. Maybe because the drivers don't get deleted before being re-mirrored? Therefore influence=1 doesn't work. TODO.
 					armature.data.bones.active = opp_data_b
-
-					# https://developer.blender.org/T39891#222496
+					opp_c.influence = 1
 					context_py = bpy.context.copy()
 					context_py["constraint"] = opp_c
 					bpy.ops.constraint.childof_set_inverse(context_py, constraint=opp_c.name, owner='BONE')
