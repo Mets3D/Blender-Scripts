@@ -56,7 +56,7 @@ def create_tangent_bones():
 		
 		# Scale down the selected bones by setting them to an absolute scale
 		direction = (eb.tail-eb.head).normalized()
-		eb.tail = eb.head+direction*scale
+		eb.tail = eb.head + direction * scale
 
 		# Set BBone targets
 		def_bone = bpy.context.object.data.edit_bones.get(def_name)
@@ -67,7 +67,8 @@ def create_tangent_bones():
 			
 			if(not def_bone.parent): continue
 			
-			if(def_bone.parent.name.startswith("DEF")):
+			if(def_bone.parent.name.startswith("DEF-")):
+				if(def_bone.parent.name == "DEF-Head"): continue
 				# End target of parent def bone
 				parent_bone = def_bone.parent
 				parent_bone.bbone_handle_type_start = 'TANGENT'

@@ -1,4 +1,9 @@
-TODO: combine this with blender_wishlist.txt at home.
+TODO: 
+    combine this with blender_wishlist.txt at home.
+    assign priorities
+    re-word more professionally
+    talk to Jacques about his plans for rigging with nodes
+    talk to Sebastian about what his role is going to be in 2.81 and 2.82
 
 Big things:
 - Constraints as nodes, or in general a node-based rigging system, which can still be abstracted by the old constraint interface.
@@ -7,6 +12,7 @@ Big things:
 - Let armatures be aware of every object they deform.
 - Deprecate armature layers and bone groups and replace with a new system.
 - Rebuild the data structure of how vertex groups(and maybe shape keys) are stored. (A weight container is the same thing as a traditional Weight Map in that it stores weight values for vertices, but it is separate from the mesh and is an item of its own.)
+- Granuralize(that's a word) bone transforms further in the dependency graph. Two bones should be able to aim at each other without a dependency cycle, since only their rotation is dependent on their location. But as far as they're concerned right now, their transforms are dependent on each other's transforms.
 
 Medium things:
 - Mask for Surface Deform modifier
@@ -16,3 +22,12 @@ Medium things:
 Small things:
 - Thicker/brighter edge drawing for bone shapes (Or edges in general)
 - Head/Tail sliders should interpolate BBones correctly
+- Ctrl+0,1,2 to set subsurf levels should work in weight paint mode on the weight paint object.
+
+VERY small things:
+- Child Of constraint should automatically Set Inverse when a new target is chosen.
+- It should be easier(I'm not even sure it's reliably possible at all) to set the inverse of Child Of constraint through python.
+- How come Normalize Vertex Group and Normalize All Vertex Groups are separate operators, whereas Clean Vertex Group and Clean All Vertex Groups is one operator?
+
+Bugs:
+- Mask modifiers can have a severe performance impact when they have drivers on them, which could be relevant to production rigs with switchable accessories or clothes.
