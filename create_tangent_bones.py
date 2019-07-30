@@ -1,8 +1,9 @@
 import bpy
 
 # For setting up BBone tangents.
-# Before using, select all face DEF- bones in edit mode.
-# This was hardcoded to work on Rain on 29/07/2019, but could be modified to be reusable.
+# Before using:
+# Make sure all previous TAN- bones are deleted
+# Select all face DEF- bones in edit mode.
 
 def find_nearby_bones(search_co, dist):
 	# Bruteforce search for bones that are within a given distance of the given coordinates.
@@ -17,7 +18,7 @@ bpy.ops.armature.duplicate_move()
 
 scale=0.01
 
-# Unparenting and disconnecting ( TODO: They will have to be parented manually, probably, unless we want to do some distance check bs, which I guess we could tbh )
+# Unparenting and disconnecting
 bpy.ops.armature.parent_clear(type='CLEAR')
 bpy.ops.armature.select_more()
 
@@ -38,16 +39,12 @@ for eb in bpy.context.selected_editable_bones:
 	# Disable Deform
 	eb.use_deform = False
 	
-	# Finding a parent CTR bone
+	# Finding a nearby CTR bone and parenting to it
 	nearby_bones = find_nearby_bones(eb.head, 0.0005)
-	for nb in nearby_bones:
-		print(".."+nb.name)
-	
 	ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR') and not b.name.startswith('CTR2')]
 	ctr_bone = None
 	if(len(ctr_bones) > 0):
 		ctr_bone = ctr_bones[0]
-		print("Parent: " + ctr_bone.name)
 		eb.parent = ctr_bone
 	
 	# Scale down the selected bones by setting them to an absolute scale
@@ -56,17 +53,13 @@ for eb in bpy.context.selected_editable_bones:
 
 	# Set BBone targets
 	def_bone = bpy.context.object.data.edit_bones.get(def_name)
-	print(def_name)
 	if(def_bone):
-		print(def_bone)
 		def_bone.bbone_handle_type_start = 'TANGENT'
-		print(def_bone.bbone_handle_type_start)
 		def_bone.bbone_handle_type_end = 'TANGENT'
 		def_bone.bbone_custom_handle_start = eb
 		if(def_bone.parent and def_bone.parent.name.startswith("DEF")):
 			parent_bone = def_bone.parent
 			parent_bone.bbone_handle_type_start = 'TANGENT'
-			print(def_bone.bbone_handle_type_start)
 			parent_bone.bbone_handle_type_end = 'TANGENT'
 			parent_bone.bbone_custom_handle_end = eb
 			
