@@ -1,0 +1,18 @@
+TODO: combine this with blender_wishlist.txt at home.
+
+Big things:
+- Constraints as nodes, or in general a node-based rigging system, which can still be abstracted by the old constraint interface.
+- Combining shape keys with a node system (I vaguely know what I mean by this but not really - think hundreds of corrective shape keys interacting with each other. It's currently set up with a bunch of drivers and it's super finicky.)
+- Also let us control shape key values within the same node graph as bone constraints.
+- Let armatures be aware of every object they deform.
+- Deprecate armature layers and bone groups and replace with a new system.
+- Rebuild the data structure of how vertex groups(and maybe shape keys) are stored. (A weight container is the same thing as a traditional Weight Map in that it stores weight values for vertices, but it is separate from the mesh and is an item of its own.)
+
+Medium things:
+- Mask for Surface Deform modifier
+- Physics bones?
+- Let me snap bones to other bones(not just the head or tail but anywhere in between) - and consider bbone splining
+
+Small things:
+- Thicker/brighter edge drawing for bone shapes (Or edges in general)
+- Head/Tail sliders should interpolate BBones correctly
