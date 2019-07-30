@@ -22,8 +22,11 @@ Medium things:
 - Mask for Surface Deform modifier
 - Physics bones?
 - Let me snap bones to other bones(not just the head or tail but anywhere in between) - and consider bbone splining
+- Can't press number keys to change brush anymore. Collections appear to have precedence, but they really shouldn't.
 
 Small things:
+- Auto-Normalize should never add weights to 0 weights.
+- Considering there is now X Y Z symmetry options, the X-Mirror option seems redundant. 
 - Thicker/brighter edge drawing for bone shapes (Or edges in general)
 - Head/Tail sliders should interpolate BBones correctly
 - Ctrl+0,1,2 to set subsurf levels should work in weight paint mode on the weight paint object.
