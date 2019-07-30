@@ -7,6 +7,10 @@ TODO:
 
 Big things:
 - Constraints as nodes, or in general a node-based rigging system, which can still be abstracted by the old constraint interface.
+    - I want to access the result of a constraint and do maths on it, without actually applying that result to my transforms. I guess that's pretty fundamental and may be obvious, but there you go.
+    - In this setting it might not make sense to refere to these pieces of logic as "constraints" anymore. They are more like Solvers. You ask them what transformation needs to be performed on a bone to achieve a goal, and they give you a result.
+    - The way they arrive at this result also doesn't have to be a black box. There could be atomic nodes that let you do simple vector, matrix and quaternion maths, and these Solver nodes could be built out of these atomic nodes. The Solver nodes would basically just be pre-created node groups.
+    - I can think of very few things that would need special atomic nodes, like IK and maybe Shrinkwrap.
 - Combining shape keys with a node system (I vaguely know what I mean by this but not really - think hundreds of corrective shape keys interacting with each other. It's currently set up with a bunch of drivers and it's super finicky.)
 - Also let us control shape key values within the same node graph as bone constraints.
 - Let armatures be aware of every object they deform.
