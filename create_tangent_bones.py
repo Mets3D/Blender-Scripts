@@ -71,6 +71,9 @@ def create_tangent_bones_for_chain(chain):
 		if(i==0):
 			# Tangent control for the first bone in each chain needs to be created based on only start bone.
 			def_bone.bbone_custom_handle_start = create_tangent_bone(bone_start=chain[0], bone_end=None)
+			if(len(chain)==1):
+				# If there is exactly one bone in the chain, it's both the first and last bone, so we also need to create its tail tangent here.
+				def_bone.bbone_custom_handle_end = create_tangent_bone(bone_start=None, bone_end=chain[0])
 			continue
 
 		chain[i].bbone_custom_handle_start = chain[i-1].bbone_custom_handle_end = create_tangent_bone(chain[i], chain[i-1])
