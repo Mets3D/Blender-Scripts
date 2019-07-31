@@ -40,17 +40,32 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 	loc = None
 	name = ""
 	direction = None
-	if(bone_start):
+	pos_aim = None
+	neg_aim = None
+	if(bone_start):	# If bone_start is passed
 		loc = bone_start.head
 		name = bone_start.name.replace("DEF-", "TAN-")
 		direction = (bone_start.tail-bone_start.head).normalized()
-		if(bone_end):
+
+		# Finding neighbor CTR bone towards end of the bone chain.
+		nearby_bones = find_nearby_bones(bone_start.tail, 0.0005)
+		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR') and not b.name.startswith('CTR2')]
+		if(len(ctr_bones) > 0):
+			pos_aim = ctr_bones[0]
+	
+		if(bone_end):	# If both bone_start and bone_end are passed
 			bone_end_direction = (bone_end.tail-bone_end.head).normalized()
 			direction = (direction + bone_end_direction) * 1/2
-	else:
+	else:	# If only bone_end is passed
 		loc = bone_end.tail
 		name = bone_end.name.replace("DEF-", "TAN-Tail-")
 		direction = (bone_end.tail-bone_end.head).normalized()
+	
+	if(bone_end): # If bone_end is passed, we want to find the neighbor towards the beginning of the chain.
+		nearby_bones = find_nearby_bones(bone_end.head, 0.0005)
+		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR') and not b.name.startswith('CTR2')]
+		if(len(ctr_bones) > 0):
+			neg_aim = ctr_bones[0]
 
 	# Find a parent CTR bone
 	nearby_bones = find_nearby_bones(loc, 0.0005)
@@ -59,10 +74,17 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 	
 	ctr_bone = ctr_bones[0]
 	tan_bone = bpy.context.object.data.edit_bones.new(name)
+	aim_bone = bpy.context.object.data.edit_bones.new(name.replace("TAN-", "AIM-TAN-"))
 	tan_bone.parent = ctr_bone
-	tan_bone.head = loc
-	tan_bone.tail = tan_bone.head + direction*scale
-	tan_bone.bbone_x = tan_bone.bbone_z = 0.001
+	aim_bone.parent = ctr_bone.parent
+	if(pos_aim):
+		aim_bone['pos_aim'] = pos_aim.name
+	if(neg_aim):
+		aim_bone['neg_aim'] = neg_aim.name
+	aim_bone['copy_loc'] = ctr_bone.name
+	tan_bone.head = aim_bone.head = loc
+	tan_bone.tail = aim_bone.tail = tan_bone.head + direction*scale
+	tan_bone.bbone_x = tan_bone.bbone_z = aim_bone.bbone_x = aim_bone.bbone_z = 0.001
 	
 	return tan_bone
 
@@ -93,10 +115,38 @@ def setup_rain_face_rig():
 	bpy.ops.armature.select_more()
 	bpy.ops.object.mode_set(mode='POSE')
 	for pb in bpy.context.selected_pose_bones:
-		if(not pb.name.startswith('TAN-')): continue
+		if('TAN-' not in pb.name): continue
 		pb.custom_shape = arrow_shape
 		pb.use_custom_shape_bone_size = False
-		pb.custom_shape_scale = 1.5
 		pb.bone_group = bpy.context.object.pose.bone_groups.active
+		if(pb.name.startswith('TAN')):
+			pb.custom_shape_scale = 1.4
+			copy_rotation = pb.constraints.new(type='COPY_ROTATION')
+			copy_rotation.target = bpy.context.object
+			copy_rotation.subtarget = pb.name.replace("TAN-", "AIM-TAN-")
+			copy_rotation.target_space = 'LOCAL'
+			copy_rotation.owner_space = 'LOCAL'
+			copy_rotation.use_offset = True
+		if(pb.name.startswith('AIM')):
+			pb.custom_shape_scale = 1.6
+			db = bpy.context.object.data.bones.get(pb.name)
+			copy_location = pb.constraints.new(type='COPY_LOCATION')
+			copy_location.target = bpy.context.object
+			copy_location.subtarget = db['copy_loc']
+			if('pos_aim' in db):
+				damped_pos = pb.constraints.new(type='DAMPED_TRACK')
+				damped_pos.name = 'Damped Track +Y'
+				damped_pos.target = bpy.context.object
+				damped_pos.subtarget = db['pos_aim']
+				damped_pos.track_axis = 'TRACK_Y'
+			if('neg_aim' in db):
+				damped_neg = pb.constraints.new(type='DAMPED_TRACK')
+				damped_neg.name = 'Damped Track -Y'
+				damped_neg.target = bpy.context.object
+				damped_neg.subtarget = db['neg_aim']
+				damped_neg.track_axis = 'TRACK_NEGATIVE_Y'
+				if('pos_aim' in db):
+					damped_neg.influence = 0.5
+
 
 setup_rain_face_rig()
