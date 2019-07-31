@@ -1127,6 +1127,24 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		min=0,
 		max=2,
 		update=update_constraints)
+	
+	# Face settings
+	sticky_eyelids: FloatProperty(
+		name='Sticky Eyelids',
+		description='Eyelids are nudged by the rotation of the eyeball',
+		min=0,
+		max=5,
+		soft_min=0,
+		soft_max=1,
+		update=update_constraints)
+	sticky_eyesockets: FloatProperty(
+		name='Sticky Eyesockets',
+		description='Eyesockets are nudged by the rotation of the eyeball',
+		min=0,
+		max=5,
+		soft_min=0,
+		soft_max=1,
+		update=update_constraints)
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -1431,6 +1449,11 @@ class MetsRigUI_IKFK(MetsRigUI):
 				layout.row().prop(mets_props, 'head_look', toggle=True, text='Head Look')
 		head_parents = ['Root', 'Pelvis', 'Chest', 'Neck', 'Head']
 		layout.row().prop(mets_props, 'head_target_parents', slider=True, text='Head Target Parent ['+head_parents[mets_props.head_target_parents] + "]")
+
+		# Face settings
+		layout.label(text='Face Settings')
+		layout.row().prop(mets_props, 'sticky_eyelids', slider=True)
+		layout.row().prop(mets_props, 'sticky_eyesockets', slider=True)
 
 class MetsRigUI_Extras(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras"

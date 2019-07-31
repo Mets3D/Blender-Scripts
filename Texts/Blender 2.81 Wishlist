@@ -1,8 +1,6 @@
 TODO: 
-    combine this with blender_wishlist.txt at home.
     assign priorities
     re-word more professionally
-    talk to Jacques about his plans for rigging with nodes
     talk to Sebastian about what his role is going to be in 2.81 and 2.82
 
 Big things:
@@ -11,23 +9,30 @@ Big things:
     - In this setting it might not make sense to refere to these pieces of logic as "constraints" anymore. They are more like Solvers. You ask them what transformation needs to be performed on a bone to achieve a goal, and they give you a result.
     - The way they arrive at this result also doesn't have to be a black box. There could be atomic nodes that let you do simple vector, matrix and quaternion maths, and these Solver nodes could be built out of these atomic nodes. The Solver nodes would basically just be pre-created node groups.
     - I can think of very few things that would need special atomic nodes, like IK and maybe Shrinkwrap.
+    - Physics bones?
+
+- Granuralize(that's a word) bone transforms further in the dependency graph. Two bones should be able to aim at each other without a dependency cycle, since only their rotation is dependent on their location. But as far as they're concerned right now, their transforms are dependent on each other's transforms.
+- Bone parenting should no longer strictly imply any sort of transformational relationship. The purpose of parenting bones would be reduced to purely organizational and 3rd party software compatibility purpose (From a data perspective, NOT from a user perspective). As far as the depsgraph should be concerned, a child is no longer guaranteed to be dependent on its parent.
+        - This is because all parent-induced transformations should become explicit. This is already sort of the case, in a backwards way, via the "Inherit Location/Rotation/Scale" checkboxes. The behavior of these checkboxes would be replaced by nodes, which are set up automatically when a user parents a bone, as long as the "use_nodes" option on the bone is disabled, which it would be by default.
+
+- Armatures should maintain a list of objects that they deform. Is it possible?
+- Deprecate armature layers and bone groups and replace with a new system.
+
 - Combining shape keys with a node system (I vaguely know what I mean by this but not really - think hundreds of corrective shape keys interacting with each other. It's currently set up with a bunch of drivers and it's super finicky.)
 - Also let us control shape key values within the same node graph as bone constraints.
-- Let armatures be aware of every object they deform.
-- Deprecate armature layers and bone groups and replace with a new system.
-- Rebuild the data structure of how vertex groups(and maybe shape keys) are stored. (A weight container is the same thing as a traditional Weight Map in that it stores weight values for vertices, but it is separate from the mesh and is an item of its own.)
-- Granuralize(that's a word) bone transforms further in the dependency graph. Two bones should be able to aim at each other without a dependency cycle, since only their rotation is dependent on their location. But as far as they're concerned right now, their transforms are dependent on each other's transforms.
+- Consider if any changes would be useful for the data structure of how vertex groups(and maybe shape keys) are stored. (A weight container is the same thing as a traditional Weight Map in that it stores weight values for vertices, but it is separate from the mesh and is an item of its own.)
 
 Medium things:
+- Thicker/brighter edge drawing for bone shapes (Or edges in general)
 - Mask for Surface Deform modifier
-- Physics bones?
-- Let me snap bones to other bones(not just the head or tail but anywhere in between) - and consider bbone splining
-- Can't press number keys to change brush anymore. Collections appear to have precedence, but they really shouldn't.
+
+- Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
+- Weight paint: Can't press number keys to change brush anymore, and I don't think a hotkey can even be set up. Even if it can, it's probably more complicated than it should be.
+- Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
 
 Small things:
 - Auto-Normalize should never add weights to 0 weights.
-- Considering there is now X Y Z symmetry options, the X-Mirror option seems redundant. 
-- Thicker/brighter edge drawing for bone shapes (Or edges in general)
+- Considering there is now X Y Z symmetry options, the X-Mirror option seems redundant.
 - Head/Tail sliders should interpolate BBones correctly
 - Ctrl+0,1,2 to set subsurf levels should work in weight paint mode on the weight paint object.
 
