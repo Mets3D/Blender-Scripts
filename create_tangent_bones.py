@@ -49,7 +49,7 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 
 		# Finding neighbor CTR bone towards end of the bone chain.
 		nearby_bones = find_nearby_bones(bone_start.tail, 0.0005)
-		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR') and not b.name.startswith('CTR2')]
+		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-')]
 		if(len(ctr_bones) > 0):
 			pos_aim = ctr_bones[0]
 	
@@ -63,13 +63,13 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 	
 	if(bone_end): # If bone_end is passed, we want to find the neighbor towards the beginning of the chain.
 		nearby_bones = find_nearby_bones(bone_end.head, 0.0005)
-		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR') and not b.name.startswith('CTR2')]
+		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-')]
 		if(len(ctr_bones) > 0):
 			neg_aim = ctr_bones[0]
 
 	# Find a parent CTR bone
 	nearby_bones = find_nearby_bones(loc, 0.0005)
-	ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR') and not b.name.startswith('CTR2')]
+	ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-')]
 	if(len(ctr_bones) == 0): return
 	
 	ctr_bone = ctr_bones[0]

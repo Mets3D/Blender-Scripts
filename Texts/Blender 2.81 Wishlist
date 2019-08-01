@@ -25,6 +25,9 @@ Big things:
 Medium things:
 - Thicker/brighter edge drawing for bone shapes (Or edges in general)
 - Mask for Surface Deform modifier
+- Mask modifier can have severe performance impact when hiding just a few vertices on a high poly mesh.
+
+- "Soft IK" tech should be how IK constraints behave by default.
 
 - Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
 - Weight paint: Can't press number keys to change brush anymore, and I don't think a hotkey can even be set up. Even if it can, it's probably more complicated than it should be.
