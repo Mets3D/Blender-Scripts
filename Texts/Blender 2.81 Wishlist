@@ -38,11 +38,16 @@ Small things:
 - Considering there is now X Y Z symmetry options, the X-Mirror option seems redundant.
 - Head/Tail sliders should interpolate BBones correctly
 - Ctrl+0,1,2 to set subsurf levels should work in weight paint mode on the weight paint object.
+- In the vertex weight panel in edit mode N panel, let us sort influences by weight instead of alphabetical.
 
 VERY small things:
 - Child Of constraint should automatically Set Inverse when a new target is chosen.
 - It should be easier(I'm not even sure it's reliably possible at all) to set the inverse of Child Of constraint through python.
 - How come Normalize Vertex Group and Normalize All Vertex Groups are separate operators, whereas Clean Vertex Group and Clean All Vertex Groups is one operator?
+- When clicking on the Toolbar, the tool should switch on mouse button press, not only after a full click(mouse release) - I often try to click too fast, and my mouse cursor is moved off the toolbar by the time I finish the click, therefore the tool doesn't change.
+
+Defaults:
+- In the Normalize All Vertex Groups operator, Lock Active should be disabled by default.
 
 Bugs:
 - Mask modifiers can have a severe performance impact when they have drivers on them, which could be relevant to production rigs with switchable accessories or clothes.

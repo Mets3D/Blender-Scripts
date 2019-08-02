@@ -105,10 +105,11 @@ def create_tangent_bones_for_chain(chain):
 			chain[i].bbone_custom_handle_end = create_tangent_bone(bone_start=None, bone_end=chain[i])
 			continue
 
-def setup_rain_face_rig():
+def face_tangent_setup():
 	ebones = bpy.context.selected_editable_bones
 	for eb in ebones:
-		if(eb.parent not in ebones):
+		if(eb.parent not in ebones
+		or eb.parent.children[0] != eb):	# This is not the 1st child of the bone, so it won't be included in the chain returned by get_chain()  # Handle this as a separate chain - TODO: First start tangent bone is going to be a duplicate in this case I think. We should detect if the TAN bone exists before we create them, and if they do, just offset them accordingly if possible.
 			chain = get_chain(eb, [])
 			create_tangent_bones_for_chain(chain)
 	
@@ -118,8 +119,8 @@ def setup_rain_face_rig():
 		if('TAN-' not in pb.name): continue
 		pb.custom_shape = arrow_shape
 		pb.use_custom_shape_bone_size = False
-		pb.bone_group = bpy.context.object.pose.bone_groups.active
 		if(pb.name.startswith('TAN')):
+			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN - BBone Tangent Handle Helpers')
 			pb.custom_shape_scale = 1.4
 			copy_rotation = pb.constraints.new(type='COPY_ROTATION')
 			copy_rotation.target = bpy.context.object
@@ -128,6 +129,7 @@ def setup_rain_face_rig():
 			copy_rotation.owner_space = 'LOCAL'
 			copy_rotation.use_offset = True
 		if(pb.name.startswith('AIM')):
+			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN-AIM - BBone Automatic Handle Helpers')
 			pb.custom_shape_scale = 1.6
 			db = bpy.context.object.data.bones.get(pb.name)
 			copy_location = pb.constraints.new(type='COPY_LOCATION')
@@ -148,5 +150,4 @@ def setup_rain_face_rig():
 				if('pos_aim' in db):
 					damped_neg.influence = 0.5
 
-
-setup_rain_face_rig()
+face_tangent_setup()
