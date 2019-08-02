@@ -151,3 +151,4 @@ def face_tangent_setup():
 					damped_neg.influence = 0.5
 
 face_tangent_setup()
+#Todo: Recalc global +Y axis.

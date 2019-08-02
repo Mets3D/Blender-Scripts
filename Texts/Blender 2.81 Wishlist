@@ -23,6 +23,7 @@ Big things:
 - Consider if any changes would be useful for the data structure of how vertex groups(and maybe shape keys) are stored. (A weight container is the same thing as a traditional Weight Map in that it stores weight values for vertices, but it is separate from the mesh and is an item of its own.)
 
 Medium things:
+- Let me access armature layers(or whatever they become) from weight paint mode.
 - Thicker/brighter edge drawing for bone shapes (Or edges in general)
 - Mask for Surface Deform modifier
 - Mask modifier can have severe performance impact when hiding just a few vertices on a high poly mesh.
