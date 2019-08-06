@@ -1168,17 +1168,17 @@ class MetsRigUI_IKFK(MetsRigUI):
 		# IK Stretch
 		layout.label(text='IK Stretch')
 		layout.row().prop(ikfk_props, '["ik_stretch_spine"]', slider=True, text='Stretchy Spine')
-		layout.row().prop(ikfk_props, '["ik_stretch_arms"]', toggle=True, text='Stretchy Arms')
-		layout.row().prop(ikfk_props, '["ik_stretch_legs"]', toggle=True, text='Stretchy Legs')
+		layout.row().prop(ikfk_props, '["ik_stretch_arms"]', slider=True, text='Stretchy Arms')
+		layout.row().prop(ikfk_props, '["ik_stretch_legs"]', slider=True, text='Stretchy Legs')
 
 		# IK Hinge
 		layout.label(text='IK Hinge')
 		hand_row = layout.row()
-		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_left"]', toggle=True, text='Left Hand')
-		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_right"]', toggle=True, text='Right Hand')
+		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_left"]', slider=True, text='Left Hand')
+		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_right"]', slider=True, text='Right Hand')
 		foot_row = layout.row()
-		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_left"]', toggle=True, text='Left Foot')
-		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_right"]', toggle=True, text='Right Foot')
+		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_left"]', slider=True, text='Left Foot')
+		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_right"]', slider=True, text='Right Foot')
 		
 		# TODO: These cannot be animated this way. To let them be animated, we need to put a driver on the use_inherit values which then depend on a custom property.
 		# This is because use_inherit values belong to rig.data rather than rig.pose.
@@ -1205,8 +1205,8 @@ class MetsRigUI_IKFK(MetsRigUI):
 		# IK Auto Clavicle
 		layout.label(text='IK Auto Clavicle')
 		hand_row = layout.row()
-		hand_row.column().prop(ikfk_props, '["ik_auto_clav_left"]', toggle=True, text='Left Clavicle')
-		hand_row.column().prop(ikfk_props, '["ik_auto_clav_right"]', toggle=True, text='Right Clavicle')
+		hand_row.column().prop(ikfk_props, '["ik_auto_clav_left"]', slider=True, text='Left Clavicle')
+		hand_row.column().prop(ikfk_props, '["ik_auto_clav_right"]', slider=True, text='Right Clavicle')
 
 		# IK Parents
 		layout.label(text='IK Parents')
@@ -1222,6 +1222,7 @@ class MetsRigUI_IKFK(MetsRigUI):
 		# IK Pole Follow
 		layout.label(text='IK Pole Follow')
 		pole_row = layout.row()
+		# TODO: This should be real toggles...
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_hands"]', toggle=True, text='Arms')
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_feet"]', toggle=True, text='Legs')
 
@@ -1236,7 +1237,7 @@ class MetsRigUI_IKFK(MetsRigUI):
 		if(head_bone):
 			layout.row().prop(head_bone, 'use_inherit_rotation', toggle=True, text='Head Hinge')
 			if(aim_constraint):
-				layout.row().prop(ikfk_props, '["head_look"]', toggle=True, text='Head Look')
+				layout.row().prop(aim_constraint, 'influence', toggle=True, text='Head Look')
 		head_parents = ['Root', 'Pelvis', 'Chest']
 		layout.row().prop(face_props, '["head_target_parents"]', slider=True, text='Head Target Parent ['+head_parents[face_props["head_target_parents"]] + "]")
 
