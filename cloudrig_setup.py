@@ -75,7 +75,7 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 	ctr_bone = ctr_bones[0]
 	tan_bone = bpy.context.object.data.edit_bones.new(name)
 	aim_bone = bpy.context.object.data.edit_bones.new(name.replace("TAN-", "AIM-TAN-"))
-	tan_bone.parent = ctr_bone
+	tan_bone.parent = aim_bone
 	aim_bone.parent = ctr_bone.parent
 	if(pos_aim):
 		aim_bone['pos_aim'] = pos_aim.name
@@ -120,6 +120,7 @@ def face_tangent_setup():
 		pb.custom_shape = arrow_shape
 		pb.use_custom_shape_bone_size = False
 		if(pb.name.startswith('TAN')):
+			continue # The old solution would've let us control the rotations with the CTR bone, but it breaks when the parent of the CTR bone is rotated. There is no solution other than Everything Nodes or forcing animators to rotate bbone handles using the TAN- bones.
 			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN - BBone Tangent Handle Helpers')
 			pb.custom_shape_scale = 1.4
 			copy_rotation = pb.constraints.new(type='COPY_ROTATION')

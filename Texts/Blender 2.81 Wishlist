@@ -27,6 +27,7 @@ Medium things:
 - Thicker/brighter edge drawing for bone shapes (Or edges in general)
 - Mask for Surface Deform modifier
 - Mask modifier can have severe performance impact when hiding just a few vertices on a high poly mesh.
+- Action constraints(or any constraints) shouldn't mess up the rotation pivot of bones.
 
 - "Soft IK" tech should be how IK constraints behave by default.
 
