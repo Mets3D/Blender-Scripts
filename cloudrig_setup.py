@@ -120,15 +120,15 @@ def face_tangent_setup():
 		pb.custom_shape = arrow_shape
 		pb.use_custom_shape_bone_size = False
 		if(pb.name.startswith('TAN')):
-			continue # The old solution would've let us control the rotations with the CTR bone, but it breaks when the parent of the CTR bone is rotated. There is no solution other than Everything Nodes or forcing animators to rotate bbone handles using the TAN- bones.
 			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN - BBone Tangent Handle Helpers')
 			pb.custom_shape_scale = 1.4
-			copy_rotation = pb.constraints.new(type='COPY_ROTATION')
-			copy_rotation.target = bpy.context.object
-			copy_rotation.subtarget = pb.name.replace("TAN-", "AIM-TAN-")
-			copy_rotation.target_space = 'LOCAL'
-			copy_rotation.owner_space = 'LOCAL'
-			copy_rotation.use_offset = True
+			if(False): # The old solution would've let us control the rotations with the CTR bone, but it breaks when the parent of the CTR bone is rotated. There is no solution other than Everything Nodes or forcing animators to rotate bbone handles using the TAN- bones.
+				copy_rotation = pb.constraints.new(type='COPY_ROTATION')
+				copy_rotation.target = bpy.context.object
+				copy_rotation.subtarget = pb.name.replace("TAN-", "AIM-TAN-")
+				copy_rotation.target_space = 'LOCAL'
+				copy_rotation.owner_space = 'LOCAL'
+				copy_rotation.use_offset = True
 		if(pb.name.startswith('AIM')):
 			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN-AIM - BBone Automatic Handle Helpers')
 			pb.custom_shape_scale = 1.6
