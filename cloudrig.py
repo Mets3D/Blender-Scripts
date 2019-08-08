@@ -1202,14 +1202,11 @@ class MetsRigUI_IKFK(MetsRigUI):
 		layout.label(text='Head Settings')
 		head_bone = rig.data.bones.get("AIM-Head")
 		neck_bone = rig.data.bones.get("DEF-Neck")
-		head_pose_bone = rig.pose.bones.get("AIM-Head")
-		aim_constraint = head_pose_bone.constraints.get('head_look')
 		if(neck_bone):
-			layout.row().prop(neck_bone, 'use_inherit_rotation', toggle=True, text='Neck Hinge')
+			layout.row().prop(face_props, '["neck_hinge"]', toggle=True, text='Neck Hinge')
 		if(head_bone):
-			layout.row().prop(head_bone, 'use_inherit_rotation', toggle=True, text='Head Hinge')
-			if(aim_constraint):
-				layout.row().prop(aim_constraint, 'influence', toggle=True, text='Head Look')
+			layout.row().prop(face_props, '["head_hinge"]', toggle=True, text='Head Hinge')
+			layout.row().prop(face_props, '["head_look"]', slider=True, text='Head Look')
 		head_parents = ['Root', 'Pelvis', 'Chest']
 		layout.row().prop(face_props, '["head_target_parents"]', slider=True, text='Head Target Parent ['+head_parents[face_props["head_target_parents"]] + "]")
 
