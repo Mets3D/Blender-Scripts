@@ -107,13 +107,13 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	def pre_depsgraph_update(cls, scene):
 		""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
 		
-		def update_pinned_rig(scene):
-			# The pinned rig should store the most recently selected metsrig.
-			if(bpy.context.object in get_rigs()):
-				scene['metsrig_pinned'] = bpy.context.object
-			if(scene['metsrig_pinned'] == None):
-				scene['metsrig_pinned'] = get_rigs()[0] # Can be None, only when no metsrigs are in the scene.
-			return scene['metsrig_pinned']
+		#def update_pinned_rig(scene):
+		# The pinned rig should store the most recently selected metsrig.
+		if(bpy.context.object in get_rigs()):
+			scene['metsrig_pinned'] = bpy.context.object
+		if(scene['metsrig_pinned'] == None):
+			scene['metsrig_pinned'] = get_rigs()[0] # Can be None, only when no metsrigs are in the scene.
+		return scene['metsrig_pinned']
 		
 		for rig in get_rigs():
 			# Grabbing relevant data
@@ -930,10 +930,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		description='Mesh Selectability',
 		update=update_meshes)
 
-	ik_per_finger: BoolProperty(
-		name='Per Finger',
-		description='Control Ik/FK on individual fingers')
-
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
 	bl_region_type = 'UI'
@@ -1078,33 +1074,38 @@ class MetsRigUI_Layers(MetsRigUI):
 		data = context.scene['metsrig_pinned'].data
 		
 		row_ik = layout.row()
-		row_ik.column().prop(data, 'layers', index=0, toggle=True, text='Main IK Controls')
-		row_ik.column().prop(data, 'layers', index=16, toggle=True, text='Secondary IK Controls')
+		row_ik.column().prop(data, 'layers', index=0, toggle=True, text='Body IK')
+		row_ik.column().prop(data, 'layers', index=16, toggle=True, text='Body IK Secondary')
 		
-		layout.row().prop(data, 'layers', index=1, toggle=True, text='FK Controls')
-		layout.row().prop(data, 'layers', index=2, toggle=True, text='Stretch Controls')
+		layout.row().prop(data, 'layers', index=1, toggle=True, text='Body FK')
+		layout.row().prop(data, 'layers', index=17, toggle=True, text='Body Stretch')
 		
 		row_face = layout.row()
-		row_face.column().prop(data, 'layers', index=3, toggle=True, text='Face Controls')
-		#row_face.column().prop(data, 'layers', index=19, toggle=True, text='Face Deform')
+		row_face.column().prop(data, 'layers', index=2, toggle=True, text='Face Main')
+		row_face.column().prop(data, 'layers', index=18, toggle=True, text='Face Secondary')
 		
 		row_fingers = layout.row()
-		row_fingers.column().prop(data, 'layers', index=21, toggle=True, text='Finger FK')
-		row_fingers.column().prop(data, 'layers', index=22, toggle=True, text='Finger IK')
-		row_fingers.column().prop(data, 'layers', index=23, toggle=True, text='Finger Stretch')
+		row_fingers.column().prop(data, 'layers', index=3, toggle=True, text='Finger Controls')
+		row_fingers.column().prop(data, 'layers', index=19, toggle=True, text='Finger Stretch')
 		
-		layout.row().prop(data, 'layers', index=5, toggle=True, text='Hair')
-		layout.row().prop(data, 'layers', index=6, toggle=True, text='Clothes')
+		layout.row().prop(data, 'layers', index=6, toggle=True, text='Hair')
+		layout.row().prop(data, 'layers', index=7, toggle=True, text='Clothes')
 		
 		layout.separator()
 		if(False):
-			dev_box = layout.box()
-
-			dev_box.row().prop(data, 'layers', index=29, toggle=True, text='IK Mechanism')
+			row_mechanism = layout.row()
+			row_mechanism.prop(data, 'layers', index=8, toggle=True, text='Body Mechanism')
+			row_mechanism.prop(data, 'layers', index=9, toggle=True, text='Body Adjust Mechanism')
+			row_mechanism.prop(data, 'layers', index=10, toggle=True, text='Face Mechanism')
 			
-			row_deform = dev_box.row()
-			row_deform.prop(data, 'layers', index=30, toggle=True, text='Deform Main')
-			row_deform.prop(data, 'layers', index=31, toggle=True, text='Deform Adjust')
+			row_deform = layout.row()
+			row_deform.prop(data, 'layers', index=24, toggle=True, text='Body Deform')
+			row_deform.prop(data, 'layers', index=25, toggle=True, text='Body Adjust Deform')
+			row_deform.prop(data, 'layers', index=26, toggle=True, text='Face Deform')
+
+			death_row = layout.row()
+			death_row.prop(data, 'layers', index=30, toggle=True, text='Properties')
+			death_row.prop(data, 'layers', index=30, toggle=True, text='Black Box')
 
 class MetsRigUI_IKFK(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_ik"
@@ -1135,36 +1136,7 @@ class MetsRigUI_IKFK(MetsRigUI):
 		legs_row = layout.row()
 		legs_row.prop(ikfk_props, '["ik_leg_left"]', slider=True, text='Left Leg')
 		legs_row.prop(ikfk_props, '["ik_leg_right"]', slider=True, text='Right Leg')
-		
-		### Fingers
-		layout.row().prop(mets_props, 'ik_per_finger', toggle=True)
-		
-		# Drawing individual finger controls, if that toggle is enabled.
-		if(mets_props.ik_per_finger):
-			finger_names = ["thumb", "index", "middle", "ring", "pinky"]
-			side_names = ["_ik.l", "_ik.r"]
-			for cn in finger_names:
-				finger_row = layout.row()
-				for sn in side_names:
-					found=False
-					for b in rig.pose.bones:
-						for c in b.constraints:
-							if(cn+sn in c.name.lower()):
-								clean_name = cn+sn
-								if(clean_name.endswith("_ik.l")):
-									clean_name = "L " + clean_name.replace("_ik.l", "").capitalize()
-								if(clean_name.endswith("_ik.r")):
-									clean_name = "R " + clean_name.replace("_ik.r", "").capitalize()
-								finger_row.prop(c, 'influence', slider=True, text=clean_name)
-								found=True
-								break
-						if(found):break
-		
-		else:
-			fingers_row = layout.row()
-			fingers_row.prop(ikfk_props, '["ik_fingers_left"]', text='Left Fingers', slider=True)
-			fingers_row.prop(ikfk_props, '["ik_fingers_right"]', text='Right Fingers', slider=True)
-		
+
 		# IK Stretch
 		layout.label(text='IK Stretch')
 		layout.row().prop(ikfk_props, '["ik_stretch_spine"]', slider=True, text='Stretchy Spine')
