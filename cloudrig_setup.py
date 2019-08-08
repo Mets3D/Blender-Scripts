@@ -38,18 +38,20 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 	assert bone_start or bone_end, "No bones passed for create_tangent_bone()"
 
 	loc = None
-	name = ""
+	tan_name = ""
 	direction = None
 	pos_aim = None
 	neg_aim = None
+	roll = 0
 	if(bone_start):	# If bone_start is passed
 		loc = bone_start.head
-		name = bone_start.name.replace("DEF-", "TAN-")
+		tan_name = bone_start.name.replace("DEF-", "TAN-")
 		direction = (bone_start.tail-bone_start.head).normalized()
+		roll = bone_start.roll
 
 		# Finding neighbor CTR bone towards end of the bone chain.
 		nearby_bones = find_nearby_bones(bone_start.tail, 0.0005)
-		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-')]
+		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-') and not b.name.startswith('CTR-CONST-')]
 		if(len(ctr_bones) > 0):
 			pos_aim = ctr_bones[0]
 	
@@ -58,33 +60,58 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 			direction = (direction + bone_end_direction) * 1/2
 	else:	# If only bone_end is passed
 		loc = bone_end.tail
-		name = bone_end.name.replace("DEF-", "TAN-Tail-")
+		tan_name = bone_end.name.replace("DEF-", "TAN-Tail-")
 		direction = (bone_end.tail-bone_end.head).normalized()
+		roll = bone_end.roll
 	
 	if(bone_end): # If bone_end is passed, we want to find the neighbor towards the beginning of the chain.
 		nearby_bones = find_nearby_bones(bone_end.head, 0.0005)
-		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-')]
+		ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-') and not b.name.startswith('CTR-CONST-')]
 		if(len(ctr_bones) > 0):
 			neg_aim = ctr_bones[0]
 
 	# Find a parent CTR bone
 	nearby_bones = find_nearby_bones(loc, 0.0005)
-	ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-')]
+	ctr_bones = [b for b in nearby_bones if b.name.startswith('CTR-') and not b.name.startswith('CTR-P-') and not b.name.startswith('CTR-CONST-')]
 	if(len(ctr_bones) == 0): return
 	
 	ctr_bone = ctr_bones[0]
-	tan_bone = bpy.context.object.data.edit_bones.new(name)
-	aim_bone = bpy.context.object.data.edit_bones.new(name.replace("TAN-", "AIM-TAN-"))
-	tan_bone.parent = aim_bone
-	aim_bone.parent = ctr_bone.parent
-	if(pos_aim):
-		aim_bone['pos_aim'] = pos_aim.name
-	if(neg_aim):
-		aim_bone['neg_aim'] = neg_aim.name
-	aim_bone['copy_loc'] = ctr_bone.name
-	tan_bone.head = aim_bone.head = loc
-	tan_bone.tail = aim_bone.tail = tan_bone.head + direction*scale
-	tan_bone.bbone_x = tan_bone.bbone_z = aim_bone.bbone_x = aim_bone.bbone_z = 0.001
+	if(ctr_bone):
+		user_ctr_node_name = ctr_bone.name.replace("CTR-", "Node_UserRotation_CTR-")
+		user_ctr_node = bpy.context.object.data.edit_bones.get(user_ctr_node_name)
+		if(not user_ctr_node):
+			user_ctr_node = bpy.context.object.data.edit_bones.new(user_ctr_node_name)
+		user_ctr_node.head = ctr_bone.head
+		user_ctr_node.tail = ctr_bone.tail
+		user_ctr_node.roll = ctr_bone.roll
+		user_ctr_node.bbone_x = user_ctr_node.bbone_z = 0.001
+		user_ctr_node.use_deform = False
+
+		tan_bone = bpy.context.object.data.edit_bones.new(tan_name)
+		aim_bone = bpy.context.object.data.edit_bones.new(tan_name.replace("TAN-", "AIM-TAN-"))
+		tan_bone.parent = aim_bone
+		aim_bone.parent = ctr_bone
+		if(pos_aim):
+			aim_bone['pos_aim'] = pos_aim.name
+		if(neg_aim):
+			aim_bone['neg_aim'] = neg_aim.name
+		aim_bone['copy_loc'] = ctr_bone.name
+		tan_bone.head = aim_bone.head = loc
+		tan_bone.tail = aim_bone.tail = tan_bone.head + direction*scale
+		tan_bone.bbone_x = tan_bone.bbone_z = aim_bone.bbone_x = aim_bone.bbone_z = 0.001
+		tan_bone.roll = aim_bone.roll = roll
+		tan_bone.use_deform = aim_bone.use_deform = False
+
+		user_tan_node_name = tan_bone.name.replace("TAN-", "Node_UserRotation_TAN-")
+		user_tan_node = bpy.context.object.data.edit_bones.get(user_tan_node_name)
+		if(not user_tan_node):
+			user_tan_node = bpy.context.object.data.edit_bones.new(user_tan_node_name)
+		user_tan_node.head = tan_bone.head
+		user_tan_node.tail = tan_bone.tail
+		user_tan_node.roll = tan_bone.roll
+		user_tan_node.bbone_x = user_tan_node.bbone_z = 0.001
+		user_tan_node.use_deform = False
+		user_tan_node['parent'] = user_ctr_node.name
 	
 	return tan_bone
 
@@ -115,21 +142,36 @@ def face_tangent_setup():
 	
 	bpy.ops.armature.select_more()
 	bpy.ops.object.mode_set(mode='POSE')
-	for pb in bpy.context.selected_pose_bones:
+	for pb in bpy.context.object.pose.bones:
+		if("Node_UserRotation_CTR-" in pb.name):
+			copy_rotation = pb.constraints.new(type='COPY_ROTATION')
+			copy_rotation.target = bpy.context.object
+			copy_rotation.subtarget = pb.name.replace("Node_UserRotation_CTR-", "CTR-")
+			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
+		if("Node_UserRotation_TAN-" in pb.name):
+			pb.custom_shape = arrow_shape
+			pb.use_custom_shape_bone_size = False
+			armature_const = pb.constraints.new(type='ARMATURE')
+			target = armature_const.targets.new()
+			target.target = bpy.context.object
+			db = bpy.context.object.data.bones.get(pb.name)
+			target.subtarget = db['parent']
+		
 		if('TAN-' not in pb.name): continue
+		
 		pb.custom_shape = arrow_shape
 		pb.use_custom_shape_bone_size = False
 		if(pb.name.startswith('TAN')):
 			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN - BBone Tangent Handle Helpers')
 			pb.custom_shape_scale = 1.4
-			if(False): # The old solution would've let us control the rotations with the CTR bone, but it breaks when the parent of the CTR bone is rotated. There is no solution other than Everything Nodes or forcing animators to rotate bbone handles using the TAN- bones.
-				copy_rotation = pb.constraints.new(type='COPY_ROTATION')
-				copy_rotation.target = bpy.context.object
-				copy_rotation.subtarget = pb.name.replace("TAN-", "AIM-TAN-")
-				copy_rotation.target_space = 'LOCAL'
-				copy_rotation.owner_space = 'LOCAL'
-				copy_rotation.use_offset = True
+			copy_rotation = pb.constraints.new(type='COPY_ROTATION')
+			copy_rotation.target = bpy.context.object
+			copy_rotation.subtarget = pb.name.replace("TAN-", "Node_UserRotation_TAN-")
+			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
+			copy_rotation.use_offset = True
+
 		if(pb.name.startswith('AIM')):
+			print("SETTING UP AIM CONSTRAINTS")
 			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN-AIM - BBone Automatic Handle Helpers')
 			pb.custom_shape_scale = 1.6
 			db = bpy.context.object.data.bones.get(pb.name)
