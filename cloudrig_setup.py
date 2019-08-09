@@ -12,6 +12,12 @@ import bpy
 arrow_shape = bpy.data.objects['Shape_Arrow.001']
 scale=0.01
 
+def safe_create_bone(bonename):
+	bone = bpy.context.object.data.edit_bones.get(bonename)
+	if(not bone):
+		bone = bpy.context.object.data.edit_bones.new(bonename)
+	return bone
+
 def find_nearby_bones(search_co, dist):
 	# Bruteforce search for bones that are within a given distance of the given coordinates.
 	ret = []
@@ -77,18 +83,15 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 	
 	ctr_bone = ctr_bones[0]
 	if(ctr_bone):
-		user_ctr_node_name = ctr_bone.name.replace("CTR-", "Node_UserRotation_CTR-")
-		user_ctr_node = bpy.context.object.data.edit_bones.get(user_ctr_node_name)
-		if(not user_ctr_node):
-			user_ctr_node = bpy.context.object.data.edit_bones.new(user_ctr_node_name)
+		user_ctr_node = safe_create_bone(ctr_bone.name.replace("CTR-", "Node_UserRotation_CTR-"))
 		user_ctr_node.head = ctr_bone.head
 		user_ctr_node.tail = ctr_bone.tail
 		user_ctr_node.roll = ctr_bone.roll
 		user_ctr_node.bbone_x = user_ctr_node.bbone_z = 0.001
 		user_ctr_node.use_deform = False
 
-		tan_bone = bpy.context.object.data.edit_bones.new(tan_name)
-		aim_bone = bpy.context.object.data.edit_bones.new(tan_name.replace("TAN-", "AIM-TAN-"))
+		tan_bone = safe_create_bone(tan_name)
+		aim_bone = safe_create_bone(tan_name.replace("TAN-", "AIM-TAN-"))
 		tan_bone.parent = aim_bone
 		aim_bone.parent = ctr_bone
 		if(pos_aim):
@@ -102,10 +105,7 @@ def create_tangent_bone(bone_start=None, bone_end=None):
 		tan_bone.roll = aim_bone.roll = roll
 		tan_bone.use_deform = aim_bone.use_deform = False
 
-		user_tan_node_name = tan_bone.name.replace("TAN-", "Node_UserRotation_TAN-")
-		user_tan_node = bpy.context.object.data.edit_bones.get(user_tan_node_name)
-		if(not user_tan_node):
-			user_tan_node = bpy.context.object.data.edit_bones.new(user_tan_node_name)
+		user_tan_node = safe_create_bone(tan_bone.name.replace("TAN-", "Node_UserRotation_TAN-"))
 		user_tan_node.head = tan_bone.head
 		user_tan_node.tail = tan_bone.tail
 		user_tan_node.roll = tan_bone.roll
@@ -140,15 +140,29 @@ def face_tangent_setup():
 			chain = get_chain(eb, [])
 			create_tangent_bones_for_chain(chain)
 	
+	def safe_create_constraint(pb, ctype, name=None):
+		# Only create a constraint on this bone of a given type if a bone with that type or name does not already exist.
+		for c in pb.constraints:
+			if(c.type==ctype):
+				if(name):
+					if(c.name==name):
+						return c
+				else:
+					return c
+		c = pb.constraints.new(type=ctype)
+		c.name = name
+		return c
+
 	bpy.ops.armature.select_more()
 	bpy.ops.object.mode_set(mode='POSE')
 	for pb in bpy.context.object.pose.bones:
 		if("Node_UserRotation_CTR-" in pb.name):
-			copy_rotation = pb.constraints.new(type='COPY_ROTATION')
+			copy_rotation = safe_create_constraint(pb, 'COPY_ROTATION')
 			copy_rotation.target = bpy.context.object
 			copy_rotation.subtarget = pb.name.replace("Node_UserRotation_CTR-", "CTR-")
 			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
 		if("Node_UserRotation_TAN-" in pb.name):
+			clear_constraints(pb)
 			pb.custom_shape = arrow_shape
 			pb.use_custom_shape_bone_size = False
 			armature_const = pb.constraints.new(type='ARMATURE')
@@ -164,29 +178,27 @@ def face_tangent_setup():
 		if(pb.name.startswith('TAN')):
 			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN - BBone Tangent Handle Helpers')
 			pb.custom_shape_scale = 1.4
-			copy_rotation = pb.constraints.new(type='COPY_ROTATION')
+			copy_rotation = safe_create_constraint(pb, 'COPY_ROTATION')
 			copy_rotation.target = bpy.context.object
 			copy_rotation.subtarget = pb.name.replace("TAN-", "Node_UserRotation_TAN-")
 			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
 			copy_rotation.use_offset = True
 
 		if(pb.name.startswith('AIM')):
-			print("SETTING UP AIM CONSTRAINTS")
+			clear_constraints(pb)
 			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN-AIM - BBone Automatic Handle Helpers')
 			pb.custom_shape_scale = 1.6
 			db = bpy.context.object.data.bones.get(pb.name)
-			copy_location = pb.constraints.new(type='COPY_LOCATION')
+			copy_location = safe_create_constraint(pb, 'COPY_LOCATION')
 			copy_location.target = bpy.context.object
 			copy_location.subtarget = db['copy_loc']
 			if('pos_aim' in db):
-				damped_pos = pb.constraints.new(type='DAMPED_TRACK')
-				damped_pos.name = 'Damped Track +Y'
+				damped_pos = safe_create_constraint(pb, 'DAMPED_TRACK', "Damped Track +Y")
 				damped_pos.target = bpy.context.object
 				damped_pos.subtarget = db['pos_aim']
 				damped_pos.track_axis = 'TRACK_Y'
 			if('neg_aim' in db):
-				damped_neg = pb.constraints.new(type='DAMPED_TRACK')
-				damped_neg.name = 'Damped Track -Y'
+				damped_neg = safe_create_constraint(pb, 'DAMPED_TRACK', "Damped Track -Y")
 				damped_neg.target = bpy.context.object
 				damped_neg.subtarget = db['neg_aim']
 				damped_neg.track_axis = 'TRACK_NEGATIVE_Y'

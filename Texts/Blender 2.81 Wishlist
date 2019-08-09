@@ -49,6 +49,7 @@ Small things:
 - Considering there is now X Y Z symmetry options, the X-Mirror option seems redundant.
 - Ctrl+0,1,2 to set subsurf levels should work in weight paint mode on the weight paint object.
 - In the vertex weight panel in edit mode N panel, let us sort influences by weight instead of alphabetical.
+- Give me a PoseBone.constraints.clear() for the python API, to delete all constraints.
 
 VERY small things:
 - Child Of constraint should automatically Set Inverse when a new target is chosen.
