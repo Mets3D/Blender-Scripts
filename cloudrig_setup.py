@@ -150,7 +150,8 @@ def face_tangent_setup():
 				else:
 					return c
 		c = pb.constraints.new(type=ctype)
-		c.name = name
+		if(name):
+			c.name = name
 		return c
 
 	bpy.ops.armature.select_more()
@@ -162,10 +163,9 @@ def face_tangent_setup():
 			copy_rotation.subtarget = pb.name.replace("Node_UserRotation_CTR-", "CTR-")
 			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
 		if("Node_UserRotation_TAN-" in pb.name):
-			clear_constraints(pb)
 			pb.custom_shape = arrow_shape
 			pb.use_custom_shape_bone_size = False
-			armature_const = pb.constraints.new(type='ARMATURE')
+			armature_const = safe_create_constraint(pb, 'ARMATURE')
 			target = armature_const.targets.new()
 			target.target = bpy.context.object
 			db = bpy.context.object.data.bones.get(pb.name)
@@ -185,7 +185,6 @@ def face_tangent_setup():
 			copy_rotation.use_offset = True
 
 		if(pb.name.startswith('AIM')):
-			clear_constraints(pb)
 			pb.bone_group = bpy.context.object.pose.bone_groups.get('Face: TAN-AIM - BBone Automatic Handle Helpers')
 			pb.custom_shape_scale = 1.6
 			db = bpy.context.object.data.bones.get(pb.name)
