@@ -33,7 +33,8 @@ class SetupActionConstraints(bpy.types.Operator):
 	)
 
 	frame_start: IntProperty(name="Start Frame")
-	frame_end: IntProperty(name="End Frame")
+	frame_end: IntProperty(name="End Frame",
+		default=2)
 	trans_min: FloatProperty(name="Min",
 		default=-0.05)
 	trans_max: FloatProperty(name="Max",
@@ -49,7 +50,11 @@ class SetupActionConstraints(bpy.types.Operator):
 	def execute(self, context):
 		# Options
 		armature = context.object
-		target = context.scene.objects[self.target]
+		target = None
+		if(self.target!=""):
+			context.scene.objects[self.target]
+		else:
+			target = armature
 		action = bpy.data.actions[self.action]
 		constraint_name = "Action_" + action.name.replace("Rain_", "")
 
@@ -65,7 +70,7 @@ class SetupActionConstraints(bpy.types.Operator):
 
 		# Adding or updating Action constraint on the bones
 		for b in bones:
-			c = find_or_create_constraint(b, 'ACTION', constraint_name)	# TODO: Hard coded action naming convention.
+			c = utils.find_or_create_constraint(b, 'ACTION', constraint_name)	# TODO: Hard coded action naming convention.
 			c.target_space = self.target_space
 			c.transform_channel = self.transform_channel
 			c.target = target

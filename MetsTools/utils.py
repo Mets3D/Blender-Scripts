@@ -46,13 +46,13 @@ def find_or_create_constraint(bone, const_type, const_name=None):
 	# Only create a constraint on this bone of a given type if a bone with that type or name does not already exist.
 	# TODO: This belongs in a utils.py along with safe_create_bone. Could probably also be named better, like find_or_create_thing().
 	for c in bone.constraints:
-		if(c.type==ctype):
+		if(c.type==const_type):
 			if(const_name):
 				if(c.name==const_name):
 					return c
 			else:
 				return c
-	c = pb.constraints.new(type=const_type)
+	c = bone.constraints.new(type=const_type)
 	if(const_name):
 		c.name = const_name
 	return c
