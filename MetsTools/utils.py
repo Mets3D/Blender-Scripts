@@ -34,6 +34,29 @@ def uniform_scale():
 		o.dimensions = [1, 1, 1]
 		o.scale = [min(o.scale), min(o.scale), min(o.scale)]
 
+def find_or_create_bone(armature, bonename):
+	assert armature.mode=='EDIT', "Armature must be in edit mode"
+
+	bone = armature.data.edit_bones.get(bonename)
+	if(not bone):
+		bone = armature.data.edit_bones.new(bonename)
+	return bone
+
+def find_or_create_constraint(bone, const_type, const_name=None):
+	# Only create a constraint on this bone of a given type if a bone with that type or name does not already exist.
+	# TODO: This belongs in a utils.py along with safe_create_bone. Could probably also be named better, like find_or_create_thing().
+	for c in bone.constraints:
+		if(c.type==ctype):
+			if(const_name):
+				if(c.name==const_name):
+					return c
+			else:
+				return c
+	c = pb.constraints.new(type=const_type)
+	if(const_name):
+		c.name = const_name
+	return c
+
 def flip_name(from_name, only=True, must_change=False):
 	# based on BLI_string_flip_side_name in https://developer.blender.org/diffusion/B/browse/master/source/blender/blenlib/intern/string_utils.c
 	# If only==True, only replace one occurrence of the side identifier in the string, eg. "Left_Eyelid.L" would become "Left_Eyelid.R", if only==False, it will return "Right_Eyelid.R"
