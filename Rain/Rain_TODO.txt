@@ -1,11 +1,11 @@
+Set up some new hotkeys to let me work faster
+    In Front toggle (Nacho suggested Ctrl Alt Shift Middle click)
+    Wireframe toggle
+	Entering and leaving weight paint mode with proper shading options.
+
 Body/Limbs
-	HIGH Waist weights are a bit wonky and maybe the pivot point should be a bit higher up.
-	
-	HIGH Pivot of Spine2_FK is too far back
-		Maybe get curved spine back, just make sure controls are world-aligned.
-	HIGH Make IK foot shapes bigger. 
-    HIGH Let shoulder rotate on local Y axis without breaking as much. FK-Shoulder.L
     HIGH Rerig shoulder for T-pose lmao
+	HIGH Let shoulder rotate on local Y axis without breaking as much. FK-Shoulder.L
 
 	MEDIUM Lower shin shouldn't rotate so much with the foot
 	MEDIUM Upper thigh is following knee pole vector too much.
@@ -18,14 +18,13 @@ Body/Limbs
     LOW The end of the shoulder and the start of the elbow being a separate toon control mean that the two controls are in the same place and overlap, so if we keep this, make sure to add unique bone shapes.
 	LOW Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
     LOW We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
-
+	LOW Completely rework the way deformation adjusters are implemented. They need to stop relying on the local rotation of *anything* because that shit is unreliable. Rotation values in general should pretty much only drive anything if the thing doing the driving can only rotate on one axis, so, never. Because rotations are fucking weird.
+		Instead, a stretch target should be parented to the joint, and the deform adjuster should stretch to that target. Then it's just a matter of parenting the deform adjuster itself appropriately.
 Fingers
-	HIGH Make sure all bone shapes are visible without x-ray (middle finger)
-	HIGH Shape of FK-Thumb1.L should be like the carpals.
 	HIGH Finger local Y rotation is broken again.
 		When I unbroke it, I unbroke it by accidently enabling BBones because then the finger deform bones use BBone handles for rotation. Make it work like that but without BBones.
 
-    MEDIUM In general but wrist especially, make sure the outer parts of bends stay a bit "sharper" (or less round)
+    MEDIUM In general but wrist especially, make sure the outer parts of bends stay a bit "sharper" (or less round) and don't lose as much volume.
 	MEDIUM Adjust thumb pivot point, see how good it can be, make sure we can make a decent fist.
     MEDIUM Elbow and wrist and maybe other things roll a bit when they shouldn't, eg. rotating elbow on local X results in some roll in DEF-Shoulder2.L.
     
@@ -35,7 +34,6 @@ Fingers
 Clothes
 	MEDIUM Shirt is wonky in the front and back when hips are moved
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
-	LOW Tongue of the shoes moves with the foot.
 
 Face
 	Add sneer control
@@ -46,7 +44,10 @@ Face
 	Hook up the scale of CTR bones to the bbone scale of deform bones.
 
 On release/updates
+    Apply mirror modifier on the body and fix the UV islands where needed.
+    Maybe join the UV layers into one? I don't like having them separate. I'd rather just offset them by 1 UV tile to the right.
     Make sure Armature modifiers are in the right place in the stack(ie. above SubSurf)
     Lock object transforms
     Make sure bones, objects, shapes, and object data are named properly
     Make sure bbone display size is consistent
+    Clean up bone shapes collection, maybe make a script to resize bones to a uniform scale and then adjust bone shape settings accordingly so they maintain their display size.

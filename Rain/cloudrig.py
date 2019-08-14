@@ -1070,8 +1070,8 @@ class MetsRigUI_Layers(MetsRigUI):
 	
 	def draw(self, context):
 		layout = self.layout
-		
-		data = context.scene['metsrig_pinned'].data
+		rig = context.scene['metsrig_pinned']
+		data = rig.data
 		
 		row_ik = layout.row()
 		row_ik.column().prop(data, 'layers', index=0, toggle=True, text='Body IK')
@@ -1092,7 +1092,7 @@ class MetsRigUI_Layers(MetsRigUI):
 		layout.row().prop(data, 'layers', index=7, toggle=True, text='Clothes')
 		
 		layout.separator()
-		if(False):
+		if('dev' in rig and rig['dev']==1):
 			row_mechanism = layout.row()
 			row_mechanism.prop(data, 'layers', index=8, toggle=True, text='Body Mechanism')
 			row_mechanism.prop(data, 'layers', index=9, toggle=True, text='Body Adjust Mechanism')
@@ -1105,7 +1105,7 @@ class MetsRigUI_Layers(MetsRigUI):
 
 			death_row = layout.row()
 			death_row.prop(data, 'layers', index=30, toggle=True, text='Properties')
-			death_row.prop(data, 'layers', index=30, toggle=True, text='Black Box')
+			death_row.prop(data, 'layers', index=31, toggle=True, text='Black Box')
 
 class MetsRigUI_IKFK(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_ik"

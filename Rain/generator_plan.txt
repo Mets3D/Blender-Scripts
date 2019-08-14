@@ -1,0 +1,6 @@
+If we're going to rig a movie, we will need a system to generate and re-generate rigs based on a meta-rig.
+
+Questions:
+How much effort will it be to place the bones of the metarig correctly? What are some things we can do to make this process as pain-free as possible?
+How can we make changes in the 3D viewport, and then turn those changes back into python generator code? Is this something we want to do, even? I think so.
+Could start thinking of a new node system for this ;) So far I only thought about bone nodes for determining transforms and bone properties, but we could also have armature nodes which are responsible for constructing the armature. It would be a bit like the constructionscript and the event script in UE4.
