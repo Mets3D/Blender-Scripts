@@ -1,0 +1,52 @@
+Body/Limbs
+	HIGH Waist weights are a bit wonky and maybe the pivot point should be a bit higher up.
+	
+	HIGH Pivot of Spine2_FK is too far back
+		Maybe get curved spine back, just make sure controls are world-aligned.
+	HIGH Make IK foot shapes bigger. 
+    HIGH Let shoulder rotate on local Y axis without breaking as much. FK-Shoulder.L
+    HIGH Rerig shoulder for T-pose lmao
+
+	MEDIUM Lower shin shouldn't rotate so much with the foot
+	MEDIUM Upper thigh is following knee pole vector too much.
+
+	LOW Ankle thing shouldn't move so much when foot is rotated.	
+	LOW Knee deform is a bit wonky, especially on clothes
+	LOW Knee is too round like the elbow.
+	LOW FK-Clavicle bone is currently redundant(always follows IK)
+	LOW Rebuild Soft IK tech with Likkez's tech, see if we can't eliminate all downsides. If it works, Apply it to the arms too.
+    LOW The end of the shoulder and the start of the elbow being a separate toon control mean that the two controls are in the same place and overlap, so if we keep this, make sure to add unique bone shapes.
+	LOW Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
+    LOW We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
+
+Fingers
+	HIGH Make sure all bone shapes are visible without x-ray (middle finger)
+	HIGH Shape of FK-Thumb1.L should be like the carpals.
+	HIGH Finger local Y rotation is broken again.
+		When I unbroke it, I unbroke it by accidently enabling BBones because then the finger deform bones use BBone handles for rotation. Make it work like that but without BBones.
+
+    MEDIUM In general but wrist especially, make sure the outer parts of bends stay a bit "sharper" (or less round)
+	MEDIUM Adjust thumb pivot point, see how good it can be, make sure we can make a decent fist.
+    MEDIUM Elbow and wrist and maybe other things roll a bit when they shouldn't, eg. rotating elbow on local X results in some roll in DEF-Shoulder2.L.
+    
+	LOW Overall deform improvements for fingers
+    LOW Try making shoulder weights a bit broader.    
+		
+Clothes
+	MEDIUM Shirt is wonky in the front and back when hips are moved
+	MEDIUM Come up with something to make the shirt not look glued to her skin.
+	LOW Tongue of the shoes moves with the foot.
+
+Face
+	Add sneer control
+	Add smile control
+
+	Think about how to add more lower level control for the eyebrows.
+	Add lattice controls for the head and the eye.
+	Hook up the scale of CTR bones to the bbone scale of deform bones.
+
+On release/updates
+    Make sure Armature modifiers are in the right place in the stack(ie. above SubSurf)
+    Lock object transforms
+    Make sure bones, objects, shapes, and object data are named properly
+    Make sure bbone display size is consistent
