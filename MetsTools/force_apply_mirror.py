@@ -45,8 +45,11 @@ class ForceApplyMirror(bpy.types.Operator):
 				# We continue operating on the original half, since it shouldn't matter
 				o.scale = (-1, 1, 1)
 				
+				done = []	# Don't flip names twice...
+
 				# Flipping vertex group names
 				for vg in o.vertex_groups:
+					if(vg in done): continue
 					old_name = vg.name
 					flipped_name = utils.flip_name(vg.name)
 					if(old_name == flipped_name): continue
@@ -55,8 +58,10 @@ class ForceApplyMirror(bpy.types.Operator):
 						vg.name = "temp_lskjghsjdfkhbnsdf"			# Rename this to some garbage
 						opp_group = o.vertex_groups[flipped_name]	# Find the other group that's taking the name
 						opp_group.name = old_name					# Rename it to our original name
+						done.append(opp_group)
 
 					vg.name = flipped_name
+					done.append(vg)
 				
 				o.select_set(True)
 				context.view_layer.objects.active = o	# We want to be sure the original is the active so the object name doesn't get a .001

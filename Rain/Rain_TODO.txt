@@ -1,3 +1,6 @@
+I got a segfault while setting up a mask modifier :S
+
+
 Set up some new hotkeys to let me work faster
     In Front toggle (Nacho suggested Ctrl Alt Shift Middle click)
     Wireframe toggle
