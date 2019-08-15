@@ -58,7 +58,16 @@ VERY small things:
 - When clicking on the Toolbar, the tool should switch on mouse button press, not only after a full click(mouse release) - I often try to click too fast, and my mouse cursor is moved off the toolbar by the time I finish the click, therefore the tool doesn't change.
 
 Defaults:
+- Big one: Lock Object Modes should be disabled by default. It makes no sense to lock the entireity of weight paint mode behind a checkbox.
+    Better yet though, weight paint mode should automatically give access to the armature's pose bones, instead of having to do a weird selection ritual for it.
+    Since multiple armatures are technically supported(although not really), I guess there needs to be a selector in the UI.
 - In the Normalize All Vertex Groups operator, Lock Active should be disabled by default.
+- In Transformation constraints, the scale min/max values should all default to 1.
+- All constraints transform space should default to Local Space. At least for bones, but probably for objects too.
+Non-Rigging defaults:
+- Wireframe 100%
+- Local View should not move the viewport camera
 
 Bugs:
 - Mask modifiers can have a severe performance impact when they have drivers on them, which could be relevant to production rigs with switchable accessories or clothes.
+    Need to re-confirm this, feel like it might be wrong.

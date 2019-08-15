@@ -1174,12 +1174,6 @@ class MetsRigUI_IKFK(MetsRigUI):
 				if(right_fk_thigh_bone):
 					leg_row.column().prop(right_fk_thigh_bone, 'use_inherit_rotation', toggle=True, text='Right Leg')
 
-		# IK Auto Clavicle
-		layout.label(text='IK Auto Clavicle')
-		hand_row = layout.row()
-		hand_row.column().prop(ikfk_props, '["ik_auto_clav_left"]', slider=True, text='Left Clavicle')
-		hand_row.column().prop(ikfk_props, '["ik_auto_clav_right"]', slider=True, text='Right Clavicle')
-
 		# IK Parents
 		layout.label(text='IK Parents')
 		arm_parent_row = layout.row()
