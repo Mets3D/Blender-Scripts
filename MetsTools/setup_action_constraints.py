@@ -135,5 +135,3 @@ def register():
 def unregister():
 	from bpy.utils import unregister_class
 	unregister_class(SetupActionConstraints)
-
-register()
