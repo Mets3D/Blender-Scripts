@@ -20,6 +20,7 @@ class MetsRig_BoolProperties(bpy.types.PropertyGroup):
 	""" Store a BoolProperty referencing an outfit/character property whose min==0 and max==1.
 		This BoolProperty will be used to display the property as a toggle button in the UI.
 	"""
+	# This is currently only used for outfit/character settings, NOT rig settings. Those booleans are instead hard-coded into metsrig_properties.
 
 	def update_id_prop(self, context):
 		""" Callback function to update the corresponding ID property when this BoolProperty's value is changed. """
@@ -456,7 +457,9 @@ class MetsRigUI_IKFK(MetsRigUI):
 
 		layout.label(text='Head Settings')
 		layout.row().prop(mets_props, 'neck_hinge', toggle=True, text='Neck Hinge')
-		layout.row().prop(mets_props, 'head_hinge', toggle=True, text='Head Hinge')
+		head_hinge_row = layout.row()
+		head_hinge_row.enabled = mets_props.neck_hinge
+		head_hinge_row.prop(mets_props, 'head_hinge', toggle=True, text='Head Hinge')
 		layout.row().prop(face_props, '["head_look"]', slider=True, text='Head Look')
 		head_parents = ['Root', 'Pelvis', 'Chest']
 		layout.row().prop(face_props, '["head_target_parents"]', slider=True, text='Head Target Parent ['+head_parents[face_props["head_target_parents"]] + "]")

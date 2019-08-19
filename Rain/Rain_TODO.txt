@@ -1,25 +1,27 @@
 I got a segfault while setting up a mask modifier :thinking:
+I also got a crash when using the new remesh button with a completely invalid mesh by randomly extruding a vert, then two unrelated vert, then an edge, then the whole mess, from the default cube.
+
+I should set up an operator and keybind for setting or toggling 2D falloff and auto normalize in weight paint mode. They should also always be shown in the UI.
 
 Body/Limbs
-	LOW Completely rework the way deformation adjusters are implemented. They need to stop relying on the local rotation of *anything* because that shit is unreliable. Rotation values in general should pretty much only drive anything if the thing doing the driving can only rotate on one axis, so, never. Because rotations are fucking weird.
-		Instead, a stretch target should be parented to the joint, and the deform adjuster should stretch to that target. Then it's just a matter of parenting the deform adjuster itself appropriately.
-		
-		MEDIUM In general but wrist especially, make sure the outer parts of bends stay a bit "sharper" (or less round) and don't lose as much volume.
+	MEDIUM In general but wrist especially, make sure the outer parts of bends stay a bit "sharper" (or less round) and don't lose as much volume.
 		LOW Knee deform is a bit wonky, especially on clothes
 		LOW Knee is too round like the elbow.
-	
-	LOW Stretch controls are kind of a total mess right now, especially when it comes to rotating them.
-		LOW The end of the shoulder and the start of the elbow being a separate toon control mean that the two controls are in the same place and overlap, so if we keep this, make sure to add unique bone shapes.
-		LOW Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
-	
 
 	LOW Try making shoulder weights a bit broader.
 		I don't know, it feels quite broad to me already.
-	LOW Rebuild Soft IK tech with Likkez's tech, see if we can't eliminate all downsides. If it works, Apply it to the arms too.
 	LOW We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
 	
-	MEDIUM Upper thigh is following knee pole vector too much.
+	LOW Upper thigh is following knee pole vector too much.
 		I don't think this can really be fixed easily.
+	
+	NEXT RIG Completely rework the way deformation adjusters are implemented. They need to stop relying on the local rotation of *anything* because that shit is unreliable. Rotation values in general should pretty much only drive anything if the thing doing the driving can only rotate on one axis, so, never. Because rotations are fucking weird.
+		Instead, a stretch target should be parented to the joint, and the deform adjuster should stretch to that target. Then it's just a matter of parenting the deform adjuster itself appropriately.
+		Or maybe try the muscle system addon.
+	NEXT RIG Stretch controls are kind of a total mess right now, especially when it comes to rotating them.
+		The end of the shoulder and the start of the elbow being a separate toon control mean that the two controls are in the same place and overlap, so if we keep this, make sure to add unique bone shapes.
+		Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
+	NEXT RIG Rebuild Soft IK tech with Likkez's tech, see if we can't eliminate all downsides. If it works, Apply it to the arms too.
 	
 Fingers
 	MEDIUM Elbow and wrist and maybe other things roll a bit when they shouldn't, eg. rotating elbow on local X results in some roll in DEF-Shoulder2.L.

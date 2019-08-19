@@ -42,6 +42,7 @@ Medium things:
     Shift + Left Mouse Button - paint Blur
 
 Small things:
+- Ctrl+G in pose mode to set bone groups should show a list with bone groups, instead of an int with the bone group index.
 - When BBone handle type is set to Automatic, let us still choose a handle target, and have it behave such that the changes the target would apply when the handle type is set to Tangent, are applied on top of the changes that are done currently when the handle type is Automatic, effectively allowing us to combine the two behaviors.
     - When BBone handle type is set to Automatic, the bbone splining should only affect the bone itself, the child's start handle, and the parent's end handle. This is currently not the case for roll, meaning if a BBone chain is set to Automatic, and any of the bones in the chain start rolling, the entire chain will start rolling.
     - If we wanted to keep this behavior as an option, we could have a new handle type enum.
