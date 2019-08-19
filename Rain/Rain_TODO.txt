@@ -1,8 +1,5 @@
 I got a segfault while setting up a mask modifier :thinking:
 
-Script
-	MEDIUM Modifier toggle is not working when linked... Can it...?
-
 Body/Limbs
 	LOW Completely rework the way deformation adjusters are implemented. They need to stop relying on the local rotation of *anything* because that shit is unreliable. Rotation values in general should pretty much only drive anything if the thing doing the driving can only rotate on one axis, so, never. Because rotations are fucking weird.
 		Instead, a stretch target should be parented to the joint, and the deform adjuster should stretch to that target. Then it's just a matter of parenting the deform adjuster itself appropriately.

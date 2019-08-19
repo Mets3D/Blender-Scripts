@@ -25,7 +25,6 @@ class MetsRig_BoolProperties(bpy.types.PropertyGroup):
 		""" Callback function to update the corresponding ID property when this BoolProperty's value is changed. """
 		rig = self.rig
 		metsrig_props = rig.metsrig_properties
-		print("updating bool props of rig: " + rig.name)
 		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+metsrig_props.metsrig_outfits)
 		char_bone = rig.pose.bones.get("Properties_Character_"+metsrig_props.metsrig_chars)
 		for prop_owner in [outfit_bone, char_bone]:
@@ -190,16 +189,17 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	metsrig_hairs: EnumProperty(
 		name="Hairstyle",
 		items=hairs)
-	
+
 	render_modifiers: BoolProperty(
 		name='render_modifiers',
 		description='Enable SubSurf, Solidify, Bevel, etc. modifiers in the viewport')
-	show_all_meshes: BoolProperty(
-		name='show_all_meshes',
-		description='Enable all child meshes of this armature')
 	use_proxy: BoolProperty(
 		name='use_proxy',
 		description='Use Proxy Meshes')
+
+	### BOOLEANS ### - Since custom properties cannot be displayed as toggles, I'm hardcoding anything that needs toggle buttons. This is pretty ugly so hopefully one day we can either display integers custom props as toggle buttons or have real boolean custom props.
+	neck_hinge: BoolProperty()
+	head_hinge: BoolProperty()
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -426,8 +426,6 @@ class MetsRigUI_IKFK(MetsRigUI):
 		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_left"]', slider=True, text='Left Foot')
 		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_right"]', slider=True, text='Right Foot')
 		
-		# TODO: These cannot be animated this way. To let them be animated, we need to put a driver on the use_inherit values which then depend on a custom property.
-		# This is because use_inherit values belong to rig.data rather than rig.pose.
 		# FK Hinge
 		layout.label(text='FK Hinge')
 		
@@ -456,15 +454,10 @@ class MetsRigUI_IKFK(MetsRigUI):
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_hands"]', toggle=True, text='Arms')
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_feet"]', toggle=True, text='Legs')
 
-		# Head & Neck Settings TODO: These also can't be animated, as explained a few comments above about use_inherit_*
 		layout.label(text='Head Settings')
-		head_bone = rig.data.bones.get("AIM-Head")
-		neck_bone = rig.data.bones.get("DEF-Neck")
-		if(neck_bone):
-			layout.row().prop(face_props, '["neck_hinge"]', toggle=True, text='Neck Hinge')
-		if(head_bone):
-			layout.row().prop(face_props, '["head_hinge"]', toggle=True, text='Head Hinge')
-			layout.row().prop(face_props, '["head_look"]', slider=True, text='Head Look')
+		layout.row().prop(mets_props, 'neck_hinge', toggle=True, text='Neck Hinge')
+		layout.row().prop(mets_props, 'head_hinge', toggle=True, text='Head Hinge')
+		layout.row().prop(face_props, '["head_look"]', slider=True, text='Head Look')
 		head_parents = ['Root', 'Pelvis', 'Chest']
 		layout.row().prop(face_props, '["head_target_parents"]', slider=True, text='Head Target Parent ['+head_parents[face_props["head_target_parents"]] + "]")
 
@@ -472,8 +465,6 @@ class MetsRigUI_IKFK(MetsRigUI):
 		layout.label(text='Face Settings')
 		layout.row().prop(face_props, '["sticky_eyelids"]', text='Sticky Eyelids', slider=True)
 		layout.row().prop(face_props, '["sticky_eyesockets"]', text='Sticky Eyerings', slider=True)
-		#layout.row().prop(face_props, '["auto_eyering_upper"]', text='Auto Upper Eyering', slider=True)
-		#layout.row().prop(face_props, '["auto_eyering_lower"]', text='Auto Lower Eyering', slider=True)
 
 class MetsRigUI_Extras(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras"
@@ -484,9 +475,8 @@ class MetsRigUI_Extras(MetsRigUI):
 		rig = context.scene['metsrig_pinned']
 		mets_props = rig.metsrig_properties
 	
-		layout.row().prop(mets_props, 'show_all_meshes', text='Enable All Meshes', toggle=True)
 		layout.row().prop(mets_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
-		layout.row().prop(mets_props, 'use_proxy', text='Use Proxies', toggle=True)
+		layout.row().prop(mets_props, 'use_proxy', text='Use Proxy Meshes', toggle=True)
 
 class MetsRigUI_Extras_Physics(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras_physics"
