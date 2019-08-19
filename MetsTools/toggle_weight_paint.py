@@ -38,8 +38,8 @@ class ToggleWeightPaint(bpy.types.Operator):
 			# Store old shading settings in a dict custom property
 			if('wpt' not in context.screen):
 				context.screen['wpt'] = {}
-
-			if(not context.screen['wpt'].to_dict()['last_switch_in']):	# Only save shading info if we exitted weight paint mode using this operator.
+			wpt = context.screen['wpt'].to_dict()
+			if('last_switch_in' not in wpt or wpt['last_switch_in']==False):	# Only save shading info if we exitted weight paint mode using this operator.
 				context.screen['wpt']['light'] = context.space_data.shading.light
 				context.screen['wpt']['color_type'] = context.space_data.shading.color_type
 				context.screen['wpt']['studio_light'] = context.space_data.shading.studio_light
