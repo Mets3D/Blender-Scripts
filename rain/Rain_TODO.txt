@@ -1,7 +1,7 @@
 I got a segfault while setting up a mask modifier :thinking:
 I also got a crash when using the new remesh button with a completely invalid mesh by randomly extruding a vert, then two unrelated vert, then an edge, then the whole mess, from the default cube.
 
-I should set up an operator and keybind for setting or toggling 2D falloff and auto normalize in weight paint mode. They should also always be shown in the UI.
+I think I'll need a script to split shape keys into left/right parts and set up drivers accordingly. (I guess have the left-side driver on the original shape-key, then just flip that over to the new right side shape key)
 
 Body/Limbs
 	MEDIUM In general but wrist especially, make sure the outer parts of bends stay a bit "sharper" (or less round) and don't lose as much volume.
