@@ -3,14 +3,11 @@ I also got a crash when using the new remesh button with a completely invalid me
 
 I think I'll need a script to split shape keys into left/right parts and set up drivers accordingly. (I guess have the left-side driver on the original shape-key, then just flip that over to the new right side shape key)
 
-Body/Limbs
-	MEDIUM In general but wrist especially, make sure the outer parts of bends stay a bit "sharper" (or less round) and don't lose as much volume.
-		LOW Knee deform is a bit wonky, especially on clothes
-		LOW Knee is too round like the elbow.
+Improve hips based on http://www.hippydrome.com/HipsLftRtFrntBck.html (move up, preserve volume better)
 
+Body/Limbs
 	LOW Try making shoulder weights a bit broader.
 		I don't know, it feels quite broad to me already.
-	LOW We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
 	
 	LOW Upper thigh is following knee pole vector too much.
 		I don't think this can really be fixed easily.
@@ -21,6 +18,7 @@ Body/Limbs
 	NEXT RIG Stretch controls are kind of a total mess right now, especially when it comes to rotating them.
 		The end of the shoulder and the start of the elbow being a separate toon control mean that the two controls are in the same place and overlap, so if we keep this, make sure to add unique bone shapes.
 		Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
+		LOW We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
 	NEXT RIG Rebuild Soft IK tech with Likkez's tech, see if we can't eliminate all downsides. If it works, Apply it to the arms too.
 	
 Fingers

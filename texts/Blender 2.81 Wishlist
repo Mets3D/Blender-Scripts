@@ -34,6 +34,7 @@ Medium things:
 - "Soft IK" tech should be how IK constraints behave by default.
 
 - Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
+- Snapping to cursor affects hidden bones in edit mode.
 - Weight paint: Can't press number keys to change brush anymore, and I don't think a hotkey can even be set up. Even if it can, it's probably more complicated than it should be.
 - Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
 - Let this behaviour be the default, just like in sculpt mode:

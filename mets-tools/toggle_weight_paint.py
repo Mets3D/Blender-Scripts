@@ -54,6 +54,7 @@ class ToggleWeightPaint(bpy.types.Operator):
 
 		else:
 			### Leaving weight paint mode. ###
+			if(not 'wpt' in context.screen): return { 'CANCELLED' }	# Cannot leave WP with this operator until we entered WP with this operator. 
 			info = context.screen['wpt'].to_dict()
 			# Restore mode.
 			bpy.ops.object.mode_set(mode=info['mode'])

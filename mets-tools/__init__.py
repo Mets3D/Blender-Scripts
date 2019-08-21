@@ -46,6 +46,7 @@ from . import mirror_constraints
 from . import make_right_vgroups
 from . import setup_action_constraints
 from . import toggle_weight_paint
+from . import change_brush
 
 def register():
 	from bpy.utils import register_class
@@ -65,6 +66,7 @@ def register():
 	make_right_vgroups.register()
 	setup_action_constraints.register()
 	toggle_weight_paint.register()
+	change_brush.register()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.append(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.append(draw_func_MarkSharpByAutoSmooth)
@@ -88,6 +90,7 @@ def unregister():
 	make_right_vgroups.unregister()
 	setup_action_constraints.unregister()
 	toggle_weight_paint.unregister()
+	change_brush.unregister()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.remove(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.remove(draw_func_MarkSharpByAutoSmooth)
