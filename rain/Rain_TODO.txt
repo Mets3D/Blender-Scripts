@@ -1,11 +1,11 @@
-I got a segfault while setting up a mask modifier :thinking:
-I also got a crash when using the new remesh button with a completely invalid mesh by randomly extruding a vert, then two unrelated vert, then an edge, then the whole mess, from the default cube.
-
 I think I'll need a script to split shape keys into left/right parts and set up drivers accordingly. (I guess have the left-side driver on the original shape-key, then just flip that over to the new right side shape key)
 
-Improve hips based on http://www.hippydrome.com/HipsLftRtFrntBck.html (move up, preserve volume better)
+Fiddle more with spine.
+	Add upper chest control http://www.hippydrome.com/UpChestLRFB.html
+	Re-do Waist and thigh deforms
 
 Body/Limbs
+
 	LOW Try making shoulder weights a bit broader.
 		I don't know, it feels quite broad to me already.
 	
@@ -22,9 +22,7 @@ Body/Limbs
 	NEXT RIG Rebuild Soft IK tech with Likkez's tech, see if we can't eliminate all downsides. If it works, Apply it to the arms too.
 	
 Fingers
-	MEDIUM Elbow and wrist and maybe other things roll a bit when they shouldn't, eg. rotating elbow on local X results in some roll in DEF-Shoulder2.L.
-	
-	LOW Overall deform improvements for fingers
+	LOW Add deform adjusters for fingers.
 		
 Clothes
 	MEDIUM Shirt is wonky in the front and back when hips are moved
@@ -43,6 +41,6 @@ On release/updates
 	Maybe join the UV layers into one? I don't like having them separate. I'd rather just offset them by 1 UV tile to the right.
 	Make sure Armature modifiers are in the right place in the stack(ie. above SubSurf)
 	Lock object transforms
-	Make sure bones, objects, shapes, and object data are named properly
+	Make sure bones, objects, shapes, and object data are named properlyRNA_DEF_CURVEBONE_UPDATE
 	Make sure bbone display size is consistent
 	Clean up bone shapes collection, maybe make a script to resize bones to a uniform scale and then adjust bone shape settings accordingly so they maintain their display size.

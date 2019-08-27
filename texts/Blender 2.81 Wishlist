@@ -3,6 +3,10 @@ TODO:
     re-word more professionally
     talk to Sebastian about what his role is going to be in 2.81 and 2.82
 
+These things don't have an undo step it seems:
+	Unlink Action
+	Clear Pose Constraints operator
+    
 Big things:
 - Constraints as nodes, or in general a node-based rigging system, which can still be abstracted by the old constraint interface.
     - I want to access the result of a constraint and do maths on it, without actually applying that result to my transforms. I guess that's pretty fundamental and may be obvious, but there you go.
@@ -15,6 +19,8 @@ Big things:
 - Bone parenting should no longer strictly imply any sort of transformational relationship. The purpose of parenting bones would be reduced to purely organizational and 3rd party software compatibility purpose (From a data perspective, NOT from a user perspective). As far as the depsgraph should be concerned, a child is no longer guaranteed to be dependent on its parent.
         - This is because all parent-induced transformations should become explicit. This is already sort of the case, in a backwards way, via the "Inherit Location/Rotation/Scale" checkboxes. The behavior of these checkboxes would be replaced by nodes, which are set up automatically when a user parents a bone, as long as the "use_nodes" option on the bone is disabled, which it would be by default.
 
+- Deprecate armature layers!
+
 - Armatures should maintain a list of objects that they deform. Is it possible?
 - Deprecate armature layers and bone groups and replace with a new system.
 
@@ -22,7 +28,9 @@ Big things:
     - After some thinking, I think shape key values should be part of "mesh nodes" along with modifiers and potentially mesh operator nodes like extrude etc.
 - Also let us control shape key values within the same node graph as bone constraints.
     - Bad idea probably.
-- Consider if any changes would be useful for the data structure of how vertex groups(and maybe shape keys) are stored. (A weight container is the same thing as a traditional Weight Map in that it stores weight values for vertices, but it is separate from the mesh and is an item of its own.)
+- Let weights be a separate datablock from object data
+    - The goal would be to would allow for a workflow where a rigger links a character to their file and assigns weights to it, while the rest of the mesh stays linked.
+
 
 Medium things:
 - Let me access armature layers(or whatever they become) from weight paint mode.
