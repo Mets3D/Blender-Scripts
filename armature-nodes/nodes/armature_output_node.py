@@ -1,24 +1,14 @@
 import bpy
+from .armature_node import ArmatureNode
+from bpy.props import *
 from bpy.types import Node
-from . armature_node_sockets import *
 
-# Armature Node Base Class
-class MyCustomTreeNode:
-    @classmethod
-    def poll(cls, ntree):
-        return ntree.bl_idname == 'CustomTreeType'
 
 # Derived from the Node base type.
-class MyCustomNode(Node, MyCustomTreeNode):
-    # === Basics ===
-    # Description string
-    '''A custom node'''
-    # Optional identifier string. If not explicitly defined, the python class name is used.
-    bl_idname = 'CustomNodeType'
-    # Label for nice name display
-    bl_label = "Custom Node"
-    # Icon identifier
-    bl_icon = 'SOUND'
+class ArmatureOutputNode(Node, ArmatureNode):
+    '''Armature Output Node'''
+    bl_idname = 'arn_ArmatureOutputNode'
+    bl_label = "Output Node"
 
     # === Custom Properties ===
     # These work just like custom properties in ID data blocks
@@ -65,19 +55,3 @@ class MyCustomNode(Node, MyCustomTreeNode):
     # Explicit user label overrides this, but here we can define a label dynamically
     def draw_label(self):
         return "I am a custom node"
-
-
-classes = (
-    MyCustomNode,
-)
-
-def register():
-    from bpy.utils import register_class
-    for c in classes:
-        register_class(c)
-
-
-def unregister():
-    from bpy.utils import unregister_class
-    for c in reversed(classes):
-        unregister_class(c)

@@ -2,7 +2,7 @@ import bpy
 from bpy.types import NodeSocket
 
 # Custom socket type
-class MyCustomSocket(NodeSocket):
+class EditBoneSocket(NodeSocket):
     # Description string
     '''Custom node socket type'''
     # Optional identifier string. If not explicitly defined, the python class name is used.
@@ -35,18 +35,3 @@ class MyCustomSocket(NodeSocket):
     # Socket color
     def draw_color(self, context, node):
         return (1.0, 0.4, 0.216, 0.5)
-
-classes = (
-    MyCustomSocket,
-)
-
-def register():
-    from bpy.utils import register_class
-    for c in classes:
-        register_class(c)
-
-
-def unregister():
-    from bpy.utils import unregister_class
-    for c in reversed(classes):
-        unregister_class(c)
