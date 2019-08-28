@@ -10,6 +10,8 @@ class ArmatureNodeTree(NodeTree):
 	bl_label = "Armature Node Editor"
 	bl_icon = 'NODETREE'
 
+	# TODO: Initialize with some default nodes? (How?)
+
 ### Node Categories ###
 # Node categories are a python system for automatically
 # extending the Add menu, toolbar panels and search operator.

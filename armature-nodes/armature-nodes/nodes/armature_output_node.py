@@ -3,8 +3,6 @@ from .armature_node import ArmatureNode
 from bpy.props import *
 from bpy.types import Node
 
-
-# Derived from the Node base type.
 class ArmatureOutputNode(Node, ArmatureNode):
 	'''Armature Output Node'''
 	bl_idname = 'arn_ArmatureOutputNode'
@@ -13,7 +11,7 @@ class ArmatureOutputNode(Node, ArmatureNode):
 	bone_names: bpy.props.StringProperty()
 	
 	def init(self, context):
-		self.inputs.new('arn_EditBoneSocket', "Bones")
+		self.inputs.new('arn_BoneSocket', "Bones")
 
 	# Copy function to initialize a copied node from an existing one.
 	def copy(self, node):

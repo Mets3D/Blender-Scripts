@@ -1,0 +1,136 @@
+The goal of this addon is to let us generate additional parts of the armature by taking in the current set of bones as the input.
+To do this, we implement a new nodegraph using the python API.
+The output node of this nodegraph takes a list of bones as its parameter, which should be created, and the rest of the nodegraph is responsible for generating this list of bones.
+For now for simplicity's sake, the nodegraph should only be executed by an operator which is explicitly called, but ideally this would have to be a live updated thing in the future, which would probably require a lot of optimization and low level implementation.
+Keeping it simple like this should let us implement something usable in just a few days!
+
+I think the code for some nodes could be generated.
+For example, nodes that get and set bone properties, would involve a lot of code duplication, so we could just set up a dummy python file with some keywords surrounded by <> that need to be filled in by some parameters in a generator, then we run basic replace functions over it to get the final .py file.
+
+Current folder structure:
+Maybe each folder can simply be a file instead. We should look at AnimationNodes.
+
+Initial goals: Build UI, let a node create a bone when node tree is manually executed.
+
+An Armature can have a list of Armature NodeTrees, just like an object can have a list of Material NodeTrees.
+The NodeTree is assigned some selection of bones as its input, with Assign/Remove/Select/Deselect operators, just like vertices to a vertex group.
+Pressing the Generate button will execute() the output node of each node tree, from top to bottom.
+The execute() of the output node collects a list of edit bone information and then creates those edit bones.
+    Problem: Can we pass dummy instances of the EditBone class around the nodes? Probably yeah, I guess. Or can they only store instances of bpy.props?
+
+Data structure 
+    An armature owns several armature node trees, as well as a new generate() operator.
+    The generate() operator creates a new armature, and then populates it by calling some function on the node trees in order.
+    This needs to pass the armature down into the node tree, so the nodetree is aware of which armature is calling it. 
+    This is useful because then we can do things like check the scene for objects that are deformed by this armature, and do stuff with them. 
+    Sure, it's quite hacky, but we have to accept that meshes are part of the rig, so if these nodetrees are meant to set up a rig, they need to have access to the objects.
+    The node tree also passes itself into the nodes, for the same reason.
+    Nodes already pass themselves to their sockets, so that's great.
+
+    I'm not decided yet on the flow of information and the order of execution.
+    I think it would be ideal for performance's sake to "do everything in one go", since then we only need to switch into edit mode once while generating.
+    I wonder if we can instance classes like Bone, EditBone and Constraint, so that we don't have to implement our own data storages for them. Although maybe that would be the right way to do it, but I don't really care or think so.
+
+    Idea 1:
+        There is an output node. It takes an arbitrary number of lists of bones as its input.
+        Lists of bones can be created with a node that takes an arbitrary number of bones as its input.
+        An arbitrary number of Lists of any type can also be appended together with another node.
+
+        This is all blabla. The point is, the output node executes. It calls the node sockets that are plugged into it, which will call the nodes that own them.
+        These nodes could change object modes and create bones or add constraints or whatever.
+        In order for them to do this though, they would first need to request information from their input sockets first, so we recurse to the end, until we get all the info we need, and create every bone and constraint.
+        Cons:
+            - Everything has to be plugged into a fat ugly output node
+            - Performance will probably be shit due to all the mode switching.
+        Pros:
+            - Easy to implement
+            - Easy to understand? (because of output node)
+    
+    Idea 2:
+        There is no output node.
+        Nodes need to be organized into a hierarchy so that we know which one to execute first.
+    
+    Problem 1:
+        I wonder, if we have a node that outputs a bone, and then that's plugged into a bunch of other nodes - Will all of those other nodes run this node or this socket again?
+        They definitely shouldn't, at that point the variable should be saved so any subsequent calls to that node can just read it. But like, does this have to be an "if(already done)" statement?
+
+    Problem 2:
+        If we're allowing nodes to create data, but we have an output node at the same time, what if we have a node that creates data but isn't hooked up to the output node? Its data will still be created, but the user would expect it not to be, since it isn't part of the node graph's output.
+        God fucking damnit.
+        This would be so much easier if I could just create my own instances of bpy_structs.
+        Eh, would it though? Oh yeah, it would, because then I could only make those bones real that reached the output node.
+
+Practical theory 1
+    Let's say I wanted to create an IK setup from a base skeleton(like an SFM rig script)
+
+    I would first have an input node giving me a list of all the bones I can work with.
+    From this list, I would get the "Hand.L", "Elbow.L", "Shoulder.L" bones, since these would be needed for my maths.
+    So now I have 4 nodes: my input node and my 3 finder bones.
+    I would make a Find/Create node and pass it the name "Hand_IK.L". This would output for me the bone that it created.
+        With a list of nodes (vertically?) I would set all the properties of this that I want to.
+            (Note: Setter nodes should be able to take multiple bones as input, since we would often want to set the same things for many bones)
+        So that means settings its head, tail and roll to be the same as Hand.L, and I would set its parent to the Root bone.
+    On a different pin coming out of my original Hand.L bone, I would add a Copy Transforms constraint, and I would plug in Hand_IK.L as the target.
+    I now want to repeat this set of instructions with Foot_IK.L, so I would put all of the nodes after the Hand.L finder into a nodegroup.
+
+    This approach just doesn't feel right...
+
+Practical theory 2
+    Same goal, different workflow.
+    The "Create/Change Bone" node is considered one of many output nodes. It has inputs for every bone property as well as a list of constraints.
+
+    I still have an input node giving me a list of my bones. I also immediately create one such output node for Hand_IK.L.
+    I retrieve all the properties of Hand.L with a GetProperties node. The outputs of this mimic the inputs of the create node.
+    I plug in all the things that I want to copy from Hand.L to Hand_IK.L - head, tail, roll.
+    I create a Copy Transforms Constraint node, plug Hand_IK.L into it as the target.
+    Then I make another "Create/Change Bone" node for Hand.L and then I plug the constraint into the constraints of this.
+
+    Would I be able to create another Create/Change Bone node with the same target name?
+        If yes, and the two of them are plugging different values into the same socket, who wins?
+        The answer should most likely be no. This would be a lot like Jacques's Particle Type nodes. It has to be unique.
+
+    Okay, so we would want to start by evaluating these output nodes, but we would have to make sure we go from the bottom of the node hierarchy to the top, I think? 
+    That sounds easy enough, we just get a list of all Create/Change Bone nodes whose output is not plugged into anything.
+    We execute() those, which will find or create an edit_bone and set its attributes to the node's inputs. It will do this by asking each of its inputs for their value.
+    If something is plugged into those inputs, then they will ask the socket on the other side of the link to finds its own value.
+    Which will cause that output socket to trigger the evaluation of that node.
+    The node should have a flag to check if it has been execute()d yet, and if not, then do it. If yes, then all the output values should already be available for any node to request them. But how?
+    The base socket class execute() could say, if self.node.evaluated: return my property(knowing it won't be None), else: self.node.execute()
+    This will cause a recursion until the left-most node in the graph can figure out its values on its own. (data input nodes)
+    Then we will start returning from the recursion, left to right, filling out all our node values based on already filled out node values coming in from the left side.
+    This keeps going until we get all the way to the right side, when all the information necessary for the Create/Change Bone node has been filled out.
+    The for loop iterating through the input sockets completes.
+    new_bone = Armature.data.edit_bones.new(name), and then set all the attributes based on the input sockets' evaluated values.
+    (alternatively, we can create the new bone as soon as we have the name, and then populate the values with separate recursions, which is the same thing, but feels nicer.)
+
+    I like this.
+
+    We should also be able to delete bones though. Actually, I'm not so sure if that's even true. But it would be nice to be able to. These could also be considered right-most sided nodes(output nodes) with no further outputs.
+    But they could also exist disconnected from the rest of the node tree, so I guess it's important that these guys are evaluated after the Change/Create bones.
+    In which case, we would really only need one delete node that takes the whole list of things we want to delete... whcih feels weird, since now we have a hard coded node execution order, instead of that order being defined by noodles, like you would expect in a node graph.
+    
+
+     
+
+Node ideas:
+    Adding Constraints (separate node for each constraint type)
+        eg. Add Copy Location constraint
+            Bone ->
+            Constraint Name ->
+            Source Space ->
+            Target Space ->
+            (X,Y,Z) ->
+            Invert X ->
+            Invert Y ->
+            Invert Z ->
+            Offset ->
+            Influence ->
+            Head/Tail ->
+            use_bbone_shape ->
+            And there would be only one output which is a reference to the constraint, in case we want to use it for more nodes.
+    It is unfortunate that even such a simple constraint will have a lot of inputs. Setting up a Transformation constraint with a single column layout like this will be an absolute nightmare.
+
+    Adding Drivers
+        Would perhaps first need a GetProperty or GetDataPath node or something. Adding drivers is really weird.
+        A major thing with this is that we need a dynamic number of inputs for the variables - I guess we can do this by putting operator buttons on the node?
+

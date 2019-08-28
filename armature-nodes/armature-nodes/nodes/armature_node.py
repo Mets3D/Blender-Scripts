@@ -1,7 +1,11 @@
+from bpy.types import Node
+
 # Armature Node Base Class
-class ArmatureNode:
+class ArmatureNode(Node):
 	@classmethod
 	def poll(cls, ntree):
+		if(not super().poll(ntree)):
+			return False
 		return ntree.bl_idname == 'ArmatureNodeTree'
 	
 	# Called by the Generate Armature operator.
