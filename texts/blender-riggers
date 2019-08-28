@@ -1,0 +1,6 @@
+Here are some things I could bring up in #blender-riggers:
+
+- How to achieve Tangent+Automatic BBones better than what I did (very complicated to explain what I did though)
+- Why does the Transformation constraint overwrite scale rather than offset, so that we could have multiple transformation constraints on a single bone that target the scale?
+- Pros and cons of IK Stretch and is there a way to mitigate the cons?
+- Anyone got fancy finger or spine rigs? ;_;

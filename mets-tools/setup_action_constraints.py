@@ -52,7 +52,7 @@ class SetupActionConstraints(bpy.types.Operator):
 		armature = context.object
 		target = None
 		if(self.target!=""):
-			context.scene.objects[self.target]
+			target = context.scene.objects[self.target]
 		else:
 			target = armature
 		action = bpy.data.actions[self.action]
