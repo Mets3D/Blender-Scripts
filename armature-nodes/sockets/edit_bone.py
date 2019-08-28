@@ -3,35 +3,22 @@ from bpy.types import NodeSocket
 
 # Custom socket type
 class EditBoneSocket(NodeSocket):
-    # Description string
-    '''Custom node socket type'''
-    # Optional identifier string. If not explicitly defined, the python class name is used.
-    bl_idname = 'CustomSocketType'
-    # Label for nice name display
-    bl_label = "Custom Node Socket"
+	bl_idname = 'arn_EditBoneSocket'
+	bl_label = "Edit Bone Socket"
 
-    # Enum items list
-    my_items = (
-        ('DOWN', "Down", "Where your feet are"),
-        ('UP', "Up", "Where your head should be"),
-        ('LEFT', "Left", "Not right"),
-        ('RIGHT', "Right", "Not left"),
-    )
+	bone_name: bpy.props.StringProperty(
+		name="Bone Name",
+		description="Bone Name",
+		default='Bone'
+	)
 
-    my_enum_prop: bpy.props.EnumProperty(
-        name="Direction",
-        description="Just an example",
-        items=my_items,
-        default='UP',
-    )
+	# Optional function for drawing the socket input value
+	def draw(self, context, layout, node, text):
+		if self.is_output or self.is_linked:
+			layout.label(text=text)
+		else:
+			layout.prop_search(self, "bone_name", context.object.data, "bones", text=text)
 
-    # Optional function for drawing the socket input value
-    def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "my_enum_prop", text=text)
-
-    # Socket color
-    def draw_color(self, context, node):
-        return (1.0, 0.4, 0.216, 0.5)
+	# Socket color
+	def draw_color(self, context, node):
+		return (1.0, 1.0, 1.0, 1.0)
