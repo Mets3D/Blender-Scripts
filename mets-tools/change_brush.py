@@ -7,11 +7,14 @@ class ChangeWPBrush(bpy.types.Operator):
 	bl_label = "Set WP Brush"
 	bl_options = {'REGISTER', 'UNDO'}
 
+	def brushes(self, context):
+		items = []
+		for b in bpy.data.brushes:
+			pass #TODO
+
+
 	brush: EnumProperty(name="Brush",
-	items=[("ADD", "Add", "Add"),
-			("SUBTRACT", "Subtract", "Subtract"),
-			("BLUR", "Blur", "Blur"),
-			],
+	items=brushes,
 	default="ADD")
 
 	def execute(self, context):

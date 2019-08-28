@@ -30,7 +30,8 @@ def split_shapekey(o, source_name, split_names):
 	""" The use case is when we want to blend into a shape key using multiple masks. """
 	
 	# TODO: We will use this to split left/right halves as well, I suppose.
-	
+	# TODO: This fails when the source shape key has a keyframe on it that forces its value to be not 1.
+
 	shape_keys = o.data.shape_keys.key_blocks
 	# Ensure source shape key exists and set it to 1. (Let it stay on 1 after the operation is complete, since it will be disabled)
 	source_sk = shape_keys.get(source_name)
