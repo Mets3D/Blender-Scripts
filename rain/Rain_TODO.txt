@@ -6,13 +6,9 @@ Fiddle more with spine.
 
 Lower chest control
 	Try offsetting the controls downwards from the deform bones, see how it works out.
-Rename spine controls from SpineX to something more descriptive
-	HIp is good
-	Torso is good
-	Spine1 should just be Spine
-	Spine2 should be Ribcage
-	SPine3 should be Chest.
 
+Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone which is parented to, I guess various things as an option.
+	We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone.
 
 Body/Limbs
 
