@@ -2,12 +2,12 @@ import bpy
 
 # This operator is to make entering weight paint mode less of a pain in the ass.
 
-# Set active object to weight paint mode
-# Set shading mode to a white MatCap, Single Color shading
-# Find armature via modifiers
-# Make it active, Put it in pose mode, set active back to the mesh
-
-# When leaving weight paint mode with the operator, restore shading settings but keep the armature in pose mode.
+# It registers an operator called "Toggle Weight Paint Mode" that does the following:
+# 	Set active object to weight paint mode
+# 	Set shading mode to a white MatCap, Single Color shading (Should reset everything back to what it was when using the operator again, but is a bit wonky)
+# 	Find first armature via modifiers
+# 	Make it active, Put it in pose mode, set active back to the mesh
+# You need to set up your own keybind for this operator.
 
 class ToggleWeightPaint(bpy.types.Operator):
 	""" Transfer weights from active to selected objects based on weighted vert distances """
