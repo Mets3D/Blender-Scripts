@@ -4,9 +4,9 @@ import bpy
 
 # It registers an operator called "Toggle Weight Paint Mode" that does the following:
 # 	Set active object to weight paint mode
-# 	Set shading mode to a white MatCap, Single Color shading (Should reset everything back to what it was when using the operator again, but is a bit wonky)
-# 	Find first armature via modifiers
-# 	Make it active, Put it in pose mode, set active back to the mesh
+# 	Set shading mode to a white MatCap, Single Color shading
+# 	Find first armature via modifiers and set it to pose mode.
+# When running the operator again, it should restore all modes and shading settings.
 # You need to set up your own keybind for this operator.
 
 class ToggleWeightPaint(bpy.types.Operator):
@@ -30,8 +30,9 @@ class ToggleWeightPaint(bpy.types.Operator):
 		if(enter_wp):
 			### Entering weight paint mode. ###
 			# Set modes.
-			context.view_layer.objects.active = armature
-			bpy.ops.object.mode_set(mode='POSE')
+			if(armature):
+				context.view_layer.objects.active = armature
+				bpy.ops.object.mode_set(mode='POSE')
 			context.view_layer.objects.active = obj
 			bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
 
@@ -54,16 +55,19 @@ class ToggleWeightPaint(bpy.types.Operator):
 
 		else:
 			### Leaving weight paint mode. ###
-			if(not 'wpt' in context.screen): return { 'CANCELLED' }	# Cannot leave WP with this operator until we entered WP with this operator. 
-			info = context.screen['wpt'].to_dict()
-			# Restore mode.
-			bpy.ops.object.mode_set(mode=info['mode'])
-			context.screen['wpt']['last_switch_in'] = False
+			if('wpt' in context.screen):
+				info = context.screen['wpt'].to_dict()
+				# Restore mode.
+				bpy.ops.object.mode_set(mode=info['mode'])
+				context.screen['wpt']['last_switch_in'] = False
 
-			# Restore shading options.
-			context.space_data.shading.light = info['light']
-			context.space_data.shading.color_type = info['color_type']
-			context.space_data.shading.studio_light = info['studio_light']
+				# Restore shading options.
+				context.space_data.shading.light = info['light']
+				context.space_data.shading.color_type = info['color_type']
+				context.space_data.shading.studio_light = info['studio_light']
+			else:
+				# If we didn't enter weight paint mode with this operator, just go into object mode when trying to leave WP mode with this operator.
+				bpy.ops.object.mode_set(mode='OBJECT')
 
 		return { 'FINISHED' }
 
