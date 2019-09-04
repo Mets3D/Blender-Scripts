@@ -7,25 +7,19 @@ class ChangeWPBrush(bpy.types.Operator):
 	bl_label = "Set WP Brush"
 	bl_options = {'REGISTER', 'UNDO'}
 
-	def brushes(self, context):
-		items = []
-		for b in bpy.data.brushes:
-			pass #TODO
-
-
 	brush: EnumProperty(name="Brush",
-	items=brushes,
-	default="ADD")
+	items=[('Add', 'Add', 'Add'),
+			('Subtract', 'Subtract', 'Subtract'),
+			('Draw', 'Draw', 'Draw'),
+			('Average', 'Average', 'Average'),
+			('Blur', 'Blur', 'Blur'),
+			],
+	default="Add")
 
 	def execute(self, context):
 		brush = self.brush
 
-		if(brush == 'ADD'):
-			bpy.context.tool_settings.weight_paint.brush = bpy.data.brushes['Add']
-		elif(brush == 'SUBTRACT'):
-			bpy.context.tool_settings.weight_paint.brush = bpy.data.brushes['Subtract']
-		elif(brush == 'BLUR'):
-			bpy.context.tool_settings.weight_paint.brush = bpy.data.brushes['Blur']
+		bpy.context.tool_settings.weight_paint.brush = bpy.data.brushes[brush] #This will break if you delete or rename your brushes, so don't.
 
 		return { 'FINISHED' }
 

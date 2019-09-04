@@ -10,6 +10,7 @@ from mathutils import Vector
 
 arrow_shape = bpy.data.objects['Shape_Arrow']
 sphere_shape = bpy.data.objects['Shape_Sphere']
+fk_shape = bpy.data.objects['Shape_FK_Limb']
 scale=0.01
 
 def safe_create_constraint(pb, ctype, name=None):
@@ -37,13 +38,26 @@ def safe_create_bone(bonename):
 	if(not bone):
 		bone = bpy.context.object.data.edit_bones.new(bonename)
 		bone.tail = ((0, 0, 0.1))	# Ensure bone doesn't get auto deleted for being 0 length
+		#print("Created bone: " + bone.name )
+	else:
+		pass
+		#print("Found bone, not creating: " + bone.name)
 	return bone
 
 class BoneData:
-	# Container and creator of Bones for the Armature Node system.
-	instances = []	# I want this class to keep track of its instances.
+	""" Container and creator of bones. """
+	instances = []	# To let the class keep track of its instances.
+
+	@classmethod
+	def get_instance(cls, name):
+		""" Find a BoneData instance by name, if it exists. """
+		for bd in cls.instances:
+			if(bd.name == name):
+				return bd
+		return None
 
 	def __init__(self, armature=None, edit_bone=None):
+		self.__class__.instances.append(self)
 		self.constraints = []	# List of (Type, attribs{}) tuples where attribs{} is a dictionary with the attributes of the constraint. I'm too lazy to implement a container for every constraint type...
 		self.name = "Bone"
 		self.head = Vector((0,0,0))
@@ -54,23 +68,22 @@ class BoneData:
 		self.bbone_curveiny = 0
 		self.bbone_curveoutx = 0
 		self.bbone_curveouty = 0
-		self.bbone_custom_handle_start = ""  # Bone name
-		self.bbone_custom_handle_end = ""	# Bone name
-		self.bbone_custom_handle_start_type = "AUTO"
-		self.bbone_custom_handle_end_type = "AUTO"
+		self.bbone_handle_type_start = "AUTO"
+		self.bbone_handle_type_end = "AUTO"
 		self.bbone_easein = 0
 		self.bbone_easeout = 0
 		self.bbone_scaleinx = 0
 		self.bbone_scaleiny = 0
 		self.bbone_scaleoutx = 0
 		self.bbone_scaleouty = 0
-		self.bbone_segments = 1
+		self.segments = 1
 		self.bbone_x = 0.1
 		self.bbone_z = 0.1
-		self.bone_group = ""
+		self.bone_group = None
 		self.custom_shape = None   # Object ID?
 		self.custom_shape_scale = 1.0
-		self.custom_shape_transform = "" # Bone name
+		self.custom_shape_transform = None # Bone name
+		self.use_custom_shape_bone_size = False
 		self.use_endroll_as_inroll = False
 		self.use_connect = False
 		self.use_deform = False
@@ -79,19 +92,35 @@ class BoneData:
 		self.use_local_location = True
 		self.use_envelope_multiply = False
 		self.use_relative_parent = False
-		self.parent = None # Store String instead of Bone ID. This needs special treatment, see write_edit_data().
-		self.__class__.instances.append(self)
+
+		# We don't want to store a real Bone ID because we want to be able to set the parent before the parent was really created. So this is either a String or a BoneData instance.
+		self.parent = None
+		self.bbone_custom_handle_start = None
+		self.bbone_custom_handle_end = None
+
 		if(armature and edit_bone):
+			#print("reading BoneData from: " +edit_bone.name)
 			self.read_data(armature, edit_bone)
+
+	# TODO: Reading and writing shit is an absolute fucking mess, because I wasn't prepared for how much of an absolute fucking mess the python API for bones was.
 
 	def read_data(self, armature, edit_bone):
 		my_dict = self.__dict__
+		eb_attribs = []
 		for attr in my_dict.keys():
 			if(hasattr(edit_bone, attr)):
+				eb_attribs.append(attr)
 				setattr( self, attr, getattr(edit_bone, attr) )
+		#print("Read BoneData: " + self.name)
 		
 		# If this bone has a pose bone, also read its constraints.
+		
 		pose_bone = armature.pose.bones.get(edit_bone.name)
+		for attr in my_dict.keys():
+			if( hasattr(pose_bone, attr) 
+			and attr not in eb_attribs
+			and attr not in ['constraints'] ):
+				setattr( self, attr, getattr(pose_bone, attr) )
 		if(pose_bone):
 			for c in pose_bone.constraints:
 				constraint_data = (c.type, {})
@@ -107,7 +136,12 @@ class BoneData:
 		# This can strictly only be done in edit mode, and it's also important that the parent exists.
 		# This does NOT handle constraints or any other pose bone information, since we can't assume that a pose bone exists yet, since those only get initialized when leaving edit mode.
 		
+		#print("")
+		#print("Writing data to bone: " + edit_bone.name)
+		#print("From data: " + self.name)
+
 		my_dict = self.__dict__
+		# Edit bone data...
 		for attr in my_dict.keys():
 			if(hasattr(edit_bone, attr)):
 				if(attr in ['parent', 'bbone_custom_handle_start', 'bbone_custom_handle_end']):
@@ -115,17 +149,52 @@ class BoneData:
 					real_bone = None
 					if(type(self_value) == str):
 						real_bone = armature.data.edit_bones.get(self_value)
+					elif(type(self_value) == BoneData):
+						# If the target doesn't exist yet, create it.
+						real_bone = safe_create_bone(self_value.name)
 					elif(type(self_value) == bpy.types.Bone):
 						real_bone = armature.data.edit_bones.get(self_value.name)
 					elif(type(self_value) == bpy.types.EditBone):
 						real_bone = self_value
+					
 					if(real_bone):
 						setattr(edit_bone, attr, real_bone)
 				else:
 					setattr(edit_bone, attr, my_dict[attr])
-	
-	def apply_constraints(self, pose_bone):
+		
+		#print("Wrote data to bone: " + edit_bone.name)
+
+	def write_pose_data(self, armature, pose_bone):
 		# This should be called in pose mode to make sure the pose bone information is up to date with changes that may have been made in edit mode. And that the pose bone even exists to begin wtih.
+		
+		data_bone = armature.data.bones.get(pose_bone.name)
+
+		my_dict = self.__dict__
+
+		# Pose bone data...
+		for attr in my_dict.keys():
+			if(hasattr(pose_bone, attr)):
+				if(attr in ['constraints', 'head', 'tail', 'parent', 'length', 'use_connect']): continue
+				if('bbone' in attr): continue
+				print("")
+				print(attr)
+				value = my_dict[attr]
+				print("FUCKING REEE " + str(my_dict[attr]))
+				if(attr in ['custom_shape_transform'] and my_dict[attr]):
+					continue
+					value = armature.pose.bones.get(my_dict[attr])
+				setattr(pose_bone, attr, value)
+
+		# Data bone data...
+		for attr in my_dict.keys():
+			if(hasattr(data_bone, attr)):
+				value = my_dict[attr]
+				if(attr in ['constraints', 'head', 'tail', 'parent', 'length', 'use_connect']): continue
+				if(attr in ['bbone_custom_handle_start', 'bbone_custom_handle_end']):
+					if(type(value)==str):
+						value = armature.data.bones.get(value)
+				setattr(data_bone, attr, value)
+		
 		for cd in self.constraints:
 			name = cd[1]['name'] if 'name' in cd[1] else None
 			c = safe_create_constraint(pose_bone, cd[0], name)
@@ -144,7 +213,7 @@ class BoneData:
 
 		bpy.ops.object.mode_set(mode='POSE')
 		pose_bone = armature.pose.bones.get(self.name)
-		self.apply_constraints(pose_bone)
+		self.write_pose_data(armature, pose_bone)
 	
 	@staticmethod
 	def create_multiple_bones(armature, bone_datas):
@@ -156,13 +225,14 @@ class BoneData:
 			edit_bone = safe_create_bone(bd.name)
 		# Now that all the bones are created, loop over again to set the properties.
 		for bd in bone_datas:
+			edit_bone = armature.data.edit_bones.get(bd.name)
 			bd.write_edit_data(armature, edit_bone)
 
 		# And finally a third time, after switching to pose mode to write the bone data out from edit mode and make sure the PoseBone exists, so we can add constraints.
 		bpy.ops.object.mode_set(mode='POSE')
 		for bd in bone_datas:
 			pose_bone = armature.pose.bones.get(bd.name)
-			bd.apply_constraints(pose_bone)
+			bd.write_pose_data(armature, pose_bone)
 
 	@classmethod
 	def create_all_bones(cls, armature):
@@ -391,30 +461,37 @@ def spine_bbone_setup(armature):
 	assert armature.type=='ARMATURE', "Not an armature."
 	assert armature.mode=='EDIT', "Armature must be in edit mode."
 
-	bone_group = "Body: DEF - Spine Deform Bones ###"	# TODO Hardcoded group name, meh.
-
-	group_bone_names = [b.name for b in armature.pose.bones if b.bone_group and b.bone_group.name==bone_group]
-	ebones = [db for db in armature.data.edit_bones if db.name in group_bone_names]
-
 	# Align STR bones to the deform bones
 	# Align FK bones to the midway point of deform bones
 	# Align IK bones to the FK bones.
 	# Align some controls to custom positions? Or just don't so this can be done manually after generating.
 	# Parent thighs, clavicles and neck to appropriate bones.
 
-	# I want to have an adjustable number of spines, but they need to be named instead of using numbers... Eh, I guess only the FK?
-	fk_names = ["Spine", "Ribcage", "Chest"]
+	bone_group = "Body: DEF - Spine Deform Bones ###"	# TODO Hardcoded group name, meh.
+	group_bone_names = [b.name for b in armature.pose.bones if b.bone_group and b.bone_group.name==bone_group]
+	ebones = [db for db in armature.data.edit_bones if db.name in group_bone_names]
 
-	bones = []	# List of BoneData instances, so we don't have to worry about pose/edit mode bullshit.
+	#### CREATING SPINE RIG BASED ON EXISTING DEFORM BONES ####
+	bone_count = len(ebones)
+	last_fk_bone_name = ""
+	for index, def_eb in enumerate(ebones):
+		first = index == 0
+		last = index == bone_count-1
 
-	for def_eb in ebones:
+		### DEF- Deform Bones ###
 		def_bd = BoneData(armature, def_eb)
-		# Making sure DEF- bone itself is clean.
-		bone_number = int(def_eb.name[-1])	# Note: Bone numbering should always start at 1 to ensure that there are len(dbones) number of bones, rather than len(dbones)-1. This is important for when the last bone in the chain needs special treatment, which is often.
-		
+		bone_number = int(def_eb.name[-1])
+		print(def_eb.name)
+		assert bone_number == index+1, "Bone number should be 1 higher than index " + def_eb.name + " " + str(index)
+
 		stretch_name = def_bd.name.replace("DEF-", "STR-")
 		next_stretch_name = stretch_name[:-1] + str(bone_number+1)	# Add one to the number at the end of the bone name.
 		
+		def_bd.bbone_custom_handle_start = stretch_name
+		def_bd.bbone_custom_handle_end = next_stretch_name
+		def_bd.bbone_handle_type_start = def_bd.bbone_handle_type_end = 'TANGENT'
+		def_bd.segments = 15
+
 		def_bd.bbone_x = def_bd.bbone_z = 0.008
 		def_bd.head.x = def_bd.tail.x = 0
 
@@ -429,7 +506,7 @@ def spine_bbone_setup(armature):
 		stretch = ('STRETCH_TO', stretch)
 		def_bd.constraints.append(stretch)
 		
-		# Making sure STR- controls are clean (Although these should already exist in the metarig)
+		### STR- Stretch Controls ###
 		def make_stretch_bone(name, final=False):
 			str_bd = BoneData()
 			str_bd.name = name
@@ -443,44 +520,69 @@ def spine_bbone_setup(armature):
 			str_bd.bbone_x = str_bd.bbone_z = 0.02
 			str_bd.bone_group = armature.pose.bone_groups.get("Body: STR - Stretch Controls")	# TODO: safe_create_bone_group()
 			str_bd.custom_shape = sphere_shape
-			str_bd.use_custom_shape_bone_size = False
-			str_bd.custom_shape_bone_size = 0.5
+			str_bd.custom_shape_scale = 0.5
 			return str_bd
 		
 		str_bd = make_stretch_bone(stretch_name)
 
-		# Final bone special treatment
-		final_str = None
-		if(bone_number==len(ebones)):
-			final_str = make_stretch_bone(next_stretch_name, final=True)
-		
-		if(bone_number==1):
+		# First deform bone should be parented to its STR- bone.
+		if(first):
 			def_bd.parent = str_bd.name
-		"""
-		# Making sure FK controls are clean.
+		
+		### FK- Controls ###
+		fk_bd = None
 		fk_name = def_bd.name.replace("DEF-", "FK-")
-		if(bone_number < len(fk_names)):
-			fk_name = fk_name.replace("Spine", fk_names[bone_number])[:-1]
-		fk_bd = BoneData()
-		fk_bd.name = fk_name
-		fk_bd.head = def_bd.head + (def_bd.tail-def_bd.head)/2	# Place the FK bone at the midpoint of the deform bone.
+		if(not last):	# Last DEF- bone shouldn't have an FK control.
+			fk_bd = BoneData()
+			fk_bd.name = fk_name
+			last_fk_bone_name = fk_name
+			fk_bd.head = def_bd.head + (def_bd.tail-def_bd.head)/2	# Place the FK bone at the midpoint of the deform bone.
+			fk_bd.tail = fk_bd.head + Vector((0, 0, 0.01))
+			fk_bd.bbone_x = fk_bd.bbone_z = 0.03
+			fk_bd.custom_shape = fk_shape
+			fk_bd.parent = fk_name[:-1] + str(bone_number-1)
+			fk_bd.bone_group = armature.pose.bone_groups.get("Body: Main FK Controls")	# TODO: safe_create_bone_group()
+			fk_bd.custom_shape_scale = 2
+		
+		# Parent STR- to FK-
+		if(first):	# First STR should be parented to the hips, not FK spine.
+			str_bd.parent = 'MSTR-Hips'
+		else:
+			str_bd.parent = fk_name[:-1] + str(bone_number-1)
+			# Last deform bone needs an STR- bone at its tail, not only its head.
+			if(last):
+				final_str = make_stretch_bone(next_stretch_name, final=True)
+				final_str.parent = str_bd.parent
+	
+	BoneData.create_all_bones(armature)
+	
+	# Connect rest of the rig to this thing - This feels hacky.
+	bpy.ops.object.mode_set(mode='EDIT')
+	clavicle_l = armature.data.edit_bones.get("MSTR-Clavicle.L")
+	clavicle_r = armature.data.edit_bones.get("MSTR-Clavicle.R")
+	neck = armature.data.edit_bones.get("FK-Neck")
+	adjuster = armature.data.edit_bones.get("DEF-COR-Armpit.L")
+	clav_parent = armature.data.edit_bones.get(last_fk_bone_name)
+	clavicle_l.parent = clavicle_r.parent = neck.parent = adjuster.parent = clav_parent
 
-		# Parent stretch to FK
-		if(bone_number > 1):
-			str_bd.parent = fk_bd.name
-			if(final_str):
-				final_str.parent = fk_bd.name"""
+	
 	
 def run():
 	# Make sure only passed armature is in edit mode.	# TODO: This should actually be done further outside of this function. So by the time this funciton is called, we already want to assume that we have an armature in edit mode.
 	armature = bpy.context.object
+	org_mode = armature.mode
 	assert armature.type=='ARMATURE', "Active object must be an armature."
 	bpy.ops.object.mode_set(mode='EDIT')
 
 	#face_bbone_setup(armature)
 	spine_bbone_setup(armature)
-	for bd in BoneData.instances:
-		print(bd.name)
-	BoneData.create_all_bones(armature)
+	# FK Controls should have specific names. This is nice to do outside of the spine setup function because then while we're in there, we can rely on numbers at the end of the bones.
+	# TODO: However, it has to be done after the bones are created, because otherwise parent names (which have to be stored as strings...) get messed up.
+	# Alternatively, maybe parent strings should be BoneData instances instead. Or let them be either. I like this.
+	"""fk_bone_datas = [bd for bd in BoneData.instances if bd.name.startswith("FK-")]
+	fk_spine_names = ["Spine", "Ribcage", "Chest"]
+	for i, name in enumerate(fk_spine_names):
+		fk_bone_datas[i].name = name"""
+	bpy.ops.object.mode_set(mode=org_mode)
 
 run()
