@@ -1,0 +1,18 @@
+Suggestions to help reduce noise on Phabricator. 
+
+Disclaimer: I don't know anything about Phabricator's inner workings.
+
+- We should try to get every user to start bug reports from the Blender interface. Many already do, which is great.
+- The "Report a Bug" button should no longer send you directly to the bug report form. Instead it just gives you a page which shows where the button is in Blender's interface.
+- Based on the system info detected by Blender, we could perhaps automatically warn the user if:
+    - Their Blender version is outdated.
+    - Their hardware is outdated.
+    - Their graphics driver is outdated.
+    - Their OS is outdated.
+
+- Let the Report a Bug button in Blender have an option to attach the current scene. This is probably more trouble than it's worth, but if it's simple to do then it could make a big difference.
+
+- After filling out a bug report form and pressing the Submit button, check if any attached files are referenced in the text. If not, the user needs to confirm that they would like to submit the report without attaching a file.
+- This warning text would be along the lines of "Your report doesn't contain a .blend file or screenshot. The developers need to be able to reproduce the error in order to be able to find the bug. Are you sure you would like to submit?" (Submit/Cancel)
+
+- When an attached blend file is >5MB, a similar warning should explain how to minimize blend files.
