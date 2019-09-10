@@ -1,23 +1,17 @@
 I think I'll need a script to split shape keys into left/right parts and set up drivers accordingly. (I guess have the left-side driver on the original shape-key, then just flip that over to the new right side shape key)
 
-Fiddle more with spine.
-	Add upper chest control http://www.hippydrome.com/UpChestLRFB.html
-	Re-do Waist and thigh deforms
-
-Lower chest control
-	Try offsetting the controls downwards from the deform bones, see how it works out.
-
-Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone which is parented to, I guess various things as an option.
-	We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone.
+In a few days, Transformation constraints that scale should be changed to multiplicative blend mode.
 
 Body/Limbs
+	HIGH Re-do Thigh deforms with shape keys
+	HIGH We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone. Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone.
+	HIGH DRV- bones should be deleted, and driven bones and shape keys should instead use the new Swing feature.
+	
+	MEDIUM improve Spine_Fwd shape key. More of the same, reduce the curvature of the back.
+	MEDIUM The Spine control causes the length of the spine to reduce a little bit at extreme forward rotation. Could try having a sub-control that moves when it's rotated, but then it might feel like it's sliding around. So maybe just play with the pivot point.
 
-	LOW Try making shoulder weights a bit broader.
-		I don't know, it feels quite broad to me already.
-	
-	LOW Upper thigh is following knee pole vector too much.
-		I don't think this can really be fixed easily.
-	
+	MEDIUM Re-visit the elbow.
+
 	NEXT RIG Completely rework the way deformation adjusters are implemented. They need to stop relying on the local rotation of *anything* because that shit is unreliable. Rotation values in general should pretty much only drive anything if the thing doing the driving can only rotate on one axis, so, never. Because rotations are fucking weird.
 		Instead, a stretch target should be parented to the joint, and the deform adjuster should stretch to that target. Then it's just a matter of parenting the deform adjuster itself appropriately.
 		Or maybe try the muscle system addon.

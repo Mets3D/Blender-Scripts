@@ -532,11 +532,12 @@ def spine_bbone_setup(armature):
 		### FK- Controls ###
 		fk_bd = None
 		fk_name = def_bd.name.replace("DEF-", "FK-")
-		if(not last):	# Last DEF- bone shouldn't have an FK control.
+		if(True): #not last):	# Last DEF- bone shouldn't have an FK control.
 			fk_bd = BoneData()
 			fk_bd.name = fk_name
 			last_fk_bone_name = fk_name
-			fk_bd.head = def_bd.head + (def_bd.tail-def_bd.head)/2	# Place the FK bone at the midpoint of the deform bone.
+			#fk_bd.head = def_bd.head + (def_bd.tail-def_bd.head)/2	# Place the FK bone at the midpoint of the deform bone.
+			fk_bd.head = def_bd.head
 			fk_bd.tail = fk_bd.head + Vector((0, 0, 0.01))
 			fk_bd.bbone_x = fk_bd.bbone_z = 0.03
 			fk_bd.custom_shape = fk_shape

@@ -361,7 +361,7 @@ class MetsRigUI_Layers(MetsRigUI):
 		
 		row_fingers = layout.row()
 		row_fingers.column().prop(data, 'layers', index=3, toggle=True, text='Finger Controls')
-		row_fingers.column().prop(data, 'layers', index=19, toggle=True, text='Finger Stretch')
+		#row_fingers.column().prop(data, 'layers', index=19, toggle=True, text='Finger Stretch')
 		
 		layout.row().prop(data, 'layers', index=6, toggle=True, text='Hair')
 		layout.row().prop(data, 'layers', index=7, toggle=True, text='Clothes')
