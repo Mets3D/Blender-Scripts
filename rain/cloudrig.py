@@ -16,6 +16,16 @@ def get_rigs():
 		ret = [None]
 	return ret
 
+
+def pre_depsgraph_update(scene):
+	""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
+
+	# The pinned rig should store the most recently selected metsrig.
+	if(bpy.context.object in get_rigs()):
+		scene['metsrig_pinned'] = bpy.context.object
+	if(scene['metsrig_pinned'] == None):
+		scene['metsrig_pinned'] = get_rigs()[0] # Can be None, only when no metsrigs are in the scene.
+
 class MetsRig_BoolProperties(bpy.types.PropertyGroup):
 	""" Store a BoolProperty referencing an outfit/character property whose min==0 and max==1.
 		This BoolProperty will be used to display the property as a toggle button in the UI.
@@ -50,16 +60,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		for rig in get_rigs():
 			if(rig.metsrig_properties == self):
 				return rig
-
-	@classmethod
-	def pre_depsgraph_update(cls, scene):
-		""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
-		
-		# The pinned rig should store the most recently selected metsrig.
-		if(bpy.context.object in get_rigs()):
-			scene['metsrig_pinned'] = bpy.context.object
-		if(scene['metsrig_pinned'] == None):
-			scene['metsrig_pinned'] = get_rigs()[0] # Can be None, only when no metsrigs are in the scene.
 
 	def update_bool_properties(self, context):
 		""" Create BoolProperties out of those outfit/character properties whose min==0 and max==1.
@@ -566,4 +566,4 @@ for c in classes:
 bpy.types.Object.metsrig_properties = bpy.props.PointerProperty(type=MetsRig_Properties)
 bpy.types.Object.metsrig_boolproperties = bpy.props.CollectionProperty(type=MetsRig_BoolProperties)
 
-bpy.app.handlers.depsgraph_update_pre.append(MetsRig_Properties.pre_depsgraph_update)
+bpy.app.handlers.depsgraph_update_pre.append(pre_depsgraph_update)

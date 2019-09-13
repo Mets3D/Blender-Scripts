@@ -41,6 +41,7 @@ Medium things:
 
 - "Soft IK" tech should be how IK constraints behave by default.
 
+- Sculpting works poorly with mirror modifier, especially when sculpting shape keys, especially especially when sculpting shape keys on a mesh deformed by an armature.
 - Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
 - Snapping to cursor affects hidden bones in edit mode.
 - Weight paint: Can't press number keys to change brush anymore, and I don't think a hotkey can even be set up. Even if it can, it's probably more complicated than it should be.
@@ -51,6 +52,11 @@ Medium things:
     Shift + Left Mouse Button - paint Blur
 
 Small things:
+- When deleting from a list like vertex groups or shape keys, the search functionality is ignored.
+    - We can delete things that are not displayed because of the search
+    - When deleting something, the active element doesn't become the next thing in the search, but the next thing in the entire list. Fixing this fixes the above issue.
+- Shape key add button should add the shape key underneath the active one, instead of at the bottom.
+
 - Ctrl+G in pose mode to set bone groups should show a list with bone groups, instead of an int with the bone group index.
 - When BBone handle type is set to Automatic, let us still choose a handle target, and have it behave such that the changes the target would apply when the handle type is set to Tangent, are applied on top of the changes that are done currently when the handle type is Automatic, effectively allowing us to combine the two behaviors.
     - When BBone handle type is set to Automatic, the bbone splining should only affect the bone itself, the child's start handle, and the parent's end handle. This is currently not the case for roll, meaning if a BBone chain is set to Automatic, and any of the bones in the chain start rolling, the entire chain will start rolling.

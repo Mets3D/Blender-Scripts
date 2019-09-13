@@ -1,16 +1,28 @@
 I think I'll need a script to split shape keys into left/right parts and set up drivers accordingly. (I guess have the left-side driver on the original shape-key, then just flip that over to the new right side shape key)
 
-In a few days, Transformation constraints that scale should be changed to multiplicative blend mode.
+I should make an addon to help the editing of shape keys and weights in any order.
+	Let me weight paint after saving the geometry of a mesh with a certain shape key, then have an option to re-adjust the shape key with the new weights to give the same shape.
+		It would be best if this could run on every brush stroke, but I guess that won't be possible.
+	Figure out how to make it so that, in order to achieve a desired shape, the weights are re-distributed such that the least amount of work possible has to be done by shape keys, while everything else is done by bones.
+		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
 Body/Limbs
-	HIGH Re-do Thigh deforms with shape keys
-	HIGH We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone. Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone.
-	HIGH DRV- bones should be deleted, and driven bones and shape keys should instead use the new Swing feature.
+	Apply Nacho's thumb changes.
+	Apply mirror modifier and finalize thigh shape keys. Make sure the spine shape keys don't break also.
 	
-	MEDIUM improve Spine_Fwd shape key. More of the same, reduce the curvature of the back.
-	MEDIUM The Spine control causes the length of the spine to reduce a little bit at extreme forward rotation. Could try having a sub-control that moves when it's rotated, but then it might feel like it's sliding around. So maybe just play with the pivot point.
+	Make some comparison videos and edit them together.
+	Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
+	
 
+	HIGH DRV- bones should be deleted, and driven bones and shape keys should instead use the new Swing and rotation mode features.
+		Still left: Knee, Foot, Elbow, Shoulder.
+	HIGH We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone. Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone.
+	
+	MEDIUM make script to auto-update magic numbers in elbow stretch drivers.
 	MEDIUM Re-visit the elbow.
+	MEDIUM Re-add double controls for Pelvis, Hips, and whatever else.
+
+	LOW update spine construction script to latest version of the spine.
 
 	NEXT RIG Completely rework the way deformation adjusters are implemented. They need to stop relying on the local rotation of *anything* because that shit is unreliable. Rotation values in general should pretty much only drive anything if the thing doing the driving can only rotate on one axis, so, never. Because rotations are fucking weird.
 		Instead, a stretch target should be parented to the joint, and the deform adjuster should stretch to that target. Then it's just a matter of parenting the deform adjuster itself appropriately.
@@ -20,13 +32,12 @@ Body/Limbs
 		Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
 		LOW We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
 	NEXT RIG Rebuild Soft IK tech with Likkez's tech, see if we can't eliminate all downsides. If it works, Apply it to the arms too.
-	
-Fingers
-	LOW Add deform adjusters for fingers.
-		
+
 Clothes
-	MEDIUM Shirt is wonky in the front and back when hips are moved
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
+		In the interest of time, it would be best to just embrace this, and use surface deform. This would mean being able to rig the clothes in 2 seconds.
+		The alternative is spending somewhere north of 3 weeks on getting the clothes to deform as well as the body does.
+		Or ask a developer to add masking to surface deform.
 
 Face
 	Add sneer control

@@ -36,7 +36,7 @@ def normalize_vgroups(o, vgroups):
 def split_shapekey(o, source_name, split_names):
 	""" Make copies of source shape key, rename them to target names, and assign a mask vertex group.
 		The use case is when we want to blend into a shape key using multiple masks. 
-		split_names: Dictionary of {shape key name : mask vgroup name}
+		split_names: Dictionary of {shape key name : mask vgroup name} # TODO this should be a tuple, not a dict.
 	"""
 	
 	# TODO: We will use this to split left/right halves as well, I suppose.
@@ -77,7 +77,7 @@ def split_shapekey(o, source_name, split_names):
 			o.shape_key_remove(shape_keys[name])
 
 		new_sk = o.shape_key_add(name=name, from_mix=True)
-		vg = o.vertex_groups.get("SK:"+name)
+		vg = o.vertex_groups.get(split_names[name])
 		if(vg):
 			new_sk.vertex_group = vg.name
 		new_sk.mute=True
@@ -103,31 +103,31 @@ o = bpy.context.object
 
 ### FINGERS ###
 finger_mask_names = [
-	"SK_FingerBends_Index.L",
-	"SK_FingerBends_Middle.L",
-	"SK_FingerBends_Ring.L",
-	"SK_FingerBends_Pinky.L"
+	"SK:Finger_Index.L",
+	"SK:Finger_Middle.L",
+	"SK:Finger_Ring.L",
+	"SK:Finger_Pinky.L"
 ]
 finger_mask_vgs = [vg for vg in o.vertex_groups if vg.name in finger_mask_names]
 normalize_vgroups(o, finger_mask_vgs)
 
 finger_bends1 = {
-	"Finger_Index1.L" : "Finger_Index.L"
-	"Finger_Middle1.L" : "Finger_Middle.L"
-	"Finger_Ring1.L" : "Finger_Ring.L"
-	"Finger_Pinky1.L" : "Finger_Pinky.L"
+	"Finger_Index1.L" : "SK:Finger_Index.L",
+	"Finger_Middle1.L" : "SK:Finger_Middle.L",
+	"Finger_Ring1.L" : "SK:Finger_Ring.L",
+	"Finger_Pinky1.L" : "SK:Finger_Pinky.L",
 }
-finger_bends1 = {
-	"Finger_Index2.L" : "Finger_Index.L"
-	"Finger_Middle2.L" : "Finger_Middle.L"
-	"Finger_Ring2.L" : "Finger_Ring.L"
-	"Finger_Pinky2.L" : "Finger_Pinky.L"
+finger_bends2 = {
+	"Finger_Index2.L" : "SK:Finger_Index.L",
+	"Finger_Middle2.L" : "SK:Finger_Middle.L",
+	"Finger_Ring2.L" : "SK:Finger_Ring.L",
+	"Finger_Pinky2.L" : "SK:Finger_Pinky.L",
 }
-finger_bends1 = {
-	"Finger_Index3.L" : "Finger_Index.L"
-	"Finger_Middle3.L" : "Finger_Middle.L"
-	"Finger_Ring3.L" : "Finger_Ring.L"
-	"Finger_Pinky3.L" : "Finger_Pinky.L"
+finger_bends3 = {
+	"Finger_Index3.L" : "SK:Finger_Index.L",
+	"Finger_Middle3.L" : "SK:Finger_Middle.L",
+	"Finger_Ring3.L" : "SK:Finger_Ring.L",
+	"Finger_Pinky3.L" : "SK:Finger_Pinky.L",
 }
 
 split_shapekey(o, "FingerBends1", finger_bends1)
