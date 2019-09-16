@@ -1,5 +1,5 @@
 # MetsTools addon for Blender
-# Copyright (C) 2019 Mets 3D
+# Copyright (C) 2019 Demeter Dzadik
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,14 +16,14 @@
 
 # TODO
 #	Mirror selected bones (names, transforms, constraints, drivers, settings)
-#	UnfuckSFMArmature - Could add more SFM clean-up related stuff. Probably fix/re-write the SFM to Cycles material converter. Best wait for Red Eye to improve his mdl importer though.
 # 	Copy Cloth Settings (for some reason Copy Attributes doesn't do this)
-# this __init__ and the way we register stuff could probably be a lot nicer.
+#	Maybe use Jacques's auto-register.
+
 bl_info = {
 	"name": "MetsTools",
 	"author": "Mets3D",
 	"version": (2,3),
-	"blender": (2, 80, 0),
+	"blender": (2, 81, 0),
 	"location": "View3D > Search ",
 	"description": "Random collection of tools I built for myself",
 	"category": "3D View"}
@@ -46,7 +46,6 @@ from . import mirror_constraints
 from . import make_right_vgroups
 from . import setup_action_constraints
 from . import toggle_weight_paint
-from . import toggle_wp_mask
 from . import change_brush
 
 def register():
@@ -67,7 +66,6 @@ def register():
 	make_right_vgroups.register()
 	setup_action_constraints.register()
 	toggle_weight_paint.register()
-	toggle_wp_mask.register()
 	change_brush.register()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.append(draw_func_MakePhysicsBones)
@@ -92,7 +90,6 @@ def unregister():
 	make_right_vgroups.unregister()
 	setup_action_constraints.unregister()
 	toggle_weight_paint.unregister()
-	toggle_wp_mask.unregister()
 	change_brush.unregister()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.remove(draw_func_MakePhysicsBones)
