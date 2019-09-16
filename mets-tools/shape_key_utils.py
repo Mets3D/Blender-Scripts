@@ -99,6 +99,7 @@ def split_shapekey(o, source_name, split_names):
 	# Restore active shape key
 	o.active_shape_key_index = shape_keys.find(active_sk_name)
 
+"""
 o = bpy.context.object
 
 ### FINGERS ###
@@ -132,4 +133,4 @@ finger_bends3 = {
 
 split_shapekey(o, "FingerBends1", finger_bends1)
 split_shapekey(o, "FingerBends2", finger_bends2)
-split_shapekey(o, "FingerBends3", finger_bends3)
+split_shapekey(o, "FingerBends3", finger_bends3)"""

@@ -1,6 +1,7 @@
 
 import bpy
 from . import utils
+from . import shape_key_utils
 
 # TODO: Should find a way to select the X axis verts before doing Remove Doubles, or don't Remove Doubles at all. Also need to select the Basis shape before doing Remove Doubles.
 # TODO: Implement our own Remove Doubles algo with kdtree, which would average the vertex weights of the merged verts rather than just picking the weights of one of them at random.
@@ -72,7 +73,7 @@ class ForceApplyMirror(bpy.types.Operator):
 				#bpy.ops.mesh.remove_doubles()
 				bpy.ops.object.mode_set(mode='OBJECT')
 				bpy.ops.object.calculate_weighted_normals()
-			break
+				break
 		context.object.scale = org_scale
 		return {'FINISHED'}
 
