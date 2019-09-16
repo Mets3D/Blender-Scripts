@@ -113,3 +113,17 @@ def flip_name(from_name, only=True, must_change=False):
 		assert new_name != from_name, "Failed to flip string: " + from_name
 	
 	return new_name
+
+def copy_attributes(from_thing, to_thing):
+	# TODO: Could and probably should make this optinally recursive.
+	# Could be useful for copying drivers.
+	bad_stuff = ['__doc__', '__module__', '__slots__', 'active', 'bl_rna', 'error_location', 'error_rotation']
+	for prop in dir(from_thing):
+		if(prop in bad_stuff): continue
+		if(hasattr(to_thing, prop)):
+			value = getattr(from_thing, prop)
+			try:
+				setattr(to_thing, prop, value)
+			except AttributeError:	# Read Only properties
+				continue
+

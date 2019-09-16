@@ -5,19 +5,7 @@ from . import utils
 # TODO: Mirror IK Solver settings.
 # When mirroring from right to left side, it seems like it doesn't flip names correctly, and also doesn't delete existing constraints.
 # Child Of constraints' inverse matrices still don't always seem right.
-
-def copy_attributes(from_thing, to_thing):
-	# TODO: Could and probably should make this optinally recursive.
-	# Could be useful for copying drivers.
-	bad_stuff = ['__doc__', '__module__', '__slots__', 'active', 'bl_rna', 'error_location', 'error_rotation']
-	for prop in dir(from_thing):
-		if(prop in bad_stuff): continue
-		if(hasattr(to_thing, prop)):
-			value = getattr(from_thing, prop)
-			try:
-				setattr(to_thing, prop, value)
-			except AttributeError:	# Read Only properties
-				continue
+# Split constraint mirror into a util function.
 
 def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constraint=None):
 	# Creates a mirrored driver on to_bone. from_bone and to_bone should be pose bones. (Won't work on edit bones, maybe it should, TODO)
@@ -30,7 +18,7 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 	for d in armature.animation_data.drivers:					# Look through every driver on the armature
 		if('pose.bones["' + from_bone.name + '"]' in d.data_path):	# If the driver belongs to the active bone
 			if("constraints[" in d.data_path and from_constraint==None): continue
-			if(from_constraint and from_constraint.name not in d.data_path): continue
+			if(from_constraint!=None and from_constraint.name not in d.data_path): continue
 			
 			### Copying mirrored driver to target bone...
 			
@@ -44,7 +32,7 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 					# Armature constraints need special special treatment...
 					target_idx = int(data_path_from_constraint.split("targets[")[1][0])
 					target = to_constraint.targets[target_idx]
-					new_d = target.driver_add("weight")	# Weight is the only property that would ever have a driver.
+					new_d = target.driver_add("weight")	# Weight is the only property that can have a driver.
 				else:
 					new_d = to_constraint.driver_add(data_path_from_constraint)
 			else:
@@ -61,6 +49,8 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 				for i in range(len(from_var.targets)):
 					target_bone = from_var.targets[i].bone_target
 					new_target_bone = utils.flip_name(target_bone)
+					if(to_var.type == 'SINGLE_PROP'):
+						to_var.targets[i].id_type			= from_var.targets[i].id_type
 					to_var.targets[i].id 				= from_var.targets[i].id
 					to_var.targets[i].bone_target 		= new_target_bone
 					to_var.targets[i].data_path 		= utils.flip_name(from_var.targets[i].data_path, only=False)
@@ -131,7 +121,7 @@ class XMirrorConstraints(bpy.types.Operator):
 			for c in b.constraints:
 				flipped_constraint_name = utils.flip_name(c.name, only=False)
 				opp_c = opp_b.constraints.new(type=c.type)
-				copy_attributes(c, opp_c)
+				utils.copy_attributes(c, opp_c)
 				opp_c.name = flipped_constraint_name
 				
 				# Targets
