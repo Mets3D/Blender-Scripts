@@ -71,23 +71,23 @@ class ForceApplyMirror(bpy.types.Operator):
 				flipped_o = bpy.context.object
 				flipped_o.scale = (-1, 1, 1)
 				
-				# Flipping vertex group names
-				done = []	# Don't flip names twice...
-				for vg in flipped_o.vertex_groups:
-					if(vg in done): continue
-					old_name = vg.name
-					flipped_name = utils.flip_name(vg.name)
-					if(old_name == flipped_name): continue
-					
-					opp_vg = flipped_o.vertex_groups.get(flipped_name)
-					if(opp_vg):
-						vg.name = "temp"
-						opp_vg.name = old_name
-						vg.name = flipped_name
-						done.append(opp_vg)
-
+			# Flipping vertex group names
+			done = []	# Don't flip names twice...
+			for vg in flipped_o.vertex_groups:
+				if(vg in done): continue
+				old_name = vg.name
+				flipped_name = utils.flip_name(vg.name)
+				if(old_name == flipped_name): continue
+				
+				opp_vg = flipped_o.vertex_groups.get(flipped_name)
+				if(opp_vg):
+					vg.name = "temp"
+					opp_vg.name = old_name
 					vg.name = flipped_name
-					done.append(vg)
+					done.append(opp_vg)
+
+				vg.name = flipped_name
+				done.append(vg)
 				
 				if(self.split_shape_keys):
 					# Flipping shape keys

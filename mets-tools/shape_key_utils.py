@@ -45,8 +45,7 @@ def split_shapekey(o, source_name, split_names):
 	# Ensure source shape key exists.
 	source_sk = shape_keys.get(source_name)
 	assert source_sk, "Error: Source shape key does not exist: " + source_name
-	source_sk.value = 1
-		
+	
 	# For performance we have to turn off subsurf (otherwise changing shape key order takes for ever)
 	org_levels = None
 	subsurf_mod = None
@@ -58,15 +57,15 @@ def split_shapekey(o, source_name, split_names):
 
 	# Save active shape key
 	active_sk_name = o.active_shape_key.name
-
-	# Disable all shape keys and save their states
-	sk_dict = {}
-	for sk in shape_keys:
-		sk_dict[sk.name] = sk.mute
-		sk.mute = True
 	
-	# Enable the source shape key
+	# Enable the source shape key and save mute state - This is needed because pin button doesn't work when shape key is disabled.
+	org_mute = source_sk.mute
 	source_sk.mute = False
+	# Enable pin button
+	o.show_only_shape_key = True
+	# Save and remove mask
+	mask_vg = source_sk.vertex_group
+	source_sk.vertex_group = ""
 	
 	# Create copies
 	for name in split_names.keys():
@@ -76,11 +75,12 @@ def split_shapekey(o, source_name, split_names):
 			index = shape_keys.find(name)
 			o.shape_key_remove(shape_keys[name])
 
+		o.active_shape_key_index = shape_keys.find(source_name)
 		new_sk = o.shape_key_add(name=name, from_mix=True)
 		vg = o.vertex_groups.get(split_names[name])
 		if(vg):
 			new_sk.vertex_group = vg.name
-		new_sk.mute=True
+		new_sk.mute=org_mute
 
 		# Restore shape key order
 		if(index):
@@ -88,10 +88,12 @@ def split_shapekey(o, source_name, split_names):
 			for i in range(index, len(shape_keys)-1):
 				bpy.ops.object.shape_key_move(type='UP')
 	
-	# Restore shape key mute states
-	for sk in shape_keys:
-		sk.mute = sk_dict[sk.name]
-	
+	# Restore mute state
+	source_sk.mute = org_mute
+
+	# Restore vertex mask
+	source_sk.vertex_group = mask_vg
+
 	# Restore subsurf level
 	if(subsurf_mod):
 		subsurf_mod.levels = org_levels
@@ -111,7 +113,6 @@ finger_mask_names = [
 ]
 finger_mask_vgs = [vg for vg in o.vertex_groups if vg.name in finger_mask_names]
 normalize_vgroups(o, finger_mask_vgs)
-
 finger_bends1 = {
 	"Finger_Index1.L" : "SK:Finger_Index.L",
 	"Finger_Middle1.L" : "SK:Finger_Middle.L",

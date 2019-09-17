@@ -46,6 +46,7 @@ Week 7-8:
 
 I think I'll need a script to split shape keys into left/right parts and set up drivers accordingly. (I guess have the left-side driver on the original shape-key, then just flip that over to the new right side shape key)
 
+
 I should make an addon to help the editing of shape keys and weights in any order.
 	Let me weight paint after saving the geometry of a mesh with a certain shape key, then have an option to re-adjust the shape key with the new weights to give the same shape.
 		It would be best if this could run on every brush stroke, but I guess that won't be possible.
@@ -53,13 +54,9 @@ I should make an addon to help the editing of shape keys and weights in any orde
 		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
 Body/Limbs
-	Apply mirror modifier and finalize thigh shape keys. Make sure the spine shape keys don't break also.
-	
 	Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
 	Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 
-	HIGH DRV- bones should be deleted, and driven bones and shape keys should instead use the new Swing and rotation mode features.
-		Still left: Knee, Foot, Elbow, Shoulder.
 	HIGH We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone. Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone.
 	
 	MEDIUM make script to auto-update magic numbers in elbow stretch drivers.
