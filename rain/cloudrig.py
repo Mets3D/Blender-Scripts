@@ -451,9 +451,8 @@ class MetsRigUI_IKFK(MetsRigUI):
 		# IK Pole Follow
 		layout.label(text='IK Pole Follow')
 		pole_row = layout.row()
-		# TODO: This should be real toggles...
-		pole_row.column().prop(ikfk_props, '["ik_pole_follow_hands"]', toggle=True, text='Arms')
-		pole_row.column().prop(ikfk_props, '["ik_pole_follow_feet"]', toggle=True, text='Legs')
+		pole_row.column().prop(ikfk_props, '["ik_pole_follow_hands"]', slider=True, text='Arms')
+		pole_row.column().prop(ikfk_props, '["ik_pole_follow_feet"]', slider=True, text='Legs')
 
 		layout.label(text='Head Settings')
 		layout.row().prop(mets_props, 'neck_hinge', toggle=True, text='Neck Hinge')

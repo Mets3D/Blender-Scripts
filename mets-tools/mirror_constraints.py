@@ -32,6 +32,7 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 					# Armature constraints need special special treatment...
 					target_idx = int(data_path_from_constraint.split("targets[")[1][0])
 					target = to_constraint.targets[target_idx]
+
 					new_d = target.driver_add("weight")	# Weight is the only property that can have a driver.
 				else:
 					new_d = to_constraint.driver_add(data_path_from_constraint)
@@ -129,6 +130,32 @@ class XMirrorConstraints(bpy.types.Operator):
 				if(hasattr(opp_c, 'subtarget')):
 					opp_c.subtarget = utils.flip_name(c.subtarget)
 				
+				if(c.type=='ACTION'):
+					action = c.action
+					# I need to mirror the curves in the action.
+					curves = []
+					for cur in action.fcurves:
+						if(b.name in cur.data_path):
+							curves.append(cur)
+					for cur in curves:
+						# Create opposite curves
+						opp_data_path = cur.data_path.replace(b.name, opp_b.name)
+						opp_cur = action.fcurves.find(opp_data_path, index=cur.array_index)
+						if(not opp_cur):
+							opp_cur = action.fcurves.new(opp_data_path, index=cur.array_index, action_group=opp_b.name)
+						utils.copy_attributes(cur, opp_cur, skip=["data_path", "group"])
+						# Wipe any existing keyframes
+						for kf in reversed(opp_cur.keyframe_points):
+							opp_cur.keyframe_points.remove(kf)
+						# Copy keyframes
+						for kf in cur.keyframe_points:
+							opp_kf = opp_cur.keyframe_points.insert(kf.co[0], kf.co[1])
+							utils.copy_attributes(kf, opp_kf, skip=["data_path"])
+							# Flip X location, Y and Z rotation... not sure if applies to all situations... probably not :S
+							if( ("location" in cur.data_path and cur.array_index==0) or
+								("rotation" in cur.data_path and cur.array_index in [1, 2]) ):
+									opp_kf.co[1] *= -1
+
 				if(opp_c.type=='ARMATURE'):
 					for i, t in enumerate(c.targets):
 						opp_c.targets.new()
@@ -136,6 +163,7 @@ class XMirrorConstraints(bpy.types.Operator):
 						opp_c.targets[i].target = flipped_target
 						flipped_subtarget = utils.flip_name(c.targets[i].subtarget)
 						opp_c.targets[i].subtarget = flipped_subtarget
+						opp_c.targets[i].weight = c.targets[i].weight
 
 				if(opp_c.type=='CHILD_OF' and opp_c.target!=None):
 					org_influence = opp_c.influence
@@ -402,6 +430,7 @@ class XMirrorConstraints(bpy.types.Operator):
 			opp_data_b.bbone_scaleiny = data_b.bbone_scaleiny
 			opp_data_b.bbone_scaleoutx = data_b.bbone_scaleoutx
 			opp_data_b.bbone_scaleouty = data_b.bbone_scaleouty
+			#TODO: Mirror bbone curve values.
 
 			# Mirroring bone shape
 			if(b.custom_shape):
@@ -411,9 +440,6 @@ class XMirrorConstraints(bpy.types.Operator):
 				opp_b.use_custom_shape_bone_size = b.use_custom_shape_bone_size
 				if(b.custom_shape_transform):
 					opp_b.custom_shape_transform = armature.pose.bones.get(utils.flip_name(b.custom_shape_transform.name))
-
-
-			#NOTE: curve values are not mirrored, since as far as my use cases go, they would always be the default values, unless there are drivers on them, and driver mirroring is a TODO.
 
 		return {"FINISHED"}
 

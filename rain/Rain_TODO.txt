@@ -1,12 +1,3 @@
-Next week I plan to wrap up work on the body, which will include:
-	- Maybe improve shoulder & elbow deformations if needed and have time to spare.
-	- Apply the mirror modifier on the mesh, make sure rig is symmetrical, split up shape keys.
-	- Add assymetrical shape keys for spine deformations (ie. Chest Z rotation)
-	- Let Hjalti and Nacho fight it out on how they want controls to be displayed. (follow the deformation or not)
-	- Write a document about how the rig is constructed, to give us some idea of what will be involved in applying the rig to another character.
-		- Can also think about ways to automate as much of this process as possible.
-		- This document will probably evolve a fair bit over time, until we get to a point where we actually want to start implementing the rig on a new character.
-
 Rain Face Timeline
 Some notes about the current state of each area of Rain's face rig:
 	Eyes - (As far as I'm concerned) Basically done, just needs minor polish.
@@ -44,8 +35,6 @@ Week 7-8:
 
 
 
-I think I'll need a script to split shape keys into left/right parts and set up drivers accordingly. (I guess have the left-side driver on the original shape-key, then just flip that over to the new right side shape key)
-
 
 I should make an addon to help the editing of shape keys and weights in any order.
 	Let me weight paint after saving the geometry of a mesh with a certain shape key, then have an option to re-adjust the shape key with the new weights to give the same shape.
@@ -53,12 +42,22 @@ I should make an addon to help the editing of shape keys and weights in any orde
 	Figure out how to make it so that, in order to achieve a desired shape, the weights are re-distributed such that the least amount of work possible has to be done by shape keys, while everything else is done by bones.
 		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
+To make a rig generator, I need to learn how to use the new Rigify.
+
 Body/Limbs
+	Move ankle pivot like so: From side ortho, project lines from the shape of the knee, and cut it in the middle.
+
+	For RibCage forward rotation, make the shape of the back less sharp, and the shape of the belly should have two pinching points, and should affect more downwards area.
+	IK and FK Toe should be merged if possible. If not, maybe there can be a parent that owns them both.
+	During Footroll, toe should pivot from the shoe, just like the heel does. 
+
+
 	Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
 	Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 
 	HIGH We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone. Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone.
 	
+	MEDIUM Improve shoulder & elbow deformation
 	MEDIUM make script to auto-update magic numbers in elbow stretch drivers.
 	MEDIUM Re-visit the elbow.
 	MEDIUM Re-add double controls for Pelvis, Hips, and whatever else.
@@ -73,8 +72,9 @@ Body/Limbs
 
 Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
-		In the interest of time, it would be best to just embrace this, and use surface deform. This would mean being able to rig the clothes in 2 seconds.
-		The alternative is spending somewhere north of 3 weeks on getting the clothes to deform as well as the body does.
+		Currently clothes are just rigged with surface deform.
+		To rig them properly, we need a way to transfer the shape keys from the body to the clothes.
+		This could probably also be done with the help of surface deform, but needs a script and might give poor results.
 		Or ask a developer to add masking to surface deform.
 
 Face
