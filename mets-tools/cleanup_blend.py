@@ -59,7 +59,7 @@ class DeleteUnusedMaterialSlots(bpy.types.Operator):
 		return {'FINISHED'}
 
 class DeleteUnusedVGroups(bpy.types.Operator):
-	""" Delete vertex groups that have no weights and/or aren't being used by any modifiers and/or don't correlate to any bones. """
+	""" Delete vertex groups that have no weights AND aren't being used by any modifiers(including Mirror) AND aren't used as mask by any shape keys AND don't correlate to any bones """
 	bl_idname = "object.delete_unused_vgroups"
 	bl_label = "Delete Unused Vertex Groups"
 	bl_options = {'REGISTER', 'UNDO'}
@@ -78,11 +78,11 @@ class DeleteUnusedVGroups(bpy.types.Operator):
 
 	opt_save_bone_vgroups: BoolProperty(name="Save Bone Vertex Groups",
 		default=True,
-		description="Don't delete vertex groups that correspond with a bone name in any of the object's armatures")
+		description="Don't delete vertex groups that correspond with a bone name in any of the object's armatures, even if there are no weights assigned to it")
 
 	opt_save_nonzero_vgroups: BoolProperty(name="Save Any Weights",
 		default=False,
-		description="Don't delete vertex groups that have any non-zero weights. Having this disabled shouldn't break Mirror modifiers")
+		description="Don't delete vertex groups that have any non-zero weights. Considers Mirror modifier")
 	
 	opt_save_modifier_vgroups: BoolProperty(name="Save Modifier Groups",
 		default=True,
@@ -90,7 +90,7 @@ class DeleteUnusedVGroups(bpy.types.Operator):
 
 	opt_save_shapekey_vgroups: BoolProperty(name="Save Shape Key Groups",
 		default=True,
-		description="Save vertex groups that are used by a shape key as a mask")
+		description="Don't delete vertex groups that are used by a shape key as a mask")
 	
 	@classmethod
 	def poll(cls, context):
@@ -99,11 +99,6 @@ class DeleteUnusedVGroups(bpy.types.Operator):
 	def draw_delete_unused(self, context):
 		operator = self.layout.operator(DeleteUnusedVGroups.bl_idname, text="Delete Unused Groups", icon='X')
 		operator.opt_objects = 'Active'
-
-	def draw_delete_empty(self, context):
-		operator = self.layout.operator(DeleteUnusedVGroups.bl_idname, text="Delete Empty Groups", icon='X')
-		operator.opt_objects = 'Active'
-		operator.opt_save_nonzero_vgroups = True
 
 	def execute(self, context):
 		org_active = context.object
@@ -140,6 +135,13 @@ class DeleteUnusedVGroups(bpy.types.Operator):
 					if(hasattr(m, 'settings')):	#Physics modifiers
 						save_groups_by_attributes(m.settings)
 
+			# Save any vertex groups used by shape keys.
+			if(self.opt_save_shapekey_vgroups):
+				for sk in obj.data.shape_keys.key_blocks:
+					vg = obj.vertex_groups.get(sk.vertex_group)
+					if(vg and vg not in safe_groups):
+						safe_groups.append(vg)
+
 			# Getting a list of bone names from all armature modifiers.
 			bone_names = []
 			for m in obj.modifiers:
@@ -148,9 +150,9 @@ class DeleteUnusedVGroups(bpy.types.Operator):
 					if armature is None:
 						continue
 					if(bone_names is None):
-						bone_names = list(map(lambda x: x.name, armature.pose.bones))
+						bone_names = [b.name for b in armature.data.bones]
 					else:
-						bone_names.extend(list(map(lambda x: x.name, armature.pose.bones)))
+						bone_names.extend([b.name for b in armature.data.bones])
 			
 			# Saving any vertex groups that correspond to a bone name
 			if(self.opt_save_bone_vgroups):
@@ -596,7 +598,6 @@ def register():
 	from bpy.utils import register_class
 	bpy.types.MATERIAL_MT_context_menu.prepend(DeleteUnusedMaterialSlots.draw)
 	bpy.types.MESH_MT_vertex_group_context_menu.prepend(DeleteUnusedVGroups.draw_delete_unused)
-	bpy.types.MESH_MT_vertex_group_context_menu.prepend(DeleteUnusedVGroups.draw_delete_empty)
 	register_class(DeleteUnusedMaterialSlots)
 	register_class(DeleteUnusedVGroups)
 	register_class(CleanUpObjects)
@@ -608,7 +609,6 @@ def register():
 def unregister():
 	bpy.types.MATERIAL_MT_context_menu.remove(DeleteUnusedMaterialSlots.draw)
 	bpy.types.TOPBAR_MT_file_import.remove(DeleteUnusedVGroups.draw_delete_unused)
-	bpy.types.TOPBAR_MT_file_import.remove(DeleteUnusedVGroups.draw_delete_empty)
 	from bpy.utils import unregister_class
 	unregister_class(DeleteUnusedMaterialSlots)
 	unregister_class(DeleteUnusedVGroups)
