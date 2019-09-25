@@ -9,7 +9,7 @@ from . import utils
 def copy_attributes(from_thing, to_thing):
 	# TODO: Could and probably should make this optinally recursive.
 	# Could be useful for copying drivers.
-	bad_stuff = ['__doc__', '__module__', '__slots__', 'active', 'bl_rna', 'error_location', 'error_rotation']
+	bad_stuff = ['__doc__', '__module__', '__slots__', 'active', 'bl_rna', 'error_location', 'error_rotation']	# This is obviously not very safe. :)
 	for prop in dir(from_thing):
 		if(prop in bad_stuff): continue
 		if(hasattr(to_thing, prop)):
@@ -20,12 +20,10 @@ def copy_attributes(from_thing, to_thing):
 				continue
 
 def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constraint=None):
-	# Creates a mirrored driver on to_bone. from_bone and to_bone should be pose bones. (Won't work on edit bones, maybe it should, TODO)
+	# Creates a mirrored driver on to_bone. from_bone and to_bone should be pose bones.
 	# If from_constraint is specified, to_constraint also must be.
 	# If from_constraint is specified, only drivers belonging to that constraint will be copied, not drivers belonging directly to bone properties.
-	# TODO: This is pretty confusing, but the to_bone and to_constraint must be passed as parameters, because it doesn't feel safe to try to guess them from inside the function.
-	# Could do from_data_path, to_data_path, maybe, and do the data path acrobatics outside this function.
-	if(not armature.animation_data): return
+	if(not armature.animation_data): return	# No drivers to mirror.
 
 	for d in armature.animation_data.drivers:					# Look through every driver on the armature
 		if('pose.bones["' + from_bone.name + '"]' in d.data_path):	# If the driver belongs to the active bone
@@ -68,6 +66,9 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 					to_var.targets[i].transform_space 	= from_var.targets[i].transform_space
 					# TODO: If transform is X Rotation, have a "mirror" option, to invert it in the expression. Better yet, detect if the new_target_bone is the opposite of the original.
 				
+				# Below is some old terrible code to add or remove a "-" sign before the variable's name in the expression... 
+				# It's technically needed to mirror a driver correctly in some cases, but I'm not sure how to 
+				# figure out whether a variable needs to be flipped or not.
 				"""
 				print(from_var.targets[0].transform_type)
 				if( to_var.targets[0].bone_target and
@@ -102,10 +103,8 @@ class XMirrorConstraints(bpy.types.Operator):
 
 	def execute(self, context):
 		for b in context.selected_pose_bones:
-			#TODO: Should also make sure constraints are in the correct order. - They should already be, though. Are we not wiping constraints before copying them? I thought we did.
 			#TODO: Make a separate operator for "splitting" constraints in left/right parts. (by halving their influence, then mirror copying them onto the same bone)
-			#TODO: Mirror drivers...
-
+			
 			armature = context.object
 
 			flipped_name = utils.flip_name(b.name)
