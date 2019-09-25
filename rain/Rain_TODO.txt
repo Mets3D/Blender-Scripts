@@ -1,38 +1,81 @@
-I think I'll need a script to split shape keys into left/right parts and set up drivers accordingly. (I guess have the left-side driver on the original shape-key, then just flip that over to the new right side shape key)
+Rain Face Timeline
+Some notes about the current state of each area of Rain's face rig:
+	Eyes - (As far as I'm concerned) Basically done, just needs minor polish.
+	Eyebrows - Almost done, but might need some adjustments or more low level controls, which could prove challenging, but imo these are non-essential improvements.
+	Nose - As far as I'm concerned done, but didn't get feedback on it yet. I don't expect any challenges.
+	Mouth - These areas need a lot of work and iteration.
+		Lips & Cheeks - Not much functionality right now. Probably going to be the hardest part. I have some idea of what the animators want, but I expect there will be a lot of back and forth on this.
+		Jaw - Works fairly well imo, but never showed it to animators yet. Just need to make sure it continues to work well while we're making changes to the lips & cheeks.
 
-Fiddle more with spine.
-	Add upper chest control http://www.hippydrome.com/UpChestLRFB.html
-	Re-do Waist and thigh deforms
+With these things in mind, here's my estimate of how long finishing the face might take:
+Week 1: (hopefully starting Sept 23)
+	- Rig teeth and tongue. I don't expect any issues or much need for iteration here.
+	- Get feedback on jaw, eyes, eyebrows & nose so they can be finished.
+Week 2:
+	- Initial implementation of lip & cheek controls. (No shape keys yet) I expect lots of iteration needed for this.
+Week 3: 
+	- Implement feedback on eyes, eyebrows & nose, including shape keys where needed. Hopefully this is their final state.
+	- Implement feedback on jaw. I expect this to be minimal... Major changes to this could be a big problem. Stashing the feedback away for the next project is always an option ;)
+	- Add lattice controls. (More can be added any time, on demand.)
+	- Some more work on lip & cheek controls, and gathering feedback.
+Week 4-5:
+	- Implement feedback on lip & cheek -> get feedback -> repeat many times.
+	- Once we are fairly happy and are down to smaller changes, start adding shape keys.
+	- Finalize lip & cheek controls.
+Week 6:
+	- More polish, mirror everything and make sure it doesn't break.
 
-Lower chest control
-	Try offsetting the controls downwards from the deform bones, see how it works out.
+After the face is done, there is still some wrap-up work to do before we can call the entire rig finished.
+Week 7-8:
+	- Rigging the hair (if we need anything fancy, but this is probably non-essential.)
+	- Rigging the clothes (this will be a bit tricky, since we can't transfer shape keys between meshes easily... I expect some unique problems...)
+	- Final cleanup, making sure everything is consistently named, organized, WORKS, etc.
+	- Ready to show to the world....??
+	
 
-Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone which is parented to, I guess various things as an option.
-	We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone.
+
+
+
+I should make an addon to help the editing of shape keys and weights in any order.
+	Let me weight paint after saving the geometry of a mesh with a certain shape key, then have an option to re-adjust the shape key with the new weights to give the same shape.
+		It would be best if this could run on every brush stroke, but I guess that won't be possible.
+	Figure out how to make it so that, in order to achieve a desired shape, the weights are re-distributed such that the least amount of work possible has to be done by shape keys, while everything else is done by bones.
+		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
+
+To make a rig generator, I need to learn how to use the new Rigify.
 
 Body/Limbs
+	Move ankle pivot like so: From side ortho, project lines from the shape of the knee, and cut it in the middle.
 
-	LOW Try making shoulder weights a bit broader.
-		I don't know, it feels quite broad to me already.
+	For RibCage forward rotation, make the shape of the back less sharp, and the shape of the belly should have two pinching points, and should affect more downwards area.
+	IK and FK Toe should be merged if possible. If not, maybe there can be a parent that owns them both.
+	During Footroll, toe should pivot from the shoe, just like the heel does. 
+
+
+	Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
+	Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
+
+	HIGH We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone. Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone.
 	
-	LOW Upper thigh is following knee pole vector too much.
-		I don't think this can really be fixed easily.
-	
-	NEXT RIG Completely rework the way deformation adjusters are implemented. They need to stop relying on the local rotation of *anything* because that shit is unreliable. Rotation values in general should pretty much only drive anything if the thing doing the driving can only rotate on one axis, so, never. Because rotations are fucking weird.
-		Instead, a stretch target should be parented to the joint, and the deform adjuster should stretch to that target. Then it's just a matter of parenting the deform adjuster itself appropriately.
-		Or maybe try the muscle system addon.
+	MEDIUM Improve shoulder & elbow deformation
+	MEDIUM make script to auto-update magic numbers in elbow stretch drivers.
+	MEDIUM Re-visit the elbow.
+	MEDIUM Re-add double controls for Pelvis, Hips, and whatever else.
+
+	LOW update spine construction script to latest version of the spine.
+
 	NEXT RIG Stretch controls are kind of a total mess right now, especially when it comes to rotating them.
 		The end of the shoulder and the start of the elbow being a separate toon control mean that the two controls are in the same place and overlap, so if we keep this, make sure to add unique bone shapes.
 		Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
 		LOW We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
 	NEXT RIG Rebuild Soft IK tech with Likkez's tech, see if we can't eliminate all downsides. If it works, Apply it to the arms too.
-	
-Fingers
-	LOW Add deform adjusters for fingers.
-		
+
 Clothes
-	MEDIUM Shirt is wonky in the front and back when hips are moved
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
+		Currently clothes are just rigged with surface deform.
+		To rig them properly, we need a way to transfer the shape keys from the body to the clothes.
+		This could probably also be done with the help of surface deform, but needs a script and might give poor results.
+		Or ask a developer to add masking to surface deform.
 
 Face
 	Add sneer control

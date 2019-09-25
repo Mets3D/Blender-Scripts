@@ -43,6 +43,9 @@ class SetupActionConstraints(bpy.types.Operator):
 	subtarget: StringProperty(name="String Property")
 	action: StringProperty(name="Action")
 
+	enabled: BoolProperty(name="Enabled", default=True)
+
+
 	@classmethod
 	def poll(cls, context):
 		return context.object.type == 'ARMATURE' and context.object.mode in ['POSE', 'OBJECT']
@@ -80,6 +83,7 @@ class SetupActionConstraints(bpy.types.Operator):
 			c.max = self.trans_max
 			c.frame_start = self.frame_start
 			c.frame_end = self.frame_end
+			c.mute = not self.enabled
 
 		# Deleting superfluous action constraints, if any
 		for b in armature.pose.bones:
@@ -107,10 +111,36 @@ class SetupActionConstraints(bpy.types.Operator):
 
 	def invoke(self, context, event):
 		wm = context.window_manager
+		# When the action or target bone is changed, find a bone that has a constraint with that action and that target bone, and update the operator's settings with that constraint's settings.
+		# TODO: This doesn't work. I originally tried with callback function, that didn't work either. :(
+		self.target = context.object.name
+		
+		done = False
+		for b in context.object.pose.bones:
+			for c in b.constraints:
+				if(
+						c.type == 'ACTION' 
+						and c.action.name == self.action 
+						and c.subtarget == self.subtarget):
+					self.frame_start = c.frame_start
+					self.frame_end = c.frame_end
+					self.trans_min = c.min
+					self.trans_max = c.max
+					self.enabled = not c.mute
+
+					self.target_space = c.target_space
+					self.transform_channel = c.transform_channel
+					done=True
+					print("Updated operator values...")
+					break
+			if(done): break
+
 		return wm.invoke_props_dialog(self)
 	
 	def draw(self, context):
 		layout = self.layout
+		layout.prop(self, "enabled", text="Enabled")
+
 		layout.prop_search(self, "target", context.scene, "objects", text="Target")
 		layout.prop_search(self, "subtarget", context.object.data, "bones", text="Bone")
 		layout.prop_search(self, "action", bpy.data, "actions", text="Action")
