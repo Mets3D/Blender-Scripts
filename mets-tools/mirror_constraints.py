@@ -2,7 +2,6 @@ import bpy
 from math import *
 from . import utils
 
-# TODO: Mirror IK Solver settings.
 # When mirroring from right to left side, it seems like it doesn't flip names correctly, and also doesn't delete existing constraints.
 # Child Of constraints' inverse matrices still don't always seem right.
 # Split constraint mirror into a util function.
@@ -168,7 +167,7 @@ class XMirrorConstraints(bpy.types.Operator):
 					org_influence = opp_c.influence
 					org_active = armature.data.bones.active
 					
-					# Setting inverse matrix based on https://developer.blender.org/T39891#222496 but it doesn't seem to work. Maybe because the drivers don't get deleted before being re-mirrored? Therefore influence=1 doesn't work. TODO.
+					# Setting inverse matrix based on https://developer.blender.org/T39891#222496 but it doesn't seem to work. Maybe because the drivers don't get deleted before being re-mirrored? Therefore influence=1 doesn't work. TODO: We should just figure out what math to apply to the inverse matrix.
 					armature.data.bones.active = opp_data_b
 					opp_c.influence = 1
 					context_py = bpy.context.copy()
