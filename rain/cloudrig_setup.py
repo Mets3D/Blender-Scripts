@@ -13,7 +13,7 @@ sphere_shape = bpy.data.objects['Shape_Sphere']
 fk_shape = bpy.data.objects['Shape_FK_Limb']
 scale=0.01
 
-def safe_create_constraint(pb, ctype, name=None):
+def find_or_create_constraint(pb, ctype, name=None):
 	""" Create a constraint on a bone if it doesn't exist yet. 
 		If a constraint with the given type already exists, just return that.
 		If a name was passed, also make sure the name matches before deeming it a match and returning it.
@@ -31,17 +31,12 @@ def safe_create_constraint(pb, ctype, name=None):
 		c.name = name
 	return c
 
-def safe_create_bone(bonename):
-	""" Create a bone only if a bone with the given name doesn't exist yet.
-		Active object must be an edit mode armature. """
-	bone = bpy.context.object.data.edit_bones.get(bonename)
+def find_or_create_bone(armature, bonename):
+	assert armature.mode=='EDIT', "Armature must be in edit mode"
+
+	bone = armature.data.edit_bones.get(bonename)
 	if(not bone):
-		bone = bpy.context.object.data.edit_bones.new(bonename)
-		bone.tail = ((0, 0, 0.1))	# Ensure bone doesn't get auto deleted for being 0 length
-		#print("Created bone: " + bone.name )
-	else:
-		pass
-		#print("Found bone, not creating: " + bone.name)
+		bone = armature.data.edit_bones.new(bonename)
 	return bone
 
 class BoneData:
@@ -151,7 +146,7 @@ class BoneData:
 						real_bone = armature.data.edit_bones.get(self_value)
 					elif(type(self_value) == BoneData):
 						# If the target doesn't exist yet, create it.
-						real_bone = safe_create_bone(self_value.name)
+						real_bone = find_or_create_bone(armature, self_value.name)
 					elif(type(self_value) == bpy.types.Bone):
 						real_bone = armature.data.edit_bones.get(self_value.name)
 					elif(type(self_value) == bpy.types.EditBone):
@@ -197,7 +192,7 @@ class BoneData:
 		
 		for cd in self.constraints:
 			name = cd[1]['name'] if 'name' in cd[1] else None
-			c = safe_create_constraint(pose_bone, cd[0], name)
+			c = find_or_create_constraint(pose_bone, cd[0], name)
 			for attr in cd[1].keys():
 				if(hasattr(c, attr)):
 					setattr(c, attr, cd[1][attr])
@@ -208,7 +203,7 @@ class BoneData:
 		bpy.context.view_layer.objects.active = armature
 
 		bpy.ops.object.mode_set(mode='EDIT')
-		edit_bone = safe_create_bone(self.name)
+		edit_bone = find_or_create_bone(armature, self.name)
 		self.write_data(edit_bone)
 
 		bpy.ops.object.mode_set(mode='POSE')
@@ -222,7 +217,7 @@ class BoneData:
 		bpy.context.view_layer.objects.active = armature
 		bpy.ops.object.mode_set(mode='EDIT')
 		for bd in bone_datas:
-			edit_bone = safe_create_bone(bd.name)
+			edit_bone = find_or_create_bone(armature, bd.name)
 		# Now that all the bones are created, loop over again to set the properties.
 		for bd in bone_datas:
 			edit_bone = armature.data.edit_bones.get(bd.name)
@@ -282,7 +277,7 @@ def get_chain(bone, ret=[]):
 		return get_chain(bone.children[0], ret)
 	return ret
 
-def create_bbone_handle(bone_start=None, bone_end=None):
+def create_bbone_handle(armature, bone_start=None, bone_end=None):
 	""" Create a bone at the head of the start bone. (We assume the head of the start bone and the tail of the end bone are in the same place)
 		Place the tail such that this bone's orientation is the average of the start and end bones' orientations.
 		Assign arbitrary bone length, bbone scale, bone shape.
@@ -334,15 +329,15 @@ def create_bbone_handle(bone_start=None, bone_end=None):
 	
 	ctr_bone = ctr_bones[0]
 	if(ctr_bone):
-		user_ctr_node = safe_create_bone(ctr_bone.name.replace("CTR-", "Node_UserRotation_CTR-"))
+		user_ctr_node = find_or_create_bone(armature, ctr_bone.name.replace("CTR-", "Node_UserRotation_CTR-"))
 		user_ctr_node.head = ctr_bone.head
 		user_ctr_node.tail = ctr_bone.tail
 		user_ctr_node.roll = ctr_bone.roll
 		user_ctr_node.bbone_x = user_ctr_node.bbone_z = 0.001
 		user_ctr_node.use_deform = False
 
-		tan_bone = safe_create_bone(tan_name)
-		aim_bone = safe_create_bone(tan_name.replace("TAN-", "AIM-TAN-"))
+		tan_bone = find_or_create_bone(armature, tan_name)
+		aim_bone = find_or_create_bone(armature, tan_name.replace("TAN-", "AIM-TAN-"))
 		tan_bone.parent = aim_bone
 		aim_bone.parent = ctr_bone
 		if(pos_aim):
@@ -356,7 +351,7 @@ def create_bbone_handle(bone_start=None, bone_end=None):
 		tan_bone.roll = aim_bone.roll = roll
 		tan_bone.use_deform = aim_bone.use_deform = False
 
-		user_tan_node = safe_create_bone(tan_bone.name.replace("TAN-", "Node_UserRotation_TAN-"))
+		user_tan_node = find_or_create_bone(armature, tan_bone.name.replace("TAN-", "Node_UserRotation_TAN-"))
 		user_tan_node.head = tan_bone.head
 		user_tan_node.tail = tan_bone.tail
 		user_tan_node.roll = tan_bone.roll
@@ -366,23 +361,23 @@ def create_bbone_handle(bone_start=None, bone_end=None):
 	
 	return tan_bone
 
-def create_bbone_handles_for_chain(chain):
+def create_bbone_handles_for_chain(armature, chain):
 	""" Create all BBone handles for a chain. Active object must be an armature in edit mode.
 		chain: list of Pose/Data/Editbones in hierarchical order. """
 	for i, def_bone in enumerate(chain):
 		if(i==0):
 			# Tangent control for the first bone in each chain needs to be created based on only start bone.
-			def_bone.bbone_custom_handle_start = create_bbone_handle(bone_start=chain[0], bone_end=None)
+			def_bone.bbone_custom_handle_start = create_bbone_handle(armature, bone_start=chain[0], bone_end=None)
 			if(len(chain)==1):
 				# If there is exactly one bone in the chain, it's both the first and last bone, so we also need to create its tail tangent here.
-				def_bone.bbone_custom_handle_end = create_bbone_handle(bone_start=None, bone_end=chain[0])
+				def_bone.bbone_custom_handle_end = create_bbone_handle(armature, bone_start=None, bone_end=chain[0])
 			continue
 
-		chain[i].bbone_custom_handle_start = chain[i-1].bbone_custom_handle_end = create_bbone_handle(chain[i], chain[i-1])
+		chain[i].bbone_custom_handle_start = chain[i-1].bbone_custom_handle_end = create_bbone_handle(armature, chain[i], chain[i-1])
 
 		if(i==len(chain)-1):
 			# Tangent control for the last bone in each chain needs to be created based on only end bone.
-			chain[i].bbone_custom_handle_end = create_bbone_handle(bone_start=None, bone_end=chain[i])
+			chain[i].bbone_custom_handle_end = create_bbone_handle(armature, bone_start=None, bone_end=chain[i])
 			continue
 
 def face_bbone_setup(armature):
@@ -400,7 +395,7 @@ def face_bbone_setup(armature):
 		if(eb.parent not in ebones
 		or eb.parent.children[0] != eb):	# This is not the 1st child of the bone, so it is considered a separate chain.
 			chain = get_chain(eb, [])
-			create_bbone_handles_for_chain(chain)
+			create_bbone_handles_for_chain(armature, chain)
 
 	bpy.ops.armature.select_more()
 	bpy.ops.object.mode_set(mode='POSE')	# TODO: this is not needed?
@@ -408,7 +403,7 @@ def face_bbone_setup(armature):
 	### CONSTRAINTS
 	for pb in armature.pose.bones:		
 		if("Node_UserRotation_CTR-" in pb.name):
-			copy_rotation = safe_create_constraint(pb, 'COPY_ROTATION')
+			copy_rotation = find_or_create_constraint(pb, 'COPY_ROTATION')
 			copy_rotation.target = armature
 			copy_rotation.subtarget = pb.name.replace("Node_UserRotation_CTR-", "CTR-")
 			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
@@ -416,7 +411,7 @@ def face_bbone_setup(armature):
 		if("Node_UserRotation_TAN-" in pb.name):
 			pb.custom_shape = arrow_shape
 			pb.use_custom_shape_bone_size = False
-			armature_const = safe_create_constraint(pb, 'ARMATURE')
+			armature_const = find_or_create_constraint(pb, 'ARMATURE')
 			target = armature_const.targets.new()
 			target.target = armature
 			db = armature.data.bones.get(pb.name)
@@ -429,7 +424,7 @@ def face_bbone_setup(armature):
 		if(pb.name.startswith('TAN')):
 			pb.bone_group = armature.pose.bone_groups.get('Face: TAN - BBone Tangent Handle Helpers')	# TODO: safe_create_bone_group()
 			pb.custom_shape_scale = 1.4
-			copy_rotation = safe_create_constraint(pb, 'COPY_ROTATION')
+			copy_rotation = find_or_create_constraint(pb, 'COPY_ROTATION')
 			copy_rotation.target = armature
 			copy_rotation.subtarget = pb.name.replace("TAN-", "Node_UserRotation_TAN-")
 			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
@@ -439,16 +434,16 @@ def face_bbone_setup(armature):
 			pb.bone_group = armature.pose.bone_groups.get('Face: TAN-AIM - BBone Automatic Handle Helpers')
 			pb.custom_shape_scale = 1.6
 			db = armature.data.bones.get(pb.name)
-			copy_location = safe_create_constraint(pb, 'COPY_LOCATION')
+			copy_location = find_or_create_constraint(pb, 'COPY_LOCATION')
 			copy_location.target = armature
 			copy_location.subtarget = db['copy_loc']
 			if('pos_aim' in db):
-				damped_pos = safe_create_constraint(pb, 'DAMPED_TRACK', "Damped Track +Y")
+				damped_pos = find_or_create_constraint(pb, 'DAMPED_TRACK', "Damped Track +Y")
 				damped_pos.target = armature
 				damped_pos.subtarget = db['pos_aim']
 				damped_pos.track_axis = 'TRACK_Y'
 			if('neg_aim' in db):
-				damped_neg = safe_create_constraint(pb, 'DAMPED_TRACK', "Damped Track -Y")
+				damped_neg = find_or_create_constraint(pb, 'DAMPED_TRACK', "Damped Track -Y")
 				damped_neg.target = armature
 				damped_neg.subtarget = db['neg_aim']
 				damped_neg.track_axis = 'TRACK_NEGATIVE_Y'

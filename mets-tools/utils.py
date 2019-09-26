@@ -42,19 +42,22 @@ def find_or_create_bone(armature, bonename):
 		bone = armature.data.edit_bones.new(bonename)
 	return bone
 
-def find_or_create_constraint(bone, const_type, const_name=None):
-	# Only create a constraint on this bone of a given type if a bone with that type or name does not already exist.
-	# TODO: This belongs in a utils.py along with safe_create_bone. Could probably also be named better, like find_or_create_thing().
-	for c in bone.constraints:
-		if(c.type==const_type):
-			if(const_name):
-				if(c.name==const_name):
+def find_or_create_constraint(pb, ctype, name=None):
+	""" Create a constraint on a bone if it doesn't exist yet. 
+		If a constraint with the given type already exists, just return that.
+		If a name was passed, also make sure the name matches before deeming it a match and returning it.
+		pb: Must be a pose bone.
+	"""
+	for c in pb.constraints:
+		if(c.type==ctype):
+			if(name):
+				if(c.name==name):
 					return c
 			else:
 				return c
-	c = bone.constraints.new(type=const_type)
-	if(const_name):
-		c.name = const_name
+	c = pb.constraints.new(type=ctype)
+	if(name):
+		c.name = name
 	return c
 
 def flip_name(from_name, only=True, must_change=False):
@@ -115,7 +118,7 @@ def flip_name(from_name, only=True, must_change=False):
 	return new_name
 
 def copy_attributes(from_thing, to_thing, skip=[""]):
-	# TODO: Could and probably should make this optinally recursive.
+	# TODO: Could and probably should make this optionally recursive.
 	# Could be useful for copying drivers.
 	print("\nCOPYING FROM: " + str(from_thing))
 	print(".... TO: " + str(to_thing))
