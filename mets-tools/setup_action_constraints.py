@@ -44,7 +44,7 @@ class SetupActionConstraints(bpy.types.Operator):
 	action: StringProperty(name="Action")
 
 	enabled: BoolProperty(name="Enabled", default=True)
-
+	delete: BoolProperty(name="Delete", default=False)
 
 	@classmethod
 	def poll(cls, context):
@@ -89,9 +89,10 @@ class SetupActionConstraints(bpy.types.Operator):
 		for b in armature.pose.bones:
 			for c in b.constraints:
 				if(c.type=='ACTION'):
-					# If the constraint targets this action but its name is wrong
+					# If the constraint targets this action
 					if(c.action == action):
-						if(c.name != constraint_name):
+						if(constraint_name not in c.name	# but its name is wrong
+							or self.delete):				# or the user wants to delete it.
 							b.constraints.remove(c)
 							continue
 					# If the constraint is fine, but there is no associated keyframe
@@ -142,24 +143,27 @@ class SetupActionConstraints(bpy.types.Operator):
 	
 	def draw(self, context):
 		layout = self.layout
-		layout.prop(self, "enabled", text="Enabled")
+		layout.prop(self, "delete", text="Delete")
 
-		layout.prop_search(self, "target", context.scene, "objects", text="Target")
-		layout.prop_search(self, "subtarget", context.object.data, "bones", text="Bone")
+		if(not self.delete):
+			layout.prop(self, "enabled", text="Enabled")
+			layout.prop_search(self, "target", context.scene, "objects", text="Target")
+			layout.prop_search(self, "subtarget", context.object.data, "bones", text="Bone")
 		layout.prop_search(self, "action", bpy.data, "actions", text="Action")
 
-		action_row = layout.row()
-		action_row.prop(self, "frame_start", text="Start")
-		action_row.prop(self, "frame_end", text="End")
+		if(not self.delete):
+			action_row = layout.row()
+			action_row.prop(self, "frame_start", text="Start")
+			action_row.prop(self, "frame_end", text="End")
 
-		trans_row = layout.row()
-		trans_row.use_property_decorate = False
-		trans_row.prop(self, "target_space")
-		trans_row.prop(self, "transform_channel")
+			trans_row = layout.row()
+			trans_row.use_property_decorate = False
+			trans_row.prop(self, "target_space")
+			trans_row.prop(self, "transform_channel")
 
-		trans_row2 = layout.row()
-		trans_row2.prop(self, "trans_min")
-		trans_row2.prop(self, "trans_max")
+			trans_row2 = layout.row()
+			trans_row2.prop(self, "trans_min")
+			trans_row2.prop(self, "trans_max")
 
 def register():
 	from bpy.utils import register_class
