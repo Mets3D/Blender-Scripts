@@ -2,18 +2,15 @@ import bpy
 from math import *
 from . import utils
 
-# TODO: Mirror IK Solver settings.
 # When mirroring from right to left side, it seems like it doesn't flip names correctly, and also doesn't delete existing constraints.
 # Child Of constraints' inverse matrices still don't always seem right.
 # Split constraint mirror into a util function.
 
 def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constraint=None):
-	# Creates a mirrored driver on to_bone. from_bone and to_bone should be pose bones. (Won't work on edit bones, maybe it should, TODO)
+	# Creates a mirrored driver on to_bone. from_bone and to_bone should be pose bones.
 	# If from_constraint is specified, to_constraint also must be.
 	# If from_constraint is specified, only drivers belonging to that constraint will be copied, not drivers belonging directly to bone properties.
-	# TODO: This is pretty confusing, but the to_bone and to_constraint must be passed as parameters, because it doesn't feel safe to try to guess them from inside the function.
-	# Could do from_data_path, to_data_path, maybe, and do the data path acrobatics outside this function.
-	if(not armature.animation_data): return
+	if(not armature.animation_data): return	# No drivers to mirror.
 
 	for d in armature.animation_data.drivers:					# Look through every driver on the armature
 		if('pose.bones["' + from_bone.name + '"]' in d.data_path):	# If the driver belongs to the active bone
@@ -59,6 +56,9 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 					to_var.targets[i].transform_space 	= from_var.targets[i].transform_space
 					# TODO: If transform is X Rotation, have a "mirror" option, to invert it in the expression. Better yet, detect if the new_target_bone is the opposite of the original.
 				
+				# Below is some old terrible code to add or remove a "-" sign before the variable's name in the expression... 
+				# It's technically needed to mirror a driver correctly in some cases, but I'm not sure how to 
+				# figure out whether a variable needs to be flipped or not.
 				"""
 				print(from_var.targets[0].transform_type)
 				if( to_var.targets[0].bone_target and
@@ -93,10 +93,8 @@ class XMirrorConstraints(bpy.types.Operator):
 
 	def execute(self, context):
 		for b in context.selected_pose_bones:
-			#TODO: Should also make sure constraints are in the correct order. - They should already be, though. Are we not wiping constraints before copying them? I thought we did.
 			#TODO: Make a separate operator for "splitting" constraints in left/right parts. (by halving their influence, then mirror copying them onto the same bone)
-			#TODO: Mirror drivers...
-
+			
 			armature = context.object
 
 			flipped_name = utils.flip_name(b.name)
@@ -169,7 +167,7 @@ class XMirrorConstraints(bpy.types.Operator):
 					org_influence = opp_c.influence
 					org_active = armature.data.bones.active
 					
-					# Setting inverse matrix based on https://developer.blender.org/T39891#222496 but it doesn't seem to work. Maybe because the drivers don't get deleted before being re-mirrored? Therefore influence=1 doesn't work. TODO.
+					# Setting inverse matrix based on https://developer.blender.org/T39891#222496 but it doesn't seem to work. Maybe because the drivers don't get deleted before being re-mirrored? Therefore influence=1 doesn't work. TODO: We should just figure out what math to apply to the inverse matrix.
 					armature.data.bones.active = opp_data_b
 					opp_c.influence = 1
 					context_py = bpy.context.copy()
