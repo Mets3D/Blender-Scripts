@@ -110,30 +110,33 @@ class SetupActionConstraints(bpy.types.Operator):
 		return { 'FINISHED' }
 
 	def invoke(self, context, event):
+		# When the operation is invoked, set the operator's target and action based on the context. If they are found, find the first bone with this action constraint, and pre-fill the operator settings based on that constraint.
 		wm = context.window_manager
-		# When the action or target bone is changed, find a bone that has a constraint with that action and that target bone, and update the operator's settings with that constraint's settings.
-		# TODO: This doesn't work. I originally tried with callback function, that didn't work either. :(
 		self.target = context.object.name
 		
-		done = False
-		for b in context.object.pose.bones:
-			for c in b.constraints:
-				if(
-						c.type == 'ACTION' 
-						and c.action.name == self.action 
-						and c.subtarget == self.subtarget):
-					self.frame_start = c.frame_start
-					self.frame_end = c.frame_end
-					self.trans_min = c.min
-					self.trans_max = c.max
-					self.enabled = not c.mute
+		action = context.object.animation_data.action
+		self.action = action.name
 
-					self.target_space = c.target_space
-					self.transform_channel = c.transform_channel
-					done=True
-					print("Updated operator values...")
-					break
-			if(done): break
+		if(action and context.object.type=='ARMATURE'):
+			done = False
+			for b in context.object.pose.bones:
+				for c in b.constraints:
+					if(
+							c.type == 'ACTION' 
+							and c.action.name == self.action ):
+						self.subtarget = c.subtarget
+						self.frame_start = c.frame_start
+						self.frame_end = c.frame_end
+						self.trans_min = c.min
+						self.trans_max = c.max
+						self.enabled = not c.mute
+
+						self.target_space = c.target_space
+						self.transform_channel = c.transform_channel
+						done=True
+						print("Updated operator values...")
+						break
+				if(done): break
 
 		return wm.invoke_props_dialog(self)
 	
