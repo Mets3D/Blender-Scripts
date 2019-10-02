@@ -198,9 +198,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='use_proxy',
 		description='Use Proxy Meshes')
 
-	### BOOLEANS ### - Since custom properties cannot be displayed as toggles, I'm hardcoding anything that needs toggle buttons. This is pretty ugly so hopefully one day we can either display integers custom props as toggle buttons or have real boolean custom props.
-	neck_hinge: BoolProperty()
-	head_hinge: BoolProperty()
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -455,10 +452,10 @@ class MetsRigUI_IKFK(MetsRigUI):
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_feet"]', slider=True, text='Legs')
 
 		layout.label(text='Head Settings')
-		layout.row().prop(mets_props, 'neck_hinge', toggle=True, text='Neck Hinge')
+		layout.row().prop(face_props, '["neck_hinge"]', slider=True, text='Neck Hinge')
 		head_hinge_row = layout.row()
-		head_hinge_row.enabled = mets_props.neck_hinge
-		head_hinge_row.prop(mets_props, 'head_hinge', toggle=True, text='Head Hinge')
+		head_hinge_row.enabled = face_props["neck_hinge"] != 0
+		head_hinge_row.prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
 		layout.row().prop(face_props, '["head_look"]', slider=True, text='Head Look')
 		head_parents = ['Root', 'Pelvis', 'Chest']
 		layout.row().prop(face_props, '["head_target_parents"]', slider=True, text='Head Target Parent ['+head_parents[face_props["head_target_parents"]] + "]")

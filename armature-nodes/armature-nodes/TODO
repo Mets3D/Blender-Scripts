@@ -134,3 +134,14 @@ Node ideas:
         Would perhaps first need a GetProperty or GetDataPath node or something. Adding drivers is really weird.
         A major thing with this is that we need a dynamic number of inputs for the variables - I guess we can do this by putting operator buttons on the node?
 
+I'd like to get started on this project again. I think an issue that still needs tackling is whether order of execution is going to be a problem. I guess the only thing that might cause problems, is renaming bones. It would have to happen after everything else, otherwise the node graph can't be purely data flow (where order doesn't matter) - Is this even possible? I don't think so... because in some cases we will ask for a list of bones, but those bones might not have been defined yet, due to the arbitrary order of "execution". So that needs to be avoided, I guess.
+Even so. The only thing we can do to data that is order-independent is reading it.
+If we want to write data(eg. rename bones) or even create data(eg. create bones) order will matter.
+So, things that write or create data, need to have an execution line! UE4 style! I am okay with this.
+
+So the group input node can have a "Generate" pin which is an execution pin, and runs when the user presses generate. Then, the execution line runs from right to left, but any data is still read from left to right.
+
+Eg. the Generate pin goes into a Create Bones node which takes bone datas as its inputs. Those bone datas are then plugged into it from the left (they do not need an execution line since they only store and read data). This sounds good in theory.
+We just need a fast way to visually prototype node setups. We need to look at Animation Nodes. And embrace the idea that our addon might be dependent on Animation Nodes (for now, and Function nodes in the future).
+
+Better yet, I think we should just fork Animation Nodes. Or fork a fork of Animation Nodes, even.
