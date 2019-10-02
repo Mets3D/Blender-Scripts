@@ -62,7 +62,7 @@ def find_or_create_constraint(pb, ctype, name=None):
 
 def flip_name(from_name, only=True, must_change=False):
 	# based on BLI_string_flip_side_name in https://developer.blender.org/diffusion/B/browse/master/source/blender/blenlib/intern/string_utils.c
-	# If only==True, only replace one occurrence of the side identifier in the string, eg. "Left_Eyelid.L" would become "Left_Eyelid.R", if only==False, it will return "Right_Eyelid.R"
+	# If only==True, only replace the first occurrence of a side identifier in the string, eg. "Left_Eyelid.L" would become "Right_Eyelid.L". With only==False, it would instead return "Right_Eyelid.R"
 	# if must_change==True, raise an error if the string couldn't be flipped.
 
 	l = len(from_name)	# Number of characters from left to right, that we still care about. At first we care about all of them.
@@ -109,7 +109,7 @@ def flip_name(from_name, only=True, must_change=False):
 	new_name = flip_sides(right, left, new_name)
 	new_name = flip_sides(right_placehold, right, new_name)
 	
-	# Re-adding .###
+	# Re-add trailing digits (.###)
 	new_name = new_name + from_name[l:]
 
 	if(must_change):

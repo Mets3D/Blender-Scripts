@@ -129,6 +129,8 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 				if( ("location" in cur.data_path and cur.array_index==0) or
 					("rotation" in cur.data_path and cur.array_index in [1, 2]) ):
 						opp_kf.co[1] *= -1
+						opp_kf.handle_left[1] *=-1
+						opp_kf.handle_right[1] *=-1
 
 	if(c.type=='ARMATURE'):
 		for i, t in enumerate(c.targets):

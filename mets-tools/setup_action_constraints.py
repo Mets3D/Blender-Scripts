@@ -59,7 +59,7 @@ class SetupActionConstraints(bpy.types.Operator):
 		else:
 			target = armature
 		action = bpy.data.actions[self.action]
-		constraint_name = "Action_" + action.name.replace("Rain_", "")
+		constraint_name = "Action_" + action.name.replace("Rain_", "")	# TODO: Hard coded action naming convention.
 
 		# Getting a list of pose bones on the active armature corresponding to the selected action's keyframes
 		bones = []
@@ -73,17 +73,56 @@ class SetupActionConstraints(bpy.types.Operator):
 
 		# Adding or updating Action constraint on the bones
 		for b in bones:
-			c = utils.find_or_create_constraint(b, 'ACTION', constraint_name)	# TODO: Hard coded action naming convention.
-			c.target_space = self.target_space
-			c.transform_channel = self.transform_channel
-			c.target = target
-			c.subtarget = self.subtarget
-			c.action = action
-			c.min = self.trans_min
-			c.max = self.trans_max
-			c.frame_start = self.frame_start
-			c.frame_end = self.frame_end
-			c.mute = not self.enabled
+			suffix = ""
+			if(b.name.endswith(".L")):
+				suffix=".L"
+			if(b.name.endswith(".R")):
+				suffix=".R"
+			
+			constraints = [c for c in b.constraints if constraint_name in c.name]
+
+			# Creating Action constraints
+			if(len(constraints)==0):
+				if(utils.flip_name(b.name)==b.name):	# Bone name unflippable, split constraint in two.
+					c_l = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".L")
+					constraints.append(c_l)
+					c_r = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".R")
+					constraints.append(c_r)
+				else:
+					c = utils.find_or_create_constraint(b, 'ACTION', constraint_name + suffix)
+				constraints.append(c)
+
+			# Configuring Action constraints
+			for c in constraints:
+				
+				# TODO: Utils should have a way to detect and set a string to a specific side, rather than only flip. That way we wouldn't have to hard-code and only support .L/.R suffix.
+				
+				# If bone name indicates a side, force subtarget to that side
+				if( b.name.endswith(".L") and self.subtarget.endswith(".R") ):
+					self.subtarget = self.subtarget[:-2]+".L"
+				if( b.name.endswith(".R") and self.subtarget.endswith(".L") ):
+					self.subtarget = self.subtarget[:-2]+".R"
+					
+				# If constraint name indicates a side, force subtarget to that side
+				if( c.name.endswith(".L") and self.subtarget.endswith(".R") ):
+					self.subtarget = self.subtarget[:-2]+".L"
+				if( c.name.endswith(".R") and self.subtarget.endswith(".L") ):
+					self.subtarget = self.subtarget[:-2]+".R"
+				
+				# If bone name cannot be flipped, it must be a center bone, so set influence to 0.5.
+				if( utils.flip_name(b.name)==b.name ):
+					c.influence=0.5
+
+				c.target_space = self.target_space
+				c.transform_channel = self.transform_channel
+				c.target = target
+				c.subtarget = self.subtarget
+				c.action = action
+				c.min = self.trans_min
+				c.max = self.trans_max
+				c.frame_start = self.frame_start
+				c.frame_end = self.frame_end
+				c.mute = not self.enabled
 
 		# Deleting superfluous action constraints, if any
 		for b in armature.pose.bones:
