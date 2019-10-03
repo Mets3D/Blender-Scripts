@@ -66,6 +66,7 @@ was
 	NEXT RIG Think about how to add more lower level control for the eyebrows.
 
 On release/updates
+	Set "dev" custom property on the rig to 0 to hide mech layers from the UI.
 	Fix UVs.
 	Make sure Armature modifiers are in the right place in the stack(ie. above SubSurf)
 	Lock object transforms

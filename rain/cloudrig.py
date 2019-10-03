@@ -16,7 +16,6 @@ def get_rigs():
 		ret = [None]
 	return ret
 
-
 def pre_depsgraph_update(scene):
 	""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
 
@@ -203,7 +202,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		description="Show FK/IK Switches"
 	)
 
-
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
 	bl_region_type = 'UI'
@@ -351,35 +349,46 @@ class MetsRigUI_Layers(MetsRigUI):
 		data = rig.data
 		
 		row_ik = layout.row()
-		row_ik.column().prop(data, 'layers', index=0, toggle=True, text='Body IK')
-		row_ik.column().prop(data, 'layers', index=16, toggle=True, text='Body IK Secondary')
+		row_ik.prop(data, 'layers', index=0, toggle=True, text='IK')
+		row_ik.prop(data, 'layers', index=16, toggle=True, text='IK Secondary')
 		
-		layout.row().prop(data, 'layers', index=1, toggle=True, text='Body FK')
-		layout.row().prop(data, 'layers', index=17, toggle=True, text='Body Stretch')
+		row_fk = layout.row()
+		row_fk.prop(data, 'layers', index=1, toggle=True, text='FK')
+		row_fk.prop(data, 'layers', index=17, toggle=True, text='FK Secondary')
+		
+		layout.prop(data, 'layers', index=2, toggle=True, text='Stretch')
 		
 		row_face = layout.row()
-		row_face.column().prop(data, 'layers', index=2, toggle=True, text='Face Main')
-		row_face.column().prop(data, 'layers', index=18, toggle=True, text='Face Secondary')
+		row_face.column().prop(data, 'layers', index=3, toggle=True, text='Face Primary')
+		row_face.column().prop(data, 'layers', index=19, toggle=True, text='Face Extras')
+		row_face.column().prop(data, 'layers', index=20, toggle=True, text='Face Tweak')
 		
-		row_fingers = layout.row()
-		row_fingers.column().prop(data, 'layers', index=3, toggle=True, text='Finger Controls')
-		#row_fingers.column().prop(data, 'layers', index=19, toggle=True, text='Finger Stretch')
+		layout.prop(data, 'layers', index=5, toggle=True, text='Fingers')
 		
 		layout.row().prop(data, 'layers', index=6, toggle=True, text='Hair')
 		layout.row().prop(data, 'layers', index=7, toggle=True, text='Clothes')
 		
 		layout.separator()
 		if('dev' in rig and rig['dev']==1):
-			row_mechanism = layout.row()
-			row_mechanism.prop(data, 'layers', index=8, toggle=True, text='Body Mechanism')
-			row_mechanism.prop(data, 'layers', index=9, toggle=True, text='Body Adjust Mechanism')
-			row_mechanism.prop(data, 'layers', index=10, toggle=True, text='Face Mechanism')
-			
-			row_deform = layout.row()
-			row_deform.prop(data, 'layers', index=24, toggle=True, text='Body Deform')
-			row_deform.prop(data, 'layers', index=25, toggle=True, text='Body Adjust Deform')
-			row_deform.prop(data, 'layers', index=26, toggle=True, text='Face Deform')
+			layout.separator()
+			layout.prop(rig, '["dev"]', text="Secret Layers")
+			layout.label(text="Body")
+			row = layout.row()
+			row.prop(data, 'layers', index=8, toggle=True, text='Mech')
+			row.prop(data, 'layers', index=9, toggle=True, text='Adjust Mech')
+			row = layout.row()
+			row.prop(data, 'layers', index=24, toggle=True, text='Deform')
+			row.prop(data, 'layers', index=25, toggle=True, text='Adjust Deform')
 
+			layout.label(text="Head")
+			row = layout.row()
+			row.prop(data, 'layers', index=11, toggle=True, text='Mech')
+			row.prop(data, 'layers', index=11, toggle=True, text='Unlockers')
+			row = layout.row()
+			row.prop(data, 'layers', index=27, toggle=True, text='Deform')
+			row.prop(data, 'layers', index=27, toggle=True, text='Hierarchy')
+
+			layout.label(text="Other")
 			death_row = layout.row()
 			death_row.prop(data, 'layers', index=30, toggle=True, text='Properties')
 			death_row.prop(data, 'layers', index=31, toggle=True, text='Black Box')
