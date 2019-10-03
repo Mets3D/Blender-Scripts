@@ -42,24 +42,27 @@ def find_or_create_bone(armature, bonename):
 		bone = armature.data.edit_bones.new(bonename)
 	return bone
 
-def find_or_create_constraint(bone, const_type, const_name=None):
-	# Only create a constraint on this bone of a given type if a bone with that type or name does not already exist.
-	# TODO: This belongs in a utils.py along with safe_create_bone. Could probably also be named better, like find_or_create_thing().
-	for c in bone.constraints:
-		if(c.type==const_type):
-			if(const_name):
-				if(c.name==const_name):
+def find_or_create_constraint(pb, ctype, name=None):
+	""" Create a constraint on a bone if it doesn't exist yet. 
+		If a constraint with the given type already exists, just return that.
+		If a name was passed, also make sure the name matches before deeming it a match and returning it.
+		pb: Must be a pose bone.
+	"""
+	for c in pb.constraints:
+		if(c.type==ctype):
+			if(name):
+				if(c.name==name):
 					return c
 			else:
 				return c
-	c = bone.constraints.new(type=const_type)
-	if(const_name):
-		c.name = const_name
+	c = pb.constraints.new(type=ctype)
+	if(name):
+		c.name = name
 	return c
 
 def flip_name(from_name, only=True, must_change=False):
 	# based on BLI_string_flip_side_name in https://developer.blender.org/diffusion/B/browse/master/source/blender/blenlib/intern/string_utils.c
-	# If only==True, only replace one occurrence of the side identifier in the string, eg. "Left_Eyelid.L" would become "Left_Eyelid.R", if only==False, it will return "Right_Eyelid.R"
+	# If only==True, only replace the first occurrence of a side identifier in the string, eg. "Left_Eyelid.L" would become "Right_Eyelid.L". With only==False, it would instead return "Right_Eyelid.R"
 	# if must_change==True, raise an error if the string couldn't be flipped.
 
 	l = len(from_name)	# Number of characters from left to right, that we still care about. At first we care about all of them.
@@ -106,7 +109,7 @@ def flip_name(from_name, only=True, must_change=False):
 	new_name = flip_sides(right, left, new_name)
 	new_name = flip_sides(right_placehold, right, new_name)
 	
-	# Re-adding .###
+	# Re-add trailing digits (.###)
 	new_name = new_name + from_name[l:]
 
 	if(must_change):
@@ -115,7 +118,7 @@ def flip_name(from_name, only=True, must_change=False):
 	return new_name
 
 def copy_attributes(from_thing, to_thing, skip=[""]):
-	# TODO: Could and probably should make this optinally recursive.
+	# TODO: Could and probably should make this optionally recursive.
 	# Could be useful for copying drivers.
 	print("\nCOPYING FROM: " + str(from_thing))
 	print(".... TO: " + str(to_thing))

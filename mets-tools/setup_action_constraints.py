@@ -44,7 +44,7 @@ class SetupActionConstraints(bpy.types.Operator):
 	action: StringProperty(name="Action")
 
 	enabled: BoolProperty(name="Enabled", default=True)
-
+	delete: BoolProperty(name="Delete", default=False)
 
 	@classmethod
 	def poll(cls, context):
@@ -59,7 +59,7 @@ class SetupActionConstraints(bpy.types.Operator):
 		else:
 			target = armature
 		action = bpy.data.actions[self.action]
-		constraint_name = "Action_" + action.name.replace("Rain_", "")
+		constraint_name = "Action_" + action.name.replace("Rain_", "")	# TODO: Hard coded action naming convention.
 
 		# Getting a list of pose bones on the active armature corresponding to the selected action's keyframes
 		bones = []
@@ -73,25 +73,65 @@ class SetupActionConstraints(bpy.types.Operator):
 
 		# Adding or updating Action constraint on the bones
 		for b in bones:
-			c = utils.find_or_create_constraint(b, 'ACTION', constraint_name)	# TODO: Hard coded action naming convention.
-			c.target_space = self.target_space
-			c.transform_channel = self.transform_channel
-			c.target = target
-			c.subtarget = self.subtarget
-			c.action = action
-			c.min = self.trans_min
-			c.max = self.trans_max
-			c.frame_start = self.frame_start
-			c.frame_end = self.frame_end
-			c.mute = not self.enabled
+			suffix = ""
+			if(b.name.endswith(".L")):
+				suffix=".L"
+			if(b.name.endswith(".R")):
+				suffix=".R"
+			
+			constraints = [c for c in b.constraints if constraint_name in c.name]
+
+			# Creating Action constraints
+			if(len(constraints)==0):
+				if(utils.flip_name(b.name)==b.name):	# Bone name unflippable, split constraint in two.
+					c_l = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".L")
+					constraints.append(c_l)
+					c_r = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".R")
+					constraints.append(c_r)
+				else:
+					c = utils.find_or_create_constraint(b, 'ACTION', constraint_name + suffix)
+				constraints.append(c)
+
+			# Configuring Action constraints
+			for c in constraints:
+				
+				# TODO: Utils should have a way to detect and set a string to a specific side, rather than only flip. That way we wouldn't have to hard-code and only support .L/.R suffix.
+				
+				# If bone name indicates a side, force subtarget to that side
+				if( b.name.endswith(".L") and self.subtarget.endswith(".R") ):
+					self.subtarget = self.subtarget[:-2]+".L"
+				if( b.name.endswith(".R") and self.subtarget.endswith(".L") ):
+					self.subtarget = self.subtarget[:-2]+".R"
+					
+				# If constraint name indicates a side, force subtarget to that side
+				if( c.name.endswith(".L") and self.subtarget.endswith(".R") ):
+					self.subtarget = self.subtarget[:-2]+".L"
+				if( c.name.endswith(".R") and self.subtarget.endswith(".L") ):
+					self.subtarget = self.subtarget[:-2]+".R"
+				
+				# If bone name cannot be flipped, it must be a center bone, so set influence to 0.5.
+				if( utils.flip_name(b.name)==b.name ):
+					c.influence=0.5
+
+				c.target_space = self.target_space
+				c.transform_channel = self.transform_channel
+				c.target = target
+				c.subtarget = self.subtarget
+				c.action = action
+				c.min = self.trans_min
+				c.max = self.trans_max
+				c.frame_start = self.frame_start
+				c.frame_end = self.frame_end
+				c.mute = not self.enabled
 
 		# Deleting superfluous action constraints, if any
 		for b in armature.pose.bones:
 			for c in b.constraints:
 				if(c.type=='ACTION'):
-					# If the constraint targets this action but its name is wrong
+					# If the constraint targets this action
 					if(c.action == action):
-						if(c.name != constraint_name):
+						if(constraint_name not in c.name	# but its name is wrong
+							or self.delete):				# or the user wants to delete it.
 							b.constraints.remove(c)
 							continue
 					# If the constraint is fine, but there is no associated keyframe
@@ -110,53 +150,59 @@ class SetupActionConstraints(bpy.types.Operator):
 		return { 'FINISHED' }
 
 	def invoke(self, context, event):
+		# When the operation is invoked, set the operator's target and action based on the context. If they are found, find the first bone with this action constraint, and pre-fill the operator settings based on that constraint.
 		wm = context.window_manager
-		# When the action or target bone is changed, find a bone that has a constraint with that action and that target bone, and update the operator's settings with that constraint's settings.
-		# TODO: This doesn't work. I originally tried with callback function, that didn't work either. :(
 		self.target = context.object.name
 		
-		done = False
-		for b in context.object.pose.bones:
-			for c in b.constraints:
-				if(
-						c.type == 'ACTION' 
-						and c.action.name == self.action 
-						and c.subtarget == self.subtarget):
-					self.frame_start = c.frame_start
-					self.frame_end = c.frame_end
-					self.trans_min = c.min
-					self.trans_max = c.max
-					self.enabled = not c.mute
+		action = context.object.animation_data.action
+		self.action = action.name
 
-					self.target_space = c.target_space
-					self.transform_channel = c.transform_channel
-					done=True
-					print("Updated operator values...")
-					break
-			if(done): break
+		if(action and context.object.type=='ARMATURE'):
+			done = False
+			for b in context.object.pose.bones:
+				for c in b.constraints:
+					if(
+							c.type == 'ACTION' 
+							and c.action.name == self.action ):
+						self.subtarget = c.subtarget
+						self.frame_start = c.frame_start
+						self.frame_end = c.frame_end
+						self.trans_min = c.min
+						self.trans_max = c.max
+						self.enabled = not c.mute
+
+						self.target_space = c.target_space
+						self.transform_channel = c.transform_channel
+						done=True
+						print("Updated operator values...")
+						break
+				if(done): break
 
 		return wm.invoke_props_dialog(self)
 	
 	def draw(self, context):
 		layout = self.layout
-		layout.prop(self, "enabled", text="Enabled")
+		layout.prop(self, "delete", text="Delete")
 
-		layout.prop_search(self, "target", context.scene, "objects", text="Target")
-		layout.prop_search(self, "subtarget", context.object.data, "bones", text="Bone")
+		if(not self.delete):
+			layout.prop(self, "enabled", text="Enabled")
+			layout.prop_search(self, "target", context.scene, "objects", text="Target")
+			layout.prop_search(self, "subtarget", context.object.data, "bones", text="Bone")
 		layout.prop_search(self, "action", bpy.data, "actions", text="Action")
 
-		action_row = layout.row()
-		action_row.prop(self, "frame_start", text="Start")
-		action_row.prop(self, "frame_end", text="End")
+		if(not self.delete):
+			action_row = layout.row()
+			action_row.prop(self, "frame_start", text="Start")
+			action_row.prop(self, "frame_end", text="End")
 
-		trans_row = layout.row()
-		trans_row.use_property_decorate = False
-		trans_row.prop(self, "target_space")
-		trans_row.prop(self, "transform_channel")
+			trans_row = layout.row()
+			trans_row.use_property_decorate = False
+			trans_row.prop(self, "target_space")
+			trans_row.prop(self, "transform_channel")
 
-		trans_row2 = layout.row()
-		trans_row2.prop(self, "trans_min")
-		trans_row2.prop(self, "trans_max")
+			trans_row2 = layout.row()
+			trans_row2.prop(self, "trans_min")
+			trans_row2.prop(self, "trans_max")
 
 def register():
 	from bpy.utils import register_class

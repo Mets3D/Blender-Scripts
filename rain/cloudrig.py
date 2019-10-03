@@ -16,7 +16,6 @@ def get_rigs():
 		ret = [None]
 	return ret
 
-
 def pre_depsgraph_update(scene):
 	""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
 
@@ -198,9 +197,10 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='use_proxy',
 		description='Use Proxy Meshes')
 
-	### BOOLEANS ### - Since custom properties cannot be displayed as toggles, I'm hardcoding anything that needs toggle buttons. This is pretty ugly so hopefully one day we can either display integers custom props as toggle buttons or have real boolean custom props.
-	neck_hinge: BoolProperty()
-	head_hinge: BoolProperty()
+	show_fkik: BoolProperty(
+		name="FK/IK",
+		description="Show FK/IK Switches"
+	)
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -349,93 +349,99 @@ class MetsRigUI_Layers(MetsRigUI):
 		data = rig.data
 		
 		row_ik = layout.row()
-		row_ik.column().prop(data, 'layers', index=0, toggle=True, text='Body IK')
-		row_ik.column().prop(data, 'layers', index=16, toggle=True, text='Body IK Secondary')
+		row_ik.prop(data, 'layers', index=0, toggle=True, text='IK')
+		row_ik.prop(data, 'layers', index=16, toggle=True, text='IK Secondary')
 		
-		layout.row().prop(data, 'layers', index=1, toggle=True, text='Body FK')
-		layout.row().prop(data, 'layers', index=17, toggle=True, text='Body Stretch')
+		row_fk = layout.row()
+		row_fk.prop(data, 'layers', index=1, toggle=True, text='FK')
+		row_fk.prop(data, 'layers', index=17, toggle=True, text='FK Secondary')
+		
+		layout.prop(data, 'layers', index=2, toggle=True, text='Stretch')
 		
 		row_face = layout.row()
-		row_face.column().prop(data, 'layers', index=2, toggle=True, text='Face Main')
-		row_face.column().prop(data, 'layers', index=18, toggle=True, text='Face Secondary')
+		row_face.column().prop(data, 'layers', index=3, toggle=True, text='Face Primary')
+		row_face.column().prop(data, 'layers', index=19, toggle=True, text='Face Extras')
+		row_face.column().prop(data, 'layers', index=20, toggle=True, text='Face Tweak')
 		
-		row_fingers = layout.row()
-		row_fingers.column().prop(data, 'layers', index=3, toggle=True, text='Finger Controls')
-		#row_fingers.column().prop(data, 'layers', index=19, toggle=True, text='Finger Stretch')
+		layout.prop(data, 'layers', index=5, toggle=True, text='Fingers')
 		
 		layout.row().prop(data, 'layers', index=6, toggle=True, text='Hair')
 		layout.row().prop(data, 'layers', index=7, toggle=True, text='Clothes')
 		
 		layout.separator()
 		if('dev' in rig and rig['dev']==1):
-			row_mechanism = layout.row()
-			row_mechanism.prop(data, 'layers', index=8, toggle=True, text='Body Mechanism')
-			row_mechanism.prop(data, 'layers', index=9, toggle=True, text='Body Adjust Mechanism')
-			row_mechanism.prop(data, 'layers', index=10, toggle=True, text='Face Mechanism')
-			
-			row_deform = layout.row()
-			row_deform.prop(data, 'layers', index=24, toggle=True, text='Body Deform')
-			row_deform.prop(data, 'layers', index=25, toggle=True, text='Body Adjust Deform')
-			row_deform.prop(data, 'layers', index=26, toggle=True, text='Face Deform')
+			layout.separator()
+			layout.prop(rig, '["dev"]', text="Secret Layers")
+			layout.label(text="Body")
+			row = layout.row()
+			row.prop(data, 'layers', index=8, toggle=True, text='Mech')
+			row.prop(data, 'layers', index=9, toggle=True, text='Adjust Mech')
+			row = layout.row()
+			row.prop(data, 'layers', index=24, toggle=True, text='Deform')
+			row.prop(data, 'layers', index=25, toggle=True, text='Adjust Deform')
 
+			layout.label(text="Head")
+			row = layout.row()
+			row.prop(data, 'layers', index=11, toggle=True, text='Mech')
+			row.prop(data, 'layers', index=11, toggle=True, text='Unlockers')
+			row = layout.row()
+			row.prop(data, 'layers', index=27, toggle=True, text='Deform')
+			row.prop(data, 'layers', index=27, toggle=True, text='Hierarchy')
+
+			layout.label(text="Other")
 			death_row = layout.row()
 			death_row.prop(data, 'layers', index=30, toggle=True, text='Properties')
 			death_row.prop(data, 'layers', index=31, toggle=True, text='Black Box')
 
 class MetsRigUI_IKFK(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_ik"
-	bl_label = "FK/IK Settings"
+	bl_idname = "OBJECT_PT_metsrig_ui_settings"
+	bl_label = "Settings"
 	
 	def draw(self, context):
 		layout = self.layout
-		column = layout.column()
-		rig = context.scene['metsrig_pinned']
-		mets_props = rig.metsrig_properties
-		ikfk_props = rig.pose.bones.get('Properties_IKFK')
-		face_props = rig.pose.bones.get('Properties_Face')
-		
-		# TODO improve the overall organization for all these buttons.
-		
-		### FK/IK Switch Sliders
-		layout.label(text='FK/IK Switches')
 
-		# Spine
+class MetsRigUI_IKFK_Switch(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_ikfk_switch"
+	bl_label = "FK/IK Switch"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		ikfk_props = rig.pose.bones.get('Properties_IKFK')
+
 		layout.row().prop(ikfk_props, '["ik_spine"]', slider=True, text='Spine')
-		
-		# Arms
 		arms_row = layout.row()
 		arms_row.prop(ikfk_props, '["ik_arm_left"]', slider=True, text='Left Arm')
 		arms_row.prop(ikfk_props, '["ik_arm_right"]', slider=True, text='Right Arm')
-		
-		# Legs
 		legs_row = layout.row()
 		legs_row.prop(ikfk_props, '["ik_leg_left"]', slider=True, text='Left Leg')
 		legs_row.prop(ikfk_props, '["ik_leg_right"]', slider=True, text='Right Leg')
 
+class MetsRigUI_IK_Settings(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_ik"
+	bl_label = "IK Settings"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		ikfk_props = rig.pose.bones.get('Properties_IKFK')
+
 		# IK Stretch
-		layout.label(text='IK Stretch')
+		layout.label(text="IK Stretch")
 		layout.row().prop(ikfk_props, '["ik_stretch_spine"]', slider=True, text='Stretchy Spine')
 		layout.row().prop(ikfk_props, '["ik_stretch_arms"]', slider=True, text='Stretchy Arms')
 		layout.row().prop(ikfk_props, '["ik_stretch_legs"]', slider=True, text='Stretchy Legs')
 
 		# IK Hinge
-		layout.label(text='IK Hinge')
+		layout.label(text="IK Hinge")
 		hand_row = layout.row()
 		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_left"]', slider=True, text='Left Hand')
 		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_right"]', slider=True, text='Right Hand')
 		foot_row = layout.row()
 		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_left"]', slider=True, text='Left Foot')
 		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_right"]', slider=True, text='Right Foot')
-		
-		# FK Hinge
-		layout.label(text='FK Hinge')
-		
-		hand_row = layout.row()
-		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_left"]', slider=True, text='Left Arm')
-		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_right"]', slider=True, text='Right Arm')
-		foot_row = layout.row()
-		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_left"]', slider=True, text='Left Leg')
-		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_right"]', slider=True, text='Right Leg')
 
 		# IK Parents
 		layout.label(text='IK Parents')
@@ -454,19 +460,47 @@ class MetsRigUI_IKFK(MetsRigUI):
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_hands"]', slider=True, text='Arms')
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_feet"]', slider=True, text='Legs')
 
+class MetsRigUI_FK_Settings(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_fk"
+	bl_label = "FK Settings"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		mets_props = rig.metsrig_properties
+		ikfk_props = rig.pose.bones.get('Properties_IKFK')
+		face_props = rig.pose.bones.get('Properties_Face')
+
+		# FK Hinge
+		layout.label(text='FK Hinge')
+		hand_row = layout.row()
+		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_left"]', slider=True, text='Left Arm')
+		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_right"]', slider=True, text='Right Arm')
+		foot_row = layout.row()
+		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_left"]', slider=True, text='Left Leg')
+		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_right"]', slider=True, text='Right Leg')
+
+		# Head settings
 		layout.label(text='Head Settings')
-		layout.row().prop(mets_props, 'neck_hinge', toggle=True, text='Neck Hinge')
-		head_hinge_row = layout.row()
-		head_hinge_row.enabled = mets_props.neck_hinge
-		head_hinge_row.prop(mets_props, 'head_hinge', toggle=True, text='Head Hinge')
-		layout.row().prop(face_props, '["head_look"]', slider=True, text='Head Look')
+		layout.row().prop(face_props, '["neck_hinge"]', slider=True, text='Neck Hinge')
+		layout.row().prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
 		head_parents = ['Root', 'Pelvis', 'Chest']
 		layout.row().prop(face_props, '["head_target_parents"]', slider=True, text='Head Target Parent ['+head_parents[face_props["head_target_parents"]] + "]")
 
-		# Face settings
-		layout.label(text='Face Settings')
-		layout.row().prop(face_props, '["sticky_eyelids"]', text='Sticky Eyelids', slider=True)
-		layout.row().prop(face_props, '["sticky_eyesockets"]', text='Sticky Eyerings', slider=True)
+class MetsRigUI_Face_Settings(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_face"
+	bl_label = "Face Settings"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		face_props = rig.pose.bones.get('Properties_Face')
+
+		# Eyelid settings
+		layout.prop(face_props, '["sticky_eyelids"]', text='Sticky Eyelids', slider=True)
+		layout.prop(face_props, '["sticky_eyesockets"]', text='Sticky Eyerings', slider=True)
 
 class MetsRigUI_Extras(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras"
@@ -479,36 +513,6 @@ class MetsRigUI_Extras(MetsRigUI):
 	
 		layout.row().prop(mets_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
 		layout.row().prop(mets_props, 'use_proxy', text='Use Proxy Meshes', toggle=True)
-
-class MetsRigUI_Extras_Physics(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_extras_physics"
-	bl_label = "Physics"
-	bl_parent_id = "OBJECT_PT_metsrig_ui_extras"
-	
-	def draw_header(self, context):
-		rig = context.scene['metsrig_pinned']
-		mets_props = rig.metsrig_properties
-		layout = self.layout
-		layout.prop(mets_props, "physics_toggle", text="")
-	
-	def draw(self, context):
-		rig = context.scene['metsrig_pinned']
-		mets_props = rig.metsrig_properties
-		layout = self.layout
-		
-		layout.active = mets_props.physics_toggle
-		
-		cache_row = layout.row()
-		cache_row.label(text="Cache: ")
-		cache_row.prop(mets_props, 'physics_cache_start', text="Start")
-		cache_row.prop(mets_props, 'physics_cache_end', text="End")
-		
-		mult_row = layout.row()
-		mult_row.label(text="Apply Speed Multiplier:")
-		mult_row.prop(mets_props, 'physics_speed_multiplier', text="")
-		
-		layout.operator("ptcache.bake_all", text="Bake All Dynamics").bake = True
-		layout.operator("ptcache.free_bake_all", text="Delete All Bakes")
 
 class Link_Button(bpy.types.Operator):
 	"""Open a link in a web browser"""
@@ -553,6 +557,10 @@ classes = (
 	MetsRigUI_Properties, 
 	MetsRigUI_Layers, 
 	MetsRigUI_IKFK, 
+	MetsRigUI_IKFK_Switch, 
+	MetsRigUI_IK_Settings, 
+	MetsRigUI_FK_Settings, 
+	MetsRigUI_Face_Settings, 
 	MetsRigUI_Extras, 
 	Link_Button, 
 	MetsRigUI_Links

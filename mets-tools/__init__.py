@@ -48,6 +48,7 @@ from . import setup_action_constraints
 from . import toggle_weight_paint
 from . import change_brush
 from . import mirror_rig
+from . import armature_apply_scale
 
 def register():
 	from bpy.utils import register_class
@@ -69,6 +70,7 @@ def register():
 	toggle_weight_paint.register()
 	change_brush.register()
 	mirror_rig.register()
+	armature_apply_scale.register()
 
 	#bpy.types.VIEW3D_MT_pose_specials.append(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.append(draw_func_MarkSharpByAutoSmooth)
@@ -94,6 +96,7 @@ def unregister():
 	toggle_weight_paint.unregister()
 	change_brush.unregister()
 	mirror_rig.unregister()
+	armature_apply_scale.unregister()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.remove(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.remove(draw_func_MarkSharpByAutoSmooth)

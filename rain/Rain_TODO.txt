@@ -11,7 +11,8 @@ With these things in mind, here's my estimate of how long finishing the face mig
 Week 1: (hopefully starting Sept 23)
 	- Rig teeth and tongue. I don't expect any issues or much need for iteration here.
 	- Get feedback on jaw, eyes, eyebrows & nose so they can be finished.
-Week 2:
+Week 2: (Sept 29)
+	====Schedule offset by 2 days for scale discussions and fix===
 	- Initial implementation of lip & cheek controls. (No shape keys yet) I expect lots of iteration needed for this.
 Week 3: 
 	- Implement feedback on eyes, eyebrows & nose, including shape keys where needed. Hopefully this is their final state.
@@ -42,54 +43,33 @@ I should make an addon to help the editing of shape keys and weights in any orde
 	Figure out how to make it so that, in order to achieve a desired shape, the weights are re-distributed such that the least amount of work possible has to be done by shape keys, while everything else is done by bones.
 		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
+Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
+Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 To make a rig generator, I need to learn how to use the new Rigify.
-
 Body/Limbs
-	Move ankle pivot like so: From side ortho, project lines from the shape of the knee, and cut it in the middle.
-
-	For RibCage forward rotation, make the shape of the back less sharp, and the shape of the belly should have two pinching points, and should affect more downwards area.
-	IK and FK Toe should be merged if possible. If not, maybe there can be a parent that owns them both.
-	During Footroll, toe should pivot from the shoe, just like the heel does. 
-
-
-	Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
-	Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
-
-	HIGH We should never disable Inherit Rotation, because it breaks the functionality of the ROOT bone. Hinge settings need to use a Copy Transforms constraint targetting a mechanism bone.
-	
 	MEDIUM Improve shoulder & elbow deformation
-	MEDIUM make script to auto-update magic numbers in elbow stretch drivers.
-	MEDIUM Re-visit the elbow.
-	MEDIUM Re-add double controls for Pelvis, Hips, and whatever else.
-
-	LOW update spine construction script to latest version of the spine.
-
+	
 	NEXT RIG Stretch controls are kind of a total mess right now, especially when it comes to rotating them.
-		The end of the shoulder and the start of the elbow being a separate toon control mean that the two controls are in the same place and overlap, so if we keep this, make sure to add unique bone shapes.
 		Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
-		LOW We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
-	NEXT RIG Rebuild Soft IK tech with Likkez's tech, see if we can't eliminate all downsides. If it works, Apply it to the arms too.
+		We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
 
 Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
-		Currently clothes are just rigged with surface deform.
-		To rig them properly, we need a way to transfer the shape keys from the body to the clothes.
-		This could probably also be done with the help of surface deform, but needs a script and might give poor results.
-		Or ask a developer to add masking to surface deform.
-
+	
 Face
 	Add sneer control
 	Add smile control
-
-	Think about how to add more lower level control for the eyebrows.
+was cheek control
+was
 	Add lattice controls for the head and the eye.
-	Hook up the scale of CTR bones to the bbone scale of deform bones.
+	NEXT RIG Hook up the scale of CTR bones to the bbone scale of deform bones.
+	NEXT RIG Think about how to add more lower level control for the eyebrows.
 
 On release/updates
-	Apply mirror modifier on the body and fix the UV islands where needed.
-	Maybe join the UV layers into one? I don't like having them separate. I'd rather just offset them by 1 UV tile to the right.
+	Set "dev" custom property on the rig to 0 to hide mech layers from the UI.
+	Fix UVs.
 	Make sure Armature modifiers are in the right place in the stack(ie. above SubSurf)
 	Lock object transforms
-	Make sure bones, objects, shapes, and object data are named properlyRNA_DEF_CURVEBONE_UPDATE
-	Make sure bbone display size is consistent
+	Make sure bones, objects, shapes, and object data are named properly.
+	Make sure armature looks decent in all display modes. (no oversized envelopes or bbones, even with bone shapes disabled)
 	Clean up bone shapes collection, maybe make a script to resize bones to a uniform scale and then adjust bone shape settings accordingly so they maintain their display size.
