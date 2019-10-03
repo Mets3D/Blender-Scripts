@@ -198,6 +198,11 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='use_proxy',
 		description='Use Proxy Meshes')
 
+	show_fkik: BoolProperty(
+		name="FK/IK",
+		description="Show FK/IK Switches"
+	)
+
 
 class MetsRigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
@@ -380,59 +385,54 @@ class MetsRigUI_Layers(MetsRigUI):
 			death_row.prop(data, 'layers', index=31, toggle=True, text='Black Box')
 
 class MetsRigUI_IKFK(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_ik"
-	bl_label = "FK/IK Settings"
+	bl_idname = "OBJECT_PT_metsrig_ui_settings"
+	bl_label = "Settings"
 	
 	def draw(self, context):
 		layout = self.layout
-		column = layout.column()
-		rig = context.scene['metsrig_pinned']
-		mets_props = rig.metsrig_properties
-		ikfk_props = rig.pose.bones.get('Properties_IKFK')
-		face_props = rig.pose.bones.get('Properties_Face')
-		
-		# TODO improve the overall organization for all these buttons.
-		
-		### FK/IK Switch Sliders
-		layout.label(text='FK/IK Switches')
 
-		# Spine
+class MetsRigUI_IKFK_Switch(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_ikfk_switch"
+	bl_label = "FK/IK Switch"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		ikfk_props = rig.pose.bones.get('Properties_IKFK')
+
 		layout.row().prop(ikfk_props, '["ik_spine"]', slider=True, text='Spine')
-		
-		# Arms
 		arms_row = layout.row()
 		arms_row.prop(ikfk_props, '["ik_arm_left"]', slider=True, text='Left Arm')
 		arms_row.prop(ikfk_props, '["ik_arm_right"]', slider=True, text='Right Arm')
-		
-		# Legs
 		legs_row = layout.row()
 		legs_row.prop(ikfk_props, '["ik_leg_left"]', slider=True, text='Left Leg')
 		legs_row.prop(ikfk_props, '["ik_leg_right"]', slider=True, text='Right Leg')
 
+class MetsRigUI_IK_Settings(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_ik"
+	bl_label = "IK Settings"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		ikfk_props = rig.pose.bones.get('Properties_IKFK')
+
 		# IK Stretch
-		layout.label(text='IK Stretch')
+		layout.label(text="IK Stretch")
 		layout.row().prop(ikfk_props, '["ik_stretch_spine"]', slider=True, text='Stretchy Spine')
 		layout.row().prop(ikfk_props, '["ik_stretch_arms"]', slider=True, text='Stretchy Arms')
 		layout.row().prop(ikfk_props, '["ik_stretch_legs"]', slider=True, text='Stretchy Legs')
 
 		# IK Hinge
-		layout.label(text='IK Hinge')
+		layout.label(text="IK Hinge")
 		hand_row = layout.row()
 		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_left"]', slider=True, text='Left Hand')
 		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_right"]', slider=True, text='Right Hand')
 		foot_row = layout.row()
 		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_left"]', slider=True, text='Left Foot')
 		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_right"]', slider=True, text='Right Foot')
-		
-		# FK Hinge
-		layout.label(text='FK Hinge')
-		
-		hand_row = layout.row()
-		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_left"]', slider=True, text='Left Arm')
-		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_right"]', slider=True, text='Right Arm')
-		foot_row = layout.row()
-		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_left"]', slider=True, text='Left Leg')
-		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_right"]', slider=True, text='Right Leg')
 
 		# IK Parents
 		layout.label(text='IK Parents')
@@ -451,19 +451,47 @@ class MetsRigUI_IKFK(MetsRigUI):
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_hands"]', slider=True, text='Arms')
 		pole_row.column().prop(ikfk_props, '["ik_pole_follow_feet"]', slider=True, text='Legs')
 
+class MetsRigUI_FK_Settings(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_fk"
+	bl_label = "FK Settings"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		mets_props = rig.metsrig_properties
+		ikfk_props = rig.pose.bones.get('Properties_IKFK')
+		face_props = rig.pose.bones.get('Properties_Face')
+
+		# FK Hinge
+		layout.label(text='FK Hinge')
+		hand_row = layout.row()
+		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_left"]', slider=True, text='Left Arm')
+		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_right"]', slider=True, text='Right Arm')
+		foot_row = layout.row()
+		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_left"]', slider=True, text='Left Leg')
+		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_right"]', slider=True, text='Right Leg')
+
+		# Head settings
 		layout.label(text='Head Settings')
 		layout.row().prop(face_props, '["neck_hinge"]', slider=True, text='Neck Hinge')
-		head_hinge_row = layout.row()
-		head_hinge_row.enabled = face_props["neck_hinge"] != 0
-		head_hinge_row.prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
-		layout.row().prop(face_props, '["head_look"]', slider=True, text='Head Look')
+		layout.row().prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
 		head_parents = ['Root', 'Pelvis', 'Chest']
 		layout.row().prop(face_props, '["head_target_parents"]', slider=True, text='Head Target Parent ['+head_parents[face_props["head_target_parents"]] + "]")
 
-		# Face settings
-		layout.label(text='Face Settings')
-		layout.row().prop(face_props, '["sticky_eyelids"]', text='Sticky Eyelids', slider=True)
-		layout.row().prop(face_props, '["sticky_eyesockets"]', text='Sticky Eyerings', slider=True)
+class MetsRigUI_Face_Settings(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_face"
+	bl_label = "Face Settings"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		face_props = rig.pose.bones.get('Properties_Face')
+
+		# Eyelid settings
+		layout.prop(face_props, '["sticky_eyelids"]', text='Sticky Eyelids', slider=True)
+		layout.prop(face_props, '["sticky_eyesockets"]', text='Sticky Eyerings', slider=True)
 
 class MetsRigUI_Extras(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras"
@@ -476,36 +504,6 @@ class MetsRigUI_Extras(MetsRigUI):
 	
 		layout.row().prop(mets_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
 		layout.row().prop(mets_props, 'use_proxy', text='Use Proxy Meshes', toggle=True)
-
-class MetsRigUI_Extras_Physics(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_extras_physics"
-	bl_label = "Physics"
-	bl_parent_id = "OBJECT_PT_metsrig_ui_extras"
-	
-	def draw_header(self, context):
-		rig = context.scene['metsrig_pinned']
-		mets_props = rig.metsrig_properties
-		layout = self.layout
-		layout.prop(mets_props, "physics_toggle", text="")
-	
-	def draw(self, context):
-		rig = context.scene['metsrig_pinned']
-		mets_props = rig.metsrig_properties
-		layout = self.layout
-		
-		layout.active = mets_props.physics_toggle
-		
-		cache_row = layout.row()
-		cache_row.label(text="Cache: ")
-		cache_row.prop(mets_props, 'physics_cache_start', text="Start")
-		cache_row.prop(mets_props, 'physics_cache_end', text="End")
-		
-		mult_row = layout.row()
-		mult_row.label(text="Apply Speed Multiplier:")
-		mult_row.prop(mets_props, 'physics_speed_multiplier', text="")
-		
-		layout.operator("ptcache.bake_all", text="Bake All Dynamics").bake = True
-		layout.operator("ptcache.free_bake_all", text="Delete All Bakes")
 
 class Link_Button(bpy.types.Operator):
 	"""Open a link in a web browser"""
@@ -550,6 +548,10 @@ classes = (
 	MetsRigUI_Properties, 
 	MetsRigUI_Layers, 
 	MetsRigUI_IKFK, 
+	MetsRigUI_IKFK_Switch, 
+	MetsRigUI_IK_Settings, 
+	MetsRigUI_FK_Settings, 
+	MetsRigUI_Face_Settings, 
 	MetsRigUI_Extras, 
 	Link_Button, 
 	MetsRigUI_Links
