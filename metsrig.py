@@ -1,5 +1,5 @@
-"Version: 2.6"
-"Date: 04/07/19 (Last updated for Alice)"
+"Version: 2.7"
+"Date: 29/09/19 (Last updated for Sombra)"
 
 import bpy
 from bpy.props import *
@@ -85,7 +85,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				return rig
 	
 	@classmethod
-	def pre_depsgraph_update(cls, scene):
+	def pre_depsgraph_update(cls, scene, depsgraph=None):
 		""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
 		for rig in cls.get_rigs():
 			# Grabbing relevant data
@@ -138,7 +138,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				rig.data['update'] = 1
 
 	@classmethod
-	def post_depsgraph_update(cls, scene):
+	def post_depsgraph_update(cls, scene, depsgraph=None):
 		"""Runs after every depsgraph update. If any user input to the rig properties was detected by pre_depsgraph_update(), this will call update_meshes(). """
 		for rig in cls.get_rigs():
 			if(rig.data['update'] == 1):
