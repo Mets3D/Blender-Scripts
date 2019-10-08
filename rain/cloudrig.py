@@ -341,7 +341,7 @@ class MetsRigUI_Properties(MetsRigUI):
 
 class MetsRigUI_Layers(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_layers"
-	bl_label = "Rig Layers"
+	bl_label = "Layers"
 	
 	def draw(self, context):
 		layout = self.layout
@@ -383,10 +383,10 @@ class MetsRigUI_Layers(MetsRigUI):
 			layout.label(text="Head")
 			row = layout.row()
 			row.prop(data, 'layers', index=11, toggle=True, text='Mech')
-			row.prop(data, 'layers', index=11, toggle=True, text='Unlockers')
+			row.prop(data, 'layers', index=12, toggle=True, text='Unlockers')
 			row = layout.row()
 			row.prop(data, 'layers', index=27, toggle=True, text='Deform')
-			row.prop(data, 'layers', index=27, toggle=True, text='Hierarchy')
+			row.prop(data, 'layers', index=28, toggle=True, text='Hierarchy')
 
 			layout.label(text="Other")
 			death_row = layout.row()
@@ -430,35 +430,35 @@ class MetsRigUI_IK_Settings(MetsRigUI):
 
 		# IK Stretch
 		layout.label(text="IK Stretch")
-		layout.row().prop(ikfk_props, '["ik_stretch_spine"]', slider=True, text='Stretchy Spine')
-		layout.row().prop(ikfk_props, '["ik_stretch_arms"]', slider=True, text='Stretchy Arms')
-		layout.row().prop(ikfk_props, '["ik_stretch_legs"]', slider=True, text='Stretchy Legs')
+		layout.prop(ikfk_props, '["ik_stretch_spine"]', slider=True, text='Stretchy Spine')
+		layout.prop(ikfk_props, '["ik_stretch_arms"]',  slider=True, text='Stretchy Arms' )
+		layout.prop(ikfk_props, '["ik_stretch_legs"]',  slider=True, text='Stretchy Legs' )
 
 		# IK Hinge
 		layout.label(text="IK Hinge")
 		hand_row = layout.row()
-		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_left"]', slider=True, text='Left Hand')
-		hand_row.column().prop(ikfk_props, '["ik_hinge_hand_right"]', slider=True, text='Right Hand')
+		hand_row.prop(ikfk_props, '["ik_hinge_hand_left"]',  slider=True, text='Left Hand' )
+		hand_row.prop(ikfk_props, '["ik_hinge_hand_right"]', slider=True, text='Right Hand')
 		foot_row = layout.row()
-		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_left"]', slider=True, text='Left Foot')
-		foot_row.column().prop(ikfk_props, '["ik_hinge_foot_right"]', slider=True, text='Right Foot')
+		foot_row.prop(ikfk_props, '["ik_hinge_foot_left"]',  slider=True, text='Left Foot' )
+		foot_row.prop(ikfk_props, '["ik_hinge_foot_right"]', slider=True, text='Right Foot')
 
 		# IK Parents
 		layout.label(text='IK Parents')
 		arm_parent_row = layout.row()
 		arm_parents = ['Root', 'Pelvis', 'Chest', 'Arm']
-		arm_parent_row.column().prop(ikfk_props, '["ik_parents_arm_left"]', slider=True, text='Left Hand ['+arm_parents[ikfk_props["ik_parents_arm_left"]] + "]")
-		arm_parent_row.column().prop(ikfk_props, '["ik_parents_arm_right"]', slider=True, text='Right Hand ['+arm_parents[ikfk_props["ik_parents_arm_right"]] + "]")
+		arm_parent_row.prop(ikfk_props, '["ik_parents_arm_left"]',  slider=True, text = "Left Hand ["  + arm_parents[ikfk_props["ik_parents_arm_left"]]  + "]")
+		arm_parent_row.prop(ikfk_props, '["ik_parents_arm_right"]', slider=True, text = "Right Hand [" + arm_parents[ikfk_props["ik_parents_arm_right"]] + "]")
 		leg_parent_row = layout.row()
 		leg_parents = ['Root', 'Pelvis', 'Hips', 'Leg']
-		leg_parent_row.column().prop(ikfk_props, '["ik_parents_leg_left"]', slider=True, text='Left Foot ['+leg_parents[ikfk_props["ik_parents_leg_left"]] + "]")
-		leg_parent_row.column().prop(ikfk_props, '["ik_parents_leg_right"]', slider=True, text='Right Foot ['+leg_parents[ikfk_props["ik_parents_leg_right"]] + "]")
+		leg_parent_row.prop(ikfk_props, '["ik_parents_leg_left"]',  slider=True, text = "Left Foot ["  + leg_parents[ikfk_props["ik_parents_leg_left"]]  + "]")
+		leg_parent_row.prop(ikfk_props, '["ik_parents_leg_right"]', slider=True, text = "Right Foot [" + leg_parents[ikfk_props["ik_parents_leg_right"]] + "]")
 
 		# IK Pole Follow
 		layout.label(text='IK Pole Follow')
 		pole_row = layout.row()
-		pole_row.column().prop(ikfk_props, '["ik_pole_follow_hands"]', slider=True, text='Arms')
-		pole_row.column().prop(ikfk_props, '["ik_pole_follow_feet"]', slider=True, text='Legs')
+		pole_row.prop(ikfk_props, '["ik_pole_follow_hands"]', slider=True, text='Arms')
+		pole_row.prop(ikfk_props, '["ik_pole_follow_feet"]',  slider=True, text='Legs')
 
 class MetsRigUI_FK_Settings(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_fk"
@@ -475,18 +475,16 @@ class MetsRigUI_FK_Settings(MetsRigUI):
 		# FK Hinge
 		layout.label(text='FK Hinge')
 		hand_row = layout.row()
-		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_left"]', slider=True, text='Left Arm')
-		hand_row.column().prop(ikfk_props, '["fk_hinge_arm_right"]', slider=True, text='Right Arm')
+		hand_row.prop(ikfk_props, '["fk_hinge_arm_left"]',  slider=True, text='Left Arm' )
+		hand_row.prop(ikfk_props, '["fk_hinge_arm_right"]', slider=True, text='Right Arm')
 		foot_row = layout.row()
-		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_left"]', slider=True, text='Left Leg')
-		foot_row.column().prop(ikfk_props, '["fk_hinge_leg_right"]', slider=True, text='Right Leg')
+		foot_row.prop(ikfk_props, '["fk_hinge_leg_left"]',  slider=True, text='Left Leg' )
+		foot_row.prop(ikfk_props, '["fk_hinge_leg_right"]', slider=True, text='Right Leg')
 
 		# Head settings
-		layout.label(text='Head Settings')
-		layout.row().prop(face_props, '["neck_hinge"]', slider=True, text='Neck Hinge')
-		layout.row().prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
-		head_parents = ['Root', 'Pelvis', 'Chest']
-		layout.row().prop(face_props, '["head_target_parents"]', slider=True, text='Head Target Parent ['+head_parents[face_props["head_target_parents"]] + "]")
+		layout.separator()
+		layout.prop(face_props, '["neck_hinge"]', slider=True, text='Neck Hinge')
+		layout.prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
 
 class MetsRigUI_Face_Settings(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_face"
@@ -499,8 +497,30 @@ class MetsRigUI_Face_Settings(MetsRigUI):
 		face_props = rig.pose.bones.get('Properties_Face')
 
 		# Eyelid settings
-		layout.prop(face_props, '["sticky_eyelids"]', text='Sticky Eyelids', slider=True)
+		layout.prop(face_props, '["sticky_eyelids"]',    text='Sticky Eyelids',  slider=True)
 		layout.prop(face_props, '["sticky_eyesockets"]', text='Sticky Eyerings', slider=True)
+
+		layout.separator()
+		# Mouth settings
+		layout.prop(face_props, '["teeth_follow_mouth"]', text='Teeth Follow Mouth', slider=True)
+
+class MetsRigUI_Misc_Settings(MetsRigUI):
+	bl_idname = "OBJECT_PT_metsrig_ui_misc"
+	bl_label = "Misc"
+	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.scene['metsrig_pinned']
+		mets_props = rig.metsrig_properties
+		ikfk_props = rig.pose.bones.get('Properties_IKFK')
+		face_props = rig.pose.bones.get('Properties_Face')
+
+		row = layout.row()
+		parents = ['Root', 'Hand']
+		layout.label(text="Grab Parents")
+		row.prop(ikfk_props, '["grab_parent_left"]',  text="Left Hand [" + parents[ikfk_props["grab_parent_left"]] + "]", slider=True)
+		row.prop(ikfk_props, '["grab_parent_right"]',  text="Right Hand [" + parents[ikfk_props["grab_parent_right"]] + "]", slider=True)
 
 class MetsRigUI_Extras(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras"
@@ -552,18 +572,19 @@ class MetsRigUI_Links(MetsRigUI):
 		chat_button.url = self.url_blender_chat
 
 classes = (
-	MetsRig_Properties, 
+	MetsRig_Properties,
 	MetsRig_BoolProperties,
-	MetsRigUI_Properties, 
-	MetsRigUI_Layers, 
-	MetsRigUI_IKFK, 
-	MetsRigUI_IKFK_Switch, 
-	MetsRigUI_IK_Settings, 
-	MetsRigUI_FK_Settings, 
-	MetsRigUI_Face_Settings, 
-	MetsRigUI_Extras, 
-	Link_Button, 
-	MetsRigUI_Links
+	MetsRigUI_Properties,
+	MetsRigUI_Layers,
+	MetsRigUI_IKFK,
+	MetsRigUI_IKFK_Switch,
+	MetsRigUI_IK_Settings,
+	MetsRigUI_FK_Settings,
+	MetsRigUI_Face_Settings,
+	MetsRigUI_Misc_Settings,
+	MetsRigUI_Extras,
+	Link_Button,
+	MetsRigUI_Links,
 )
 
 from bpy.utils import register_class
