@@ -1,3 +1,5 @@
+import bpy
+
 class ID:
 	def __init__(self):
 		self.name = ""
@@ -6,8 +8,9 @@ class ID:
 	def __str__(self):
 		return self.name
 
-	def make_real(self, target):
+	def make_real(self, target, skip=[]):
 		for prop in self.__dict__.keys():
 			if hasattr(target, prop):
-				if( type(getattr(prop) == bpy.prop.collection)): continue
+				if "bpy_prop_" in str(type(getattr(target, prop))) : continue
+				if prop in skip: continue
 				setattr(target, prop, getattr(self, prop))

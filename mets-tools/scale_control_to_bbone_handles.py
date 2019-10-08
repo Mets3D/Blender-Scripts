@@ -20,7 +20,29 @@ class Setup_BBone_Scale_Controls(bpy.types.Operator):
 					and b.bbone_handle_type_end == 'TANGENT'
 					and b.bbone_custom_handle_start
 					and b.bbone_custom_handle_end):
-				pass
+				my_d = Driver()
+				my_var = my_d.make_var("var")
+				my_var.type = 'TRANSFORMS'
+				my_d.expression = "var"
+
+				tgt = my_var.targets[0]
+				tgt.id = context.object
+				tgt.transform_type = 'SCALE_X'
+				tgt.transform_space = 'WORLD_SPACE'
+				tgt.bone_target = b.bbone_custom_handle_start.name
+				my_d.make_real(pb, "bbone_scaleinx")
+				
+				tgt.transform_type = 'SCALE_Z'
+				my_d.make_real(pb, "bbone_scaleiny")
+				
+				tgt.bone_target = b.bbone_custom_handle_end.name
+				my_d.make_real(pb, "bbone_scaleouty")
+
+				tgt.transform_type = 'SCALE_X'
+				my_d.make_real(pb, "bbone_scaleoutx")
+
+			else:
+				return {'CANCELLED'}
 
 		return {'FINISHED'}
 
