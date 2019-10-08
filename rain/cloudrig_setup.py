@@ -266,7 +266,7 @@ def find_nearby_bones(search_co, dist, ebones=None):
 	for eb in armature.data.edit_bones:	# TODO: Could use data.bones instead so we don't have to be in edit mode?
 		if(ebones and eb not in ebones): continue
 		if( (eb.head - search_co).length < dist):
-			ret.append(b)
+			ret.append(eb)
 	return ret
 
 def get_chain(bone, ret=[]):
@@ -388,7 +388,7 @@ def face_bbone_setup(armature):
 
 	bone_group = "Face: DEF - Bendy Deform Bones ###"	# TODO Hardcoded group name, meh.
 
-	pbones = [b for b in armature.pose.bones if b.bone_group and b.bone_group.name==bone_group]
+	pbones = [b.name for b in armature.pose.bones if b.bone_group and b.bone_group.name==bone_group]
 	ebones = [eb for eb in armature.data.edit_bones if eb.name in pbones]
 
 	for eb in ebones:
@@ -561,8 +561,6 @@ def spine_bbone_setup(armature):
 	clav_parent = armature.data.edit_bones.get(last_fk_bone_name)
 	clavicle_l.parent = clavicle_r.parent = neck.parent = adjuster.parent = clav_parent
 
-	
-	
 def run():
 	# Make sure only passed armature is in edit mode.	# TODO: This should actually be done further outside of this function. So by the time this funciton is called, we already want to assume that we have an armature in edit mode.
 	armature = bpy.context.object
@@ -570,8 +568,10 @@ def run():
 	assert armature.type=='ARMATURE', "Active object must be an armature."
 	bpy.ops.object.mode_set(mode='EDIT')
 
-	#face_bbone_setup(armature)
-	spine_bbone_setup(armature)
+	print("start")
+	face_bbone_setup(armature)
+	bpy.ops.object.mode_set(mode='EDIT')
+	#spine_bbone_setup(armature)
 	# FK Controls should have specific names. This is nice to do outside of the spine setup function because then while we're in there, we can rely on numbers at the end of the bones.
 	# TODO: However, it has to be done after the bones are created, because otherwise parent names (which have to be stored as strings...) get messed up.
 	# Alternatively, maybe parent strings should be BoneData instances instead. Or let them be either. I like this.
@@ -579,6 +579,6 @@ def run():
 	fk_spine_names = ["Spine", "Ribcage", "Chest"]
 	for i, name in enumerate(fk_spine_names):
 		fk_bone_datas[i].name = name"""
-	bpy.ops.object.mode_set(mode=org_mode)
+	#bpy.ops.object.mode_set(mode=org_mode)
 
 run()
