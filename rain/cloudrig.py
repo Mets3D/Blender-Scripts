@@ -516,11 +516,16 @@ class MetsRigUI_Misc_Settings(MetsRigUI):
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 		face_props = rig.pose.bones.get('Properties_Face')
 
-		row = layout.row()
-		parents = ['Root', 'Hand']
 		layout.label(text="Grab Parents")
-		row.prop(ikfk_props, '["grab_parent_left"]',  text="Left Hand [" + parents[ikfk_props["grab_parent_left"]] + "]", slider=True)
-		row.prop(ikfk_props, '["grab_parent_right"]',  text="Right Hand [" + parents[ikfk_props["grab_parent_right"]] + "]", slider=True)
+		row = layout.row()
+		grab_parents = ['Root', 'Hand']
+		row.prop(ikfk_props, '["grab_parent_left"]',  text="Left Hand [" + grab_parents[ikfk_props["grab_parent_left"]] + "]", slider=True)
+		row.prop(ikfk_props, '["grab_parent_right"]',  text="Right Hand [" + grab_parents[ikfk_props["grab_parent_right"]] + "]", slider=True)
+
+		layout.label(text="Eye Target Parent")
+		row = layout.row()
+		eye_parents = ['Root', 'Torso', 'Torso_Loc', 'Head']
+		row.prop(ikfk_props, '["eye_target_parent"]',  text=eye_parents[ikfk_props["eye_target_parent"]], slider=True)
 
 class MetsRigUI_Extras(MetsRigUI):
 	bl_idname = "OBJECT_PT_metsrig_ui_extras"

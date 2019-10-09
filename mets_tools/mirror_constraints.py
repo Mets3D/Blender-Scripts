@@ -105,7 +105,8 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 	if(hasattr(opp_c, 'subtarget')):	# Flip sub-target (bone)
 		opp_c.subtarget = utils.flip_name(c.subtarget)
 	
-	if(c.type=='ACTION' and b != opp_b):	# Need to mirror the curves in the action to the opposite bone.
+	# Need to mirror the curves in the action to the opposite bone.
+	if(c.type=='ACTION' and b != opp_b):
 		action = c.action
 		curves = []
 		for cur in action.fcurves:
@@ -115,12 +116,15 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 			# Create opposite curves
 			opp_data_path = cur.data_path.replace(b.name, opp_b.name)
 			opp_cur = action.fcurves.find(opp_data_path, index=cur.array_index)
+			
 			if(not opp_cur):
 				opp_cur = action.fcurves.new(opp_data_path, index=cur.array_index, action_group=opp_b.name)
 			utils.copy_attributes(cur, opp_cur, skip=["data_path", "group"])
-			# Wipe any existing keyframes
+			
+			# If the other curve already existed, wipe any existing keyframes
 			for kf in reversed(opp_cur.keyframe_points):
 				opp_cur.keyframe_points.remove(kf)
+			
 			# Copy keyframes
 			for kf in cur.keyframe_points:
 				opp_kf = opp_cur.keyframe_points.insert(kf.co[0], kf.co[1])
