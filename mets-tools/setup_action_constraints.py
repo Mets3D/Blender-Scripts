@@ -134,9 +134,8 @@ class SetupActionConstraints(bpy.types.Operator):
 							or self.delete):				# or the user wants to delete it.
 							b.constraints.remove(c)
 							continue
-					# If the constraint is fine, but there is no associated keyframe
-					if(c.name == constraint_name):
-						if(b not in bones):
+						# If the name is fine, but there is no associated keyframe
+						elif(b not in bones):
 							b.constraints.remove(c)
 							continue
 					# Any action constraint with no action
@@ -150,7 +149,11 @@ class SetupActionConstraints(bpy.types.Operator):
 		return { 'FINISHED' }
 
 	def invoke(self, context, event):
-		# When the operation is invoked, set the operator's target and action based on the context. If they are found, find the first bone with this action constraint, and pre-fill the operator settings based on that constraint.
+		# When the operation is invoked, set the operator's target and action based on the context. 
+		# If they are found, find the first bone with this action constraint, 
+		# and pre-fill the operator settings based on that constraint.
+		# TODO: If no constraint is found, put the active bone as the target.
+		
 		wm = context.window_manager
 		self.target = context.object.name
 		
