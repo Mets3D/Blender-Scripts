@@ -13,7 +13,7 @@ Todo: Elaborate on how each of these goals would be achieved.
 
 ## Who owns the nodegraph? ##
 Each bone has one nodegraph.
-This nodegraph has a singule output node, similar to material nodegraphs. This is the only node that actually affects the scene. Every other node is simply for gathering and processing information.
+This nodegraph has a singular output node, similar to material nodegraphs. This is the only node that actually affects the scene. Every other node is simply for gathering and processing information.
 
 The output node would have pins for as many bone properties as we can support.
 The most important and most complex of these properties is the bone's transforms.
@@ -24,14 +24,13 @@ Of course we don't want the output node to be a monstrosity, so most of these th
 Only the properties listed in the output node, on this one bone.
 
 How is it determined whether users still have control over a property or not? Most importantly, transforms.
-
     * For transforms *
     Solution 1: Give the nodegraph access to the bone's pose transforms(transformations performed by the user), and then the author of the node graph can choose to use those transforms in some way or not. This would determine if attempting to move the bone would do anything or not. It would also allow for weird behaviour, like making it so that attempting to move the bone to the left, will move it to the right.
     Solution 2: A setting, like a checkbox, determining whether the bone can be controlled further after the final outputted transforms of the node graph or not.
 
     For single values(int/float), we have similar options as for transforms, but the weird behavior when changing values (Soluion 1) can be even weirder, since we could end up sliding a slider to the left and then have its value increase.
     But on the other hand, Solution 2 would mean adding a checkbox/setting for every single property... and we would have a problem where resetting a property to its "default value"(usually 0 or 1) would not actually do so. For example, if the nodegraph is outputting the value 2.5 to a property, and the user increased it to 5, they might want to set it to 0 by entering 0, but it would instead go back to 2.5.
-    That's fine, if the user enters a number, we would calculate the "real" user-inputted value relative to the nodegraph output. So, if the nodegraph output is 2.5, and the user enters 0, we would calculate the "true" user input to be 0-2.5, or -2.5. And so the final value would be 0. If the user wanted to truly clear their input, they would have to it differently than manually entering the default value and pressing enter. There would probably be a right click->reset to default.
+    That's fine, if the user enters a number, we would calculate the "real" user-inputted value relative to the nodegraph output. So, if the nodegraph output is 2.5, and the user enters 0, we would calculate the "true" user input to be 0-2.5, or -2.5. And so the final value would be 0. If the user wanted to truly clear their input, they would have to do it differently than manually entering the default value and pressing enter. There would probably be a right click->reset to default.
 
     For booleans, we have similar concerns.
 
@@ -39,5 +38,11 @@ How is it determined whether users still have control over a property or not? Mo
     A UX workaround to this that I can think of, is that when the user clicks a field that is controlled by the node graph, instead of just seeing "0", and being able to change that "0" into anything, the user should see the current result of the nodegraph grayed out and a "+" symbol, eg. "2.5+" And the user cannot interact with this text, only enter things after it.
     But again, this assumes that the nodegraph adds the user input to it at the end of its calculations, which doesn't have to be the case. Or I guess based on these facts, Solution 2 is going to be the play afterall.
     But that would mean the bone can't be modified by itself? For example, it couldn't rotate when being moved? That's no good.
+
+    Solution 3:
+    There needs to be a separation between the RNA value of a property, and the version of the property which has the nodetree's output applied to it.
+    For example, when a nodetree causes a bone to move, this would not be reflected by the numbers in the interface. Those, just like now, would only contain changes inputted directly by the user. The nodetree can then choose to use that user input or not, in any way.
+    This is how constraints already work. Not Drivers, though. But this should work for floats and booleans. Sure, confusing behaviour can be created by a rig author, eg. toggle buttons that don't do anything, or toggle buttons that are hooked up to completely unrelated functionality. But that can already be done by Drivers. Just don't do it. :)
+
 
 Properties controlled by the nodegraph could be indicated by a color, like how drivers are indicated by purple.
