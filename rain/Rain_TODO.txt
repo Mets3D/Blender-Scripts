@@ -56,7 +56,36 @@ Body/Limbs
 Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
 	
+
+Stop saving latest selected metsrig into a scene custom property because it will make Nacho commit sudoku
+
+
 Face
+	DONE Make the eyebrow master behave more like a parent. Get rid of rotation-based action stuff. Middle eyebrow is not moving with the masters right now.
+	Similar thing for the eye ring. Hide the current action-based thing away in case it will be useful, but possibly delete in the future.
+	For the eyelid, let it rotate along the forward axis. The CTR2/CONST bones should have a Limit Distance to stick it to the eye, and then an action should "rotate the eyelids".
+	Make the tweak bones for the eyebrow, eyering and eyelid bigger, and move them to a more prominent layer.
+	Slap some simple shape keys in there to get the nose wrinkles and better eyebrow shapes, at least when moved with the master control.
+
+	Eyering shouldn't be affected by the eyelid (turn off automatic tangent functionality on those columns of bbones, I guess?)
+	When the eyering and eyebrow are pulled down but the eyelid isn't, make sure it makes a clean shape.
+
+	When eyebrows are pulled down, let the corners resist a little bit so the eyebrow makes a nicer shape when pulled down.
+	The outer corner of the eyebrow should be able to go further before starting to break the mesh.
+
+	Try to see if eyebrow CTR can behave a bit better when rotated, but not high priority.
+	Make the eyebrow CTR bones aligned with the geometry just like we did on the lips.
+	Make the eyebrow master as well as the CTR bones tilted a bit, such that when they are moved on their local up axis, they behave according to the rule of thumb that says the eyebrows never move straight up or down. They should be tilted on both left-right and forward-back axes.
+
+	Lattice controls should pivot from the center of the face(near lower eyelid)
+	Top/Bottom latice controls should have more influence
+
+	We want lattice-like controls with bones, so we can get similar behavior while still letting the controls not become disconnected.
+	There would be two of these, one for the upper and one for the lower face. The upper would not affect the nose but the lower would.
+	There should be a CTR- bone for the nose bridge.
+
+
+
 	Add sneer control
 	Add smile control
 was cheek control

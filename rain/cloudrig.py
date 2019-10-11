@@ -16,15 +16,6 @@ def get_rigs():
 		ret = [None]
 	return ret
 
-def pre_depsgraph_update(scene):
-	""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
-
-	# The pinned rig should store the most recently selected metsrig.
-	if(bpy.context.object in get_rigs()):
-		scene['metsrig_pinned'] = bpy.context.object
-	if(scene['metsrig_pinned'] == None):
-		scene['metsrig_pinned'] = get_rigs()[0] # Can be None, only when no metsrigs are in the scene.
-
 class MetsRig_BoolProperties(bpy.types.PropertyGroup):
 	""" Store a BoolProperty referencing an outfit/character property whose min==0 and max==1.
 		This BoolProperty will be used to display the property as a toggle button in the UI.
@@ -209,8 +200,8 @@ class MetsRigUI(bpy.types.Panel):
 	
 	@classmethod
 	def poll(cls, context):
-		return 'metsrig_pinned' in bpy.context.scene and bpy.context.scene['metsrig_pinned'] != None
-	
+		return 'metsrig' in context.object
+
 	def draw(self, context):
 		layout = self.layout
 
@@ -223,7 +214,7 @@ class MetsRigUI_Properties(MetsRigUI):
 		if(not super().poll(context)):
 			return False
 		# Only display this panel if there is either an outfit with options, multiple outfits, or multiple characters.
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		if(not rig): return False
 		mets_props = rig.metsrig_properties
 		bool_props = rig.metsrig_boolproperties
@@ -244,7 +235,7 @@ class MetsRigUI_Properties(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		
 		self.bl_label = rig.name
 
@@ -345,7 +336,7 @@ class MetsRigUI_Layers(MetsRigUI):
 	
 	def draw(self, context):
 		layout = self.layout
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		data = rig.data
 		
 		row_ik = layout.row()
@@ -407,7 +398,7 @@ class MetsRigUI_IKFK_Switch(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 
 		layout.row().prop(ikfk_props, '["ik_spine"]', slider=True, text='Spine')
@@ -425,7 +416,7 @@ class MetsRigUI_IK_Settings(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 
 		# IK Stretch
@@ -467,7 +458,7 @@ class MetsRigUI_FK_Settings(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		mets_props = rig.metsrig_properties
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 		face_props = rig.pose.bones.get('Properties_Face')
@@ -493,7 +484,7 @@ class MetsRigUI_Face_Settings(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		face_props = rig.pose.bones.get('Properties_Face')
 
 		# Eyelid settings
@@ -511,7 +502,7 @@ class MetsRigUI_Misc_Settings(MetsRigUI):
 
 	def draw(self, context):
 		layout = self.layout
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		mets_props = rig.metsrig_properties
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 		face_props = rig.pose.bones.get('Properties_Face')
@@ -533,7 +524,7 @@ class MetsRigUI_Extras(MetsRigUI):
 	
 	def draw(self, context):
 		layout = self.layout
-		rig = context.scene['metsrig_pinned']
+		rig = context.object
 		mets_props = rig.metsrig_properties
 	
 		layout.row().prop(mets_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
@@ -598,5 +589,3 @@ for c in classes:
 
 bpy.types.Object.metsrig_properties = bpy.props.PointerProperty(type=MetsRig_Properties)
 bpy.types.Object.metsrig_boolproperties = bpy.props.CollectionProperty(type=MetsRig_BoolProperties)
-
-bpy.app.handlers.depsgraph_update_pre.append(pre_depsgraph_update)

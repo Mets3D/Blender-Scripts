@@ -8,20 +8,22 @@ These things don't have an undo step it seems:
 	Clear Pose Constraints operator
     
 Big things:
-- Constraints as nodes, or in general a node-based rigging system, which can still be abstracted by the old constraint interface.
-    - I want to access the result of a constraint and do maths on it, without actually applying that result to my transforms. I guess that's pretty fundamental and may be obvious, but there you go.
-    - In this setting it might not make sense to refere to these pieces of logic as "constraints" anymore. They are more like Solvers. You ask them what transformation needs to be performed on a bone to achieve a goal, and they give you a result.
-    - The way they arrive at this result also doesn't have to be a black box. There could be atomic nodes that let you do simple vector, matrix and quaternion maths, and these Solver nodes could be built out of these atomic nodes. The Solver nodes would basically just be pre-created node groups.
-    - I can think of very few things that would need special atomic nodes, like IK and maybe Shrinkwrap.
+- Constraints as nodes(Solver nodes), or in general a node-based rigging system, which can still be abstracted by the old constraint interface.
+    - Regular parenting relationship would be a part of this node tree.
+    - I guess this would mean the output of the node tree can't be in Local Space, but it has to be in Pose Space? Not sure what's best here, maybe it should be an option.
+    - Result of a constraint node doesn't have to be applied to the final transformation, it can just be used in some maths, or it can be partially applied to the transform.
+    - The way they arrive at this result also doesn't have to be a black box. There could be atomic nodes that let you do simple vector, matrix and quaternion maths, and these Solver nodes could be built out of these atomic nodes. The Solver nodes would basically just be pre-created node groups, based on logic currently present in constraints.c.
+    - Some things might need special atomic nodes, like IK and Armature constraint.
     - Physics bones?
+    - What space is the output of this node tree in? Pose space, right?
 
-- Granuralize(that's a word) bone transforms further in the dependency graph. Two bones should be able to aim at each other without a dependency cycle, since only their rotation is dependent on their location. But as far as they're concerned right now, their transforms are dependent on each other's transforms.
+- Granuralize bone transforms further in the dependency graph. Two bones should be able to aim at each other without a dependency cycle, since only their rotation is dependent on their location. But as far as they're concerned right now, their transforms are dependent on each other's transforms.
 - Bone parenting should no longer strictly imply any sort of transformational relationship. The purpose of parenting bones would be reduced to purely organizational and 3rd party software compatibility purpose (From a data perspective, NOT from a user perspective). As far as the depsgraph should be concerned, a child is no longer guaranteed to be dependent on its parent.
         - This is because all parent-induced transformations should become explicit. This is already sort of the case, in a backwards way, via the "Inherit Location/Rotation/Scale" checkboxes. The behavior of these checkboxes would be replaced by nodes, which are set up automatically when a user parents a bone, as long as the "use_nodes" option on the bone is disabled, which it would be by default.
 
 - Deprecate armature layers!
 
-- Armatures should maintain a list of objects that they deform. Is it possible?
+- Armatures should maintain a list of objects that they deform.
 - Deprecate armature layers and bone groups and replace with a new system.
 
 - Combining shape keys with a node system (I vaguely know what I mean by this but not really - think hundreds of corrective shape keys interacting with each other. It's currently set up with a bunch of drivers and it's super finicky.)
@@ -52,6 +54,7 @@ Medium things:
     Shift + Left Mouse Button - paint Blur
 
 Small things:
+- When deleting an object, there's no need to preserve references to it in bone shapes.
 - When deleting from a list like vertex groups or shape keys, the search functionality is ignored.
     - We can delete things that are not displayed because of the search
     - When deleting something, the active element doesn't become the next thing in the search, but the next thing in the entire list. Fixing this fixes the above issue.
