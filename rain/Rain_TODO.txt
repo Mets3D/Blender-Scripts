@@ -34,6 +34,13 @@ Week 7-8:
 	- Ready to show to the world....??
 
 
+
+
+I should make an operator that cleans up "invalid" drivers, such that:
+	- Re-enter its expression to update it.
+	- Check if it's invalid because the targetted bone or constraint doesn't exist. Print to console accordingly.
+	- baaaaaa but this stuff has to be done manually anyways!
+
 I should make an addon to help the editing of shape keys and weights in any order.
 	Let me weight paint after saving the geometry of a mesh with a certain shape key, then have an option to re-adjust the shape key with the new weights to give the same shape.
 		It would be best if this could run on every brush stroke, but I guess that won't be possible.
@@ -51,8 +58,12 @@ Body/Limbs
 		We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
 
 Clothes
-	MEDIUM Come up with something to make the shirt not look glued to her skin.
 	HIGH Write a script to transfer shape keys from base mesh to the clothes with Surface Deform modifier. Also need to copy drivers, and then clean up weights and shape keys.
+	MEDIUM Come up with something to make the shirt not look glued to her skin.
+
+Scale propagation
+	Knee and shoulder deform correctives need to be replaced by shape keys.
+	Teeth need Copy Scale constraints just like face deform bones. Make sure this is the first constraint in the stack.
 
 Face
 	DONE Make the eyebrow master behave more like a parent. Get rid of rotation-based action stuff. Middle eyebrow is not moving with the masters right now.
@@ -62,43 +73,39 @@ Face
 	DONE Make lower eyering behave more parent-like than action-like, same as we did with the upper eyering.
 	DONE Make the tweak bones for the eyebrow, eyering and eyelid bigger, and move them to a more prominent layer.
 	
+	DONE There should be a CTR- bone for the nose bridge.
+
 	DONE When eyebrows are pulled down, let the corners resist a little bit so the eyebrow makes a nicer shape when pulled down.
 	
 	DONE Eyering shouldn't be affected by the eyelid (turn off automatic tangent functionality on those columns of bbones, I guess?)
 	
-	>>>When the eyering and eyebrow are pulled down but the eyelid isn't, make sure it makes a clean shape.
-	>>>The outer corner of the eyebrow should be able to go further before starting to break the mesh.
-		I think this is actually a misinterpretation of the problem mentioned before it.
-			Still left TODO on this: Any bones that are translated by actions should have CONST- bones (outer eyebrow), eyering should be moved mainly by the master, and then everything should be mirrored.
-
-	Lattice controls should pivot from the center of the face(near lower eyelid)
-	Top/Bottom latice controls should have more influence
-
-	Try to see if eyebrow CTR can behave a bit better when rotated, but not high priority.
+	DONE When the eyering and eyebrow are pulled down but the eyelid isn't, make sure it makes a clean shape.
+	
 	DONE Make the eyebrow CTR bones aligned with the geometry just like we did on the lips.
 	DONE Make the eyebrow master as well as the CTR bones tilted a bit, such that when they are moved on their local up axis, they behave according to the rule of thumb that says the eyebrows never move straight up or down. They should be tilted on both left-right and forward-back axes.
+	LOW Try to see if eyebrow CTR can behave a bit better when rotated, but not high priority.
+	
+	DONE Lattice controls should pivot from the center of the face(near lower eyelid)
+	DONE Top/Bottom latice controls should have more influence
+	
+	We want lattice-like controls with bones, so we can get similar behavior while still letting the controls not become disconnected.
+	There would be two of these, one for the upper and one for the lower face. 
+		The upper would not affect the nose but the lower would.
+	Add lattice and lattice-like master bone controls for the eye.
 	
 	Slap some simple shape keys in there to get the nose wrinkles and better eyebrow shapes, at least when moved with the master control.
 
-	We want lattice-like controls with bones, so we can get similar behavior while still letting the controls not become disconnected.
-	There would be two of these, one for the upper and one for the lower face. The upper would not affect the nose but the lower would.
-	There should be a CTR- bone for the nose bridge.
-
-
 	Improve visuals of CTR2-Nose_Main (make a shape, make it yellow, rename to MSTR-Nose, make it orient with the nose with a DSP- bone)
 
-
 	Add sneer control?
-
-	LOW 
-	
-	Add lattice and lattice-like master bone controls for the eye.
-
+	MSTR-Eyering_Upper is an exposed control with a translating Action constraint. Needs a CONST- bone or someone to fix that bug.
 
 	NEXT RIG Hook up the scale of CTR bones to the bbone scale of deform bones.
 	NEXT RIG Think about how to add more lower level control for the eyebrows.
 
 On release/updates
+	Find constraints that are disabled and remove them.
+	Make sure no invalid constraints or drivers exist (and driver is not showing any warnings of any kind)
 	Make script to nuke unnecessary curves in actions (performance boost).
 	Set "dev" custom property on the rig to 0 to hide mech layers from the UI.
 	Fix UVs if they weren't already?

@@ -160,6 +160,7 @@ class SetupActionConstraints(bpy.types.Operator):
 		self.target = context.object.name
 		
 		action = context.object.animation_data.action
+		assert action, "No active action on the active object. Select an Action in the Dope Sheet->Action Editor."
 		self.action = action.name
 
 		if(action and context.object.type=='ARMATURE'):
