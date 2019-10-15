@@ -32,9 +32,6 @@ Week 7-8:
 	- Rigging the clothes (this will be a bit tricky, since we can't transfer shape keys between meshes easily... I expect some unique problems...)
 	- Final cleanup, making sure everything is consistently named, organized, WORKS, etc.
 	- Ready to show to the world....??
-	
-
-
 
 
 I should make an addon to help the editing of shape keys and weights in any order.
@@ -55,50 +52,58 @@ Body/Limbs
 
 Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
-	
-
-Stop saving latest selected metsrig into a scene custom property because it will make Nacho commit sudoku
-
+	HIGH Write a script to transfer shape keys from base mesh to the clothes with Surface Deform modifier. Also need to copy drivers, and then clean up weights and shape keys.
 
 Face
 	DONE Make the eyebrow master behave more like a parent. Get rid of rotation-based action stuff. Middle eyebrow is not moving with the masters right now.
-	Similar thing for the eye ring. Hide the current action-based thing away in case it will be useful, but possibly delete in the future.
-	For the eyelid, let it rotate along the forward axis. The CTR2/CONST bones should have a Limit Distance to stick it to the eye, and then an action should "rotate the eyelids".
-	Make the tweak bones for the eyebrow, eyering and eyelid bigger, and move them to a more prominent layer.
-	Slap some simple shape keys in there to get the nose wrinkles and better eyebrow shapes, at least when moved with the master control.
-
-	Eyering shouldn't be affected by the eyelid (turn off automatic tangent functionality on those columns of bbones, I guess?)
-	When the eyering and eyebrow are pulled down but the eyelid isn't, make sure it makes a clean shape.
-
-	When eyebrows are pulled down, let the corners resist a little bit so the eyebrow makes a nicer shape when pulled down.
-	The outer corner of the eyebrow should be able to go further before starting to break the mesh.
-
-	Try to see if eyebrow CTR can behave a bit better when rotated, but not high priority.
-	Make the eyebrow CTR bones aligned with the geometry just like we did on the lips.
-	Make the eyebrow master as well as the CTR bones tilted a bit, such that when they are moved on their local up axis, they behave according to the rule of thumb that says the eyebrows never move straight up or down. They should be tilted on both left-right and forward-back axes.
+	DONE but I'm not sure if it's perfect?
+		DONE Similar thing for the eye ring. Hide the current action-based thing away in case it will be useful, but possibly delete in the future.
+	DONE For the eyelids, let it rotate along the forward axis. The CTR2/CONST bones should have a Limit Distance to stick it to the eye, and then an action should "rotate the eyelids".
+	DONE Make lower eyering behave more parent-like than action-like, same as we did with the upper eyering.
+	DONE Make the tweak bones for the eyebrow, eyering and eyelid bigger, and move them to a more prominent layer.
+	
+	DONE When eyebrows are pulled down, let the corners resist a little bit so the eyebrow makes a nicer shape when pulled down.
+	
+	DONE Eyering shouldn't be affected by the eyelid (turn off automatic tangent functionality on those columns of bbones, I guess?)
+	
+	>>>When the eyering and eyebrow are pulled down but the eyelid isn't, make sure it makes a clean shape.
+	>>>The outer corner of the eyebrow should be able to go further before starting to break the mesh.
+		I think this is actually a misinterpretation of the problem mentioned before it.
+			Still left TODO on this: Any bones that are translated by actions should have CONST- bones (outer eyebrow), eyering should be moved mainly by the master, and then everything should be mirrored.
 
 	Lattice controls should pivot from the center of the face(near lower eyelid)
 	Top/Bottom latice controls should have more influence
+
+	Try to see if eyebrow CTR can behave a bit better when rotated, but not high priority.
+	DONE Make the eyebrow CTR bones aligned with the geometry just like we did on the lips.
+	DONE Make the eyebrow master as well as the CTR bones tilted a bit, such that when they are moved on their local up axis, they behave according to the rule of thumb that says the eyebrows never move straight up or down. They should be tilted on both left-right and forward-back axes.
+	
+	Slap some simple shape keys in there to get the nose wrinkles and better eyebrow shapes, at least when moved with the master control.
 
 	We want lattice-like controls with bones, so we can get similar behavior while still letting the controls not become disconnected.
 	There would be two of these, one for the upper and one for the lower face. The upper would not affect the nose but the lower would.
 	There should be a CTR- bone for the nose bridge.
 
 
+	Improve visuals of CTR2-Nose_Main (make a shape, make it yellow, rename to MSTR-Nose, make it orient with the nose with a DSP- bone)
 
-	Add sneer control
-	Add smile control
-was cheek control
-was
-	Add lattice controls for the head and the eye.
+
+	Add sneer control?
+
+	LOW 
+	
+	Add lattice and lattice-like master bone controls for the eye.
+
+
 	NEXT RIG Hook up the scale of CTR bones to the bbone scale of deform bones.
 	NEXT RIG Think about how to add more lower level control for the eyebrows.
 
 On release/updates
+	Make script to nuke unnecessary curves in actions (performance boost).
 	Set "dev" custom property on the rig to 0 to hide mech layers from the UI.
-	Fix UVs.
+	Fix UVs if they weren't already?
 	Make sure Armature modifiers are in the right place in the stack(ie. above SubSurf)
-	Lock object transforms
+	Lock object transforms? Disable selectability?
 	Make sure bones, objects, shapes, and object data are named properly.
 	Make sure armature looks decent in all display modes. (no oversized envelopes or bbones, even with bone shapes disabled)
 	Clean up bone shapes collection, maybe make a script to resize bones to a uniform scale and then adjust bone shape settings accordingly so they maintain their display size.

@@ -167,8 +167,9 @@ class SetupActionConstraints(bpy.types.Operator):
 			for b in context.object.pose.bones:
 				for c in b.constraints:
 					if(
-							c.type == 'ACTION' 
-							and c.action.name == self.action ):
+							(c.type == 'ACTION') 
+							and (c.action is not None)
+							and (c.action.name == self.action) ):
 						self.subtarget = c.subtarget
 						self.frame_start = c.frame_start
 						self.frame_end = c.frame_end

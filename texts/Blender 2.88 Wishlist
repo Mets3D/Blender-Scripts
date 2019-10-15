@@ -54,6 +54,7 @@ Medium things:
     Shift + Left Mouse Button - paint Blur
 
 Small things:
+- When unparenting a bone with Alt+P, Disconnect Bone option shouldn't show up when the bone isn't connected to begin with.
 - When deleting an object, there's no need to preserve references to it in bone shapes.
 - When deleting from a list like vertex groups or shape keys, the search functionality is ignored.
     - We can delete things that are not displayed because of the search

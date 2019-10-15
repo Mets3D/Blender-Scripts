@@ -137,13 +137,13 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 						opp_kf.handle_right[1] *=-1
 
 	if(c.type=='ARMATURE'):
-		for i, t in enumerate(c.targets):
-			opp_c.targets.new()
-			flipped_target = bpy.data.objects.get( utils.flip_name(c.targets[i].target.name) )
-			opp_c.targets[i].target = flipped_target
-			flipped_subtarget = utils.flip_name(c.targets[i].subtarget)
-			opp_c.targets[i].subtarget = flipped_subtarget
-			opp_c.targets[i].weight = c.targets[i].weight
+		for t in c.targets:
+			opp_t = opp_c.targets.new()
+			flipped_target = bpy.data.objects.get( utils.flip_name(t.target.name) )
+			opp_t.target = flipped_target
+			flipped_subtarget = utils.flip_name(t.subtarget)
+			opp_t.subtarget = flipped_subtarget
+			opp_t.weight = t.weight
 
 	if(c.type=='CHILD_OF' and c.target!=None):
 		return # I don't care about child of constraints anymore, I use Armature Constraints now instead.
@@ -415,6 +415,9 @@ class XMirrorConstraints(bpy.types.Operator):
 			opp_b.lock_rotation_w = b.lock_rotation_w
 			opp_b.lock_scale = b.lock_scale
 			opp_b.lock_location = b.lock_location
+
+			# Mirror bone layers
+			opp_b.bone.layers = b.bone.layers
 			
 			data_b = armature.data.bones.get(b.name)
 			opp_data_b = armature.data.bones.get(opp_b.name)
@@ -460,7 +463,9 @@ class XMirrorConstraints(bpy.types.Operator):
 
 			# Mirroring bone shape
 			if(b.custom_shape and b != opp_b):
-				opp_b.custom_shape = bpy.data.objects.get(utils.flip_name(b.custom_shape.name))
+				opp_shape = bpy.data.objects.get(utils.flip_name(b.custom_shape.name))
+				if(opp_shape):
+					opp_b.custom_shape = opp_shape
 				opp_data_b.show_wire = data_b.show_wire
 				opp_b.custom_shape_scale = b.custom_shape_scale
 				opp_b.use_custom_shape_bone_size = b.use_custom_shape_bone_size
