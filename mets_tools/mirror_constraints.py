@@ -31,10 +31,13 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 					target_idx = int(data_path_from_constraint.split("targets[")[1][0])
 					target = to_constraint.targets[target_idx]
 
+					target.driver_remove("weight")
 					new_d = target.driver_add("weight")	# Weight is the only property that can have a driver.
 				else:
+					to_constraint.driver_remove(data_path_from_constraint)
 					new_d = to_constraint.driver_add(data_path_from_constraint)
 			else:
+				to_bone.driver_remove(data_path_from_bone)
 				new_d = to_bone.driver_add(data_path_from_bone)
 				
 			expression = d.driver.expression

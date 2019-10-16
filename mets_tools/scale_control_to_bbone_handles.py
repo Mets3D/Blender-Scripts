@@ -15,31 +15,66 @@ class Setup_BBone_Scale_Controls(bpy.types.Operator):
 		for pb in context.selected_pose_bones:
 			b = pb.bone
 			# Make sure bone has both handles specified, and handle type is set to Tangent.
-			if(b.bbone_segments > 1
-					and b.bbone_handle_type_start == 'TANGENT'
-					and b.bbone_handle_type_end == 'TANGENT'
-					and b.bbone_custom_handle_start
-					and b.bbone_custom_handle_end):
+			if(b.bbone_segments > 1):
+				### Scale In/Out X/Z
 				my_d = Driver()
 				my_var = my_d.make_var("var")
 				my_var.type = 'TRANSFORMS'
-				my_d.expression = "var"
-
-				tgt = my_var.targets[0]
-				tgt.id = context.object
-				tgt.transform_type = 'SCALE_X'
-				tgt.transform_space = 'WORLD_SPACE'
-				tgt.bone_target = b.bbone_custom_handle_start.name
-				my_d.make_real(pb, "bbone_scaleinx")
 				
-				tgt.transform_type = 'SCALE_Z'
-				my_d.make_real(pb, "bbone_scaleiny")
+				var_tgt = my_var.targets[0]
+				var_tgt.id = context.object
+				var_tgt.transform_space = 'WORLD_SPACE'
 				
-				tgt.bone_target = b.bbone_custom_handle_end.name
-				my_d.make_real(pb, "bbone_scaleouty")
+				scale_var = my_d.make_var("scale")
+				scale_var.type = 'TRANSFORMS'
+				scale_tgt = scale_var.targets[0]
+				scale_tgt.id = context.object
+				scale_tgt.transform_space = 'WORLD_SPACE'
+				scale_tgt.transform_type = 'SCALE_Y'
+				
+				my_d.expression = "var/scale"
 
-				tgt.transform_type = 'SCALE_X'
-				my_d.make_real(pb, "bbone_scaleoutx")
+				# Scale In X/Y
+				if (b.bbone_handle_type_start == 'TANGENT' and b.bbone_custom_handle_start):
+					var_tgt.bone_target = b.bbone_custom_handle_start.name
+
+					var_tgt.transform_type = 'SCALE_X'
+					my_d.make_real(pb, "bbone_scaleinx")
+
+					var_tgt.transform_type = 'SCALE_Z'
+					my_d.make_real(pb, "bbone_scaleiny")
+				
+				# Scale Out X/Y
+				if (b.bbone_handle_type_end == 'TANGENT' and b.bbone_custom_handle_end):
+					var_tgt.bone_target = b.bbone_custom_handle_end.name
+					
+					var_tgt.transform_type = 'SCALE_Z'
+					my_d.make_real(pb, "bbone_scaleouty")
+
+					var_tgt.transform_type = 'SCALE_X'
+					my_d.make_real(pb, "bbone_scaleoutx")
+
+				### Ease In/Out
+				my_d = Driver()
+				my_var = my_d.make_var("scale")
+				my_var.type = 'TRANSFORMS'
+
+				my_d.expression = "scale-1"
+
+				var_tgt = my_var.targets[0]
+				var_tgt.id = context.object
+				var_tgt.transform_type = 'SCALE_Y'
+				var_tgt.transform_space = 'LOCAL_SPACE'
+
+				# Ease In
+				if (b.bbone_handle_type_start == 'TANGENT' and b.bbone_custom_handle_start):
+					var_tgt.bone_target = b.bbone_custom_handle_start.name
+					my_d.make_real(pb, "bbone_easein")
+
+				# Ease Out
+				if (b.bbone_handle_type_end == 'TANGENT' and b.bbone_custom_handle_end):
+					var_tgt.bone_target = b.bbone_custom_handle_end.name
+					my_d.make_real(pb, "bbone_easeout")
 
 			else:
 				return {'CANCELLED'}

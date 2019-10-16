@@ -35,12 +35,6 @@ Week 7-8:
 
 
 
-
-I should make an operator that cleans up "invalid" drivers, such that:
-	- Re-enter its expression to update it.
-	- Check if it's invalid because the targetted bone or constraint doesn't exist. Print to console accordingly.
-	- baaaaaa but this stuff has to be done manually anyways!
-
 I should make an addon to help the editing of shape keys and weights in any order.
 	Let me weight paint after saving the geometry of a mesh with a certain shape key, then have an option to re-adjust the shape key with the new weights to give the same shape.
 		It would be best if this could run on every brush stroke, but I guess that won't be possible.
@@ -50,9 +44,18 @@ I should make an addon to help the editing of shape keys and weights in any orde
 Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
 Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 To make a rig generator, I need to learn how to use the new Rigify.
+
 Body/Limbs
-	MEDIUM Improve shoulder & elbow deformation
+	MEDIUM I think thigh might need some updates to be up to date with current shoulder tech. I wonder if its twist is managed(countered) correctly in IK mode.
+	MEDIUM Improve shoulder deformation
 	
+	Scale propagation
+		Knee, butt and shoulder deform correctives need to be replaced by shape keys.
+			They are also currently parented to STR- bones, which is not necessarily bad but probably worth noting?
+				The reason for this is because DEF- bones don't inherit scale, they get their scale from BBone scale, which can only be inherited by Armature Constraint, which works poorly for some reason.
+					This does mean that we cannot parent anything to DEF- bones, which is not ideal.
+		Teeth need Copy Scale constraints just like face deform bones. Make sure this is the first constraint in the stack.
+
 	NEXT RIG Stretch controls are kind of a total mess right now, especially when it comes to rotating them.
 		Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
 		We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
@@ -61,9 +64,6 @@ Clothes
 	HIGH Write a script to transfer shape keys from base mesh to the clothes with Surface Deform modifier. Also need to copy drivers, and then clean up weights and shape keys.
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
 
-Scale propagation
-	Knee and shoulder deform correctives need to be replaced by shape keys.
-	Teeth need Copy Scale constraints just like face deform bones. Make sure this is the first constraint in the stack.
 
 Face
 	DONE Make the eyebrow master behave more like a parent. Get rid of rotation-based action stuff. Middle eyebrow is not moving with the masters right now.
