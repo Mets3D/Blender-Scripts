@@ -75,7 +75,7 @@ class AssignBoneGroup(bpy.types.Operator):
 
 	@classmethod
 	def poll(cls, context):
-		return (context.object and context.object.type == 'ARMATURE' and context.object.pose)
+		return (context.object and context.object.type == 'ARMATURE' and context.object.mode=='POSE')
 
 	def draw(self, context):
 		layout = self.layout
@@ -125,9 +125,8 @@ class AssignBoneGroup(bpy.types.Operator):
 				sub.prop(self, "color_active", text="")
 	
 	def invoke(self, context, event):
-		bg = context.active_pose_bone.bone_group
-		if bg:
-			self.bone_group = bg.name
+		if context.active_pose_bone and context.active_pose_bone.bone_group:
+			self.bone_group = context.active_pose_bone.bone_group.name
 		
 		if len(context.object.pose.bone_groups) == 0:
 			self.operation = 'NEW'
