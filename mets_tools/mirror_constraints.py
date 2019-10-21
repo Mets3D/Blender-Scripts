@@ -22,7 +22,6 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 			
 			# The way drivers on bones work is weird af. You have to create the driver relative to the bone, but you have to read the driver relative to the armature. So d.data_path might look like "pose.bones["bone_name"].bone_property" but when we create a driver we just need the "bone_property" part.
 			data_path_from_bone = d.data_path.split("].", 1)[1]
-			to_bone.driver_remove(data_path_from_bone)
 			new_d = None
 			if("constraints[" in data_path_from_bone):
 				data_path_from_constraint = data_path_from_bone.split("].", 1)[1]
@@ -83,6 +82,7 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 						print("3")"""
 			
 			# Copy the expression
+
 			new_d.driver.expression = expression
 
 def mirror_constraint(armature, bone, constraint, allow_split=True):
