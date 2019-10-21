@@ -1,44 +1,52 @@
 Medium things:
-- Let me access armature layers(or whatever they become) from weight paint mode.
-- Thicker/brighter edge drawing for bone shapes (Or edges in general)
-- Mask for Surface Deform modifier
-- Mask modifier can have severe performance impact when hiding just a few vertices on a high poly mesh.
-- Action constraints(or any constraints) shouldn't mess up the rotation pivot of bones.
+- HIGH Let me access armature layers(or whatever they become) from weight paint mode.
+- LOW Thicker/brighter edge drawing for bone shapes (Or edges in general)
+- MED Mask for Surface Deform modifier
 
-- Sculpting works poorly with mirror modifier, especially when sculpting shape keys, especially especially when sculpting shape keys on a mesh deformed by an armature.
-- Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
-- Snapping to cursor affects hidden bones in edit mode.
-- Weight paint: Can't press number keys to change brush anymore, and I don't think a hotkey can even be set up. Even if it can, it's probably more complicated than it should be.
-- Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
+- MED Sculpting works poorly with mirror modifier, especially when sculpting shape keys, especially especially when sculpting shape keys on a mesh deformed by an armature.
+- LOW Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
+- HIGH Weight paint: Changing brushes is an absolute pain and there's no way around it, even with a custom addon.
 - Let this behaviour be the default, just like in sculpt mode:
     Left Mouse Button - paint Add
     Ctrl + Left Mouse Button - paint Substract
     Shift + Left Mouse Button - paint Blur
+- HIGH Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
 
-Small things:
+Small things: (All of these are small things)
+- When changing order of bone constraints, they don't get updated in the viewport.
 - When in paint modes(using a brush) and 2D Falloff is disabled, the brush cursor shouldn't display when the mouse isn't over the mesh's surface, to indicate that in these cases, the brush stroke will not do anything.
 - These things don't have an undo step:
 	- Unlink Action
 	- Clear Pose Constraints operator
-- When unparenting a bone with Alt+P, Disconnect Bone option shouldn't show up when the bone isn't connected to begin with.
-- When deleting an object, there's no need to preserve references to it in bone shapes.
-- When deleting from a list like vertex groups or shape keys, the search functionality is ignored.
+- ME When unparenting a bone with Alt+P, Disconnect Bone option shouldn't show up when the bone isn't connected to begin with.
+- When deleting an object, there's no need to preserve references to it in bone shapes or custom properties.
+    - Preserving bone shapes used to make some kind of sense before we had collections (even then, it was kind of bad practice) since otherwise they would take up a precious layer. This is no longer the case, and this bad workflow should no longer be supported. Bone shapes should be put in a collection and hidden via collection visibility settings.
+    - Preserving references in custom properties is just nonsense, and causes terrible things to happen when deleting proxy armatures that are still being referenced by a custom property.
+    - Delete should mean Delete. Not "sometimes kinda delete if I feel like it."
+- ME? When deleting from a list like vertex groups or shape keys, the search functionality is ignored.
     - We can delete things that are not displayed because of the search
     - When deleting something, the active element doesn't become the next thing in the search, but the next thing in the entire list. Fixing this fixes the above issue.
-- Shape key add button should add the shape key underneath the active one, instead of at the bottom.
+- ME? Shape key add button should add the shape key underneath the active one, instead of at the bottom, at least when relative shape keys are enabled.
+- ME Relative/Absolute shape key system should be an enum toggle, not a checkbox, because it's changing between two unrelated behaviors rather than turning a behavior on and off. Based on discussion with William about changing 2D Falloff brush option to an enum.
 
-- Ctrl+G in pose mode to set bone groups should show a list with bone groups, instead of an int with the bone group index.
-- When BBone handle type is set to Automatic, let us still choose a handle target, and have it behave such that the changes the target would apply when the handle type is set to Tangent, are applied on top of the changes that are done currently when the handle type is Automatic, effectively allowing us to combine the two behaviors.
+- >>>>>ME? Ctrl+G in pose mode to set bone groups should show a list with bone groups, instead of an int with the bone group index.
+    - I implemented this into MetsTools. I don't think it would get approved for master because:
+        - Armature bone groups and layers should be getting deprecated soon™ anyways.
+        - There are no armature operators currently implemented in python.
+        - We draw some properties that already exist(existing group colors), which goes against usual design.
+        - When creating new group, the color preset selector is not consistent with the existing group preset selector, since the existing preset selector cannot be appended, because the bone group doesnt exist yet.
+        
+- BBone improvements
+    - When BBone handle type is set to Automatic, let us still choose a handle target, and have it behave such that the changes the target would apply when the handle type is set to Tangent, are applied on top of the changes that are done currently when the handle type is Automatic, effectively allowing us to combine the two behaviors.
+        - Gavrilov said this is not this simple. But I wish it was.
     - When BBone handle type is set to Automatic, the bbone splining should only affect the bone itself, the child's start handle, and the parent's end handle. This is currently not the case for roll, meaning if a BBone chain is set to Automatic, and any of the bones in the chain start rolling, the entire chain will start rolling.
-    - If we wanted to keep this behavior as an option, we could have a new handle type enum.
-- Auto-Normalize should never add weights to 0 weights.
-- Considering there is now X Y Z symmetry options, the X-Mirror option seems redundant.
+        - If we wanted to keep this behavior as an option, we could have a new handle type enum.
+- Auto-Normalize should never add weights to 0 weights. (I couldn't reproduce this though)
 - Ctrl+0,1,2 to set subsurf levels should work in weight paint mode on the weight paint object.
 - In the vertex weight panel in edit mode N panel, let us sort influences by weight instead of alphabetical.
-- Give me a PoseBone.constraints.clear() for the python API, to delete all constraints.
+- ME? Give me a PoseBone.constraints.clear() for the python API, to delete all constraints. There is already a bpy.ops operator for this.
 
 VERY small things:
-- Child Of constraint should automatically Set Inverse when a new target is chosen.
 - It should be easier(I'm not even sure it's reliably possible at all) to set the inverse of Child Of constraint through python. Maybe move the code that finds the matrix to a utility function, expose that utility function to bpy?
 - How come Normalize Vertex Group and Normalize All Vertex Groups are separate operators, whereas Clean Vertex Group and Clean All Vertex Groups is one operator?
 - When clicking on the Toolbar, the tool should switch on mouse button press, not only after a full click(mouse release) - I often try to click too fast, and my mouse cursor is moved off the toolbar by the time I finish the click, therefore the tool doesn't change.
@@ -57,6 +65,8 @@ Defaults:
 
 Big things:
 - Constraints as nodes(Solver nodes), or in general a node-based rigging system, which can still be abstracted by the old constraint interface.
+    - This could be prototyped as an extension of Animation Nodes?
+    
     - Regular parenting relationship would be a part of this node tree.
     - I guess this would mean the output of the node tree can't be in Local Space, but it has to be in Pose Space? Not sure what's best here, maybe it should be an option.
     - Result of a constraint node doesn't have to be applied to the final transformation, it can just be used in some maths, or it can be partially applied to the transform.
@@ -71,9 +81,6 @@ Big things:
 
 - Improved update call propgataion (don't propagate if value hasn't changed) https://developer.blender.org/T68740#791069
 
-- Deprecate armature layers!
-
-- Armatures should maintain a list of objects that they deform.
 - Deprecate armature layers and bone groups and replace with a new system.
 
 - Combining shape keys with a node system (I vaguely know what I mean by this but not really - think hundreds of corrective shape keys interacting with each other. It's currently set up with a bunch of drivers and it's super finicky.)
@@ -81,4 +88,4 @@ Big things:
 - Also let us control shape key values within the same node graph as bone constraints.
     - Bad idea probably.
 - Let weights be a separate datablock from object data
-    - The goal would be to would allow for a workflow where a rigger links a character to their file and assigns weights to it, while the rest of the mesh stays linked.
+    - The goal would be to allow for a workflow where a rigger links a character to their file and assigns weights to it, while the rest of the mesh stays linked, allowing a character artist to make changes to the shape of the mesh (as long as they don't change vertex IDs)
