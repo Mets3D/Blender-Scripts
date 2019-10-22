@@ -119,8 +119,8 @@ def flip_name(from_name, only=True, must_change=False):
 
 def copy_attributes(from_thing, to_thing, skip=[""], recursive=False):
 	"""Copy attributes from one thing to another. I guess I just re-implemented shallow and deep copy, which is fine by me."""
-	print("\nCOPYING FROM: " + str(from_thing))
-	print(".... TO: " + str(to_thing))
+	#print("\nCOPYING FROM: " + str(from_thing))
+	#print(".... TO: " + str(to_thing))
 	
 	bad_stuff = skip + ['__doc__', '__module__', '__slots__', 'active', 'bl_rna', 'error_location', 'error_rotation']
 	for prop in dir(from_thing):
@@ -142,14 +142,14 @@ def copy_attributes(from_thing, to_thing, skip=[""], recursive=False):
 					for i in range(0, count):
 						copy_attributes(from_value[i], to_value[i], skip, recursive)
 				except TypeError: # Not iterable.
-					if warn:
+					if False and warn:
 						print("WARNING: Could not copy attributes from iterable to non-iterable field: " + prop + 
 							"\nFrom object: " + str(from_thing) + 
 							"\nTo object: " + str(to_thing)
 						)
 			try:
 				setattr(to_thing, prop, from_value)
-				print(prop + ": " + str(from_value))
+				#print(prop + ": " + str(from_value))
 			except AttributeError:	# We ignore read-only properties without a warning.
 				continue
 
