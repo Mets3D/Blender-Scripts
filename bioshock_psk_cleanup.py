@@ -1,4 +1,7 @@
-# Bioshock Infinite raw .psk models import as a single mesh with multiple UV channels. Each UV channel corresponds to a material.
+import bpy
+import bmesh
+
+# .psk models import as a single mesh with multiple UV channels. Each UV channel corresponds to a material.
 # This script will select every UV face that isn't on 0.0 on each UV laayer, separate that part of the mesh into an object and clean up material and UV slots.
 # Wprls pm pme se;ected object for now
 
@@ -12,7 +15,7 @@ def assign_materials_by_uv_layers():
 
 	for uv_idx in range(0, len(mesh.uv_layers)):			# For each UV layer
 		obj.active_material_index = uv_idx
-		mesh.uv_textures.active_index = uv_idx
+		mesh.uv_layers.active_index = uv_idx
 		bpy.ops.mesh.select_all(action='DESELECT')
 		bm.faces.ensure_lookup_table()
 		for f in bm.faces:						# For each face
@@ -37,18 +40,20 @@ bpy.ops.object.mode_set(mode='OBJECT')
 for o in bpy.context.selected_objects:
 	# Cleaning up UV Maps
 	mat_name = o.material_slots[0].name
-	for uv_map in reversed(o.data.uv_textures):
-		if(uv_map.name != mat_name):
-			o.data.uv_textures.remove(uv_map)
-	o.data.uv_textures[0].name = "UVMap"
+	for uv_map in reversed(o.data.uv_layers):
+		if(uv_map.name not in mat_name):
+			o.data.uv_layers.remove(uv_map)
+	if(len(o.data.uv_layers) > 0):
+		o.data.uv_layers[0].name = "UVMap"
 	
 	# Cleaning mesh
-	bpy.context.scene.objects.active = o
+	bpy.context.view_layer.objects.active = o
 	bpy.ops.object.mode_set(mode='EDIT')
 	bpy.ops.mesh.select_all(action='SELECT')
 	bpy.ops.mesh.tris_convert_to_quads(uvs=True, seam=True)
 	bpy.ops.mesh.faces_shade_smooth()
-	bpy.ops.uv.seams_from_islands()
+	if(len(o.data.uv_layers) > 0):
+		bpy.ops.uv.seams_from_islands()
 	bpy.ops.object.mode_set(mode='OBJECT')
 	if(hasattr(bpy.ops.object, "calculate_weighted_normals")):	# Check if the Weighted Normals addon is available
 		bpy.ops.object.calculate_weighted_normals()

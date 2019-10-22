@@ -7,5 +7,21 @@
 			"path": "D:\\3D\\Blender\\git\\blender"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"array": "c",
+			"chrono": "c",
+			"complex": "c",
+			"functional": "c",
+			"future": "c",
+			"memory": "c",
+			"ratio": "c",
+			"tuple": "c",
+			"type_traits": "c",
+			"utility": "c",
+			"xmemory0": "c",
+			"xtr1common": "c",
+			"xutility": "c"
+		}
+	}
 }

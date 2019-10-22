@@ -12,30 +12,48 @@ Medium things:
     Shift + Left Mouse Button - paint Blur
 - HIGH Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
 
-Small things: (All of these are small things)
+Small things: (All of these are low prio)
 - When changing order of bone constraints, they don't get updated in the viewport.
 - When in paint modes(using a brush) and 2D Falloff is disabled, the brush cursor shouldn't display when the mouse isn't over the mesh's surface, to indicate that in these cases, the brush stroke will not do anything.
 - These things don't have an undo step:
 	- Unlink Action
 	- Clear Pose Constraints operator
-- ME When unparenting a bone with Alt+P, Disconnect Bone option shouldn't show up when the bone isn't connected to begin with.
+- ME! When unparenting a bone with Alt+P, Disconnect Bone option shouldn't show up when none of the bones are connected.
+    - https://developer.blender.org/D6100
+    - Could try adding warnings instead of empty menus, eg. RNA_warning("Expected an integer active data property");
+- ME! use_connect should never be able to be true when there is no parent. It causes the head of the bone to stop drawing.
+    - https://developer.blender.org/D6101
 - When deleting an object, there's no need to preserve references to it in bone shapes or custom properties.
     - Preserving bone shapes used to make some kind of sense before we had collections (even then, it was kind of bad practice) since otherwise they would take up a precious layer. This is no longer the case, and this bad workflow should no longer be supported. Bone shapes should be put in a collection and hidden via collection visibility settings.
     - Preserving references in custom properties is just nonsense, and causes terrible things to happen when deleting proxy armatures that are still being referenced by a custom property.
     - Delete should mean Delete. Not "sometimes kinda delete if I feel like it."
 - ME? When deleting from a list like vertex groups or shape keys, the search functionality is ignored.
-    - We can delete things that are not displayed because of the search
-    - When deleting something, the active element doesn't become the next thing in the search, but the next thing in the entire list. Fixing this fixes the above issue.
+    - There is already code for it, it's just commented out. https://developer.blender.org/T48001
+    - Nevermind, that code is stupid. What we need to do is to let add/delete operators communicate with the list.
+    - I think I broke scrolling to active element when it's off screen, oops. 
+    - Method 1: When adding operator to the UI, it should take the list as an optional parameter, and then ask the list to find out what should be the active index when adding or removing items from the list.
+        - Pros: List UI doesn't change active index, only operator does.
+        - Cons: Need to change the code for every occurence of lists with add/remove buttons, to pass the list into the operator.
+    - TODO: 
+    - Fix navigation with up/down arrows (Currently broken due to removed active index remapping, which must stay removed for the sorted delete fix to work).
+    - When scrolling to an off-screen element, and it is above in the list compared to the previously active element, scroll it to the center of the list rather than just ensuring that it's on screen. This is useful when stepping upwards, you generally want to see where you're going, not just where you are.
+        - Alternatively, stepping upwards should always leave the active element centered?
+        - This might be a bad idea.
+    - Expose hard-coded shortcuts to be customizable.
+    - Add default shortcut to Enter key to open and edit the filter.
+    - Adding new element should use the currently entered filter in the name, eg "Group + ui_layout.filter_name.
+    - "filter_name" in the RNA should really be changed to "filter_text"
+
 - ME? Shape key add button should add the shape key underneath the active one, instead of at the bottom, at least when relative shape keys are enabled.
 - ME Relative/Absolute shape key system should be an enum toggle, not a checkbox, because it's changing between two unrelated behaviors rather than turning a behavior on and off. Based on discussion with William about changing 2D Falloff brush option to an enum.
 
-- >>>>>ME? Ctrl+G in pose mode to set bone groups should show a list with bone groups, instead of an int with the bone group index.
+- ME! Ctrl+G in pose mode to set bone groups should show a list with bone groups, instead of an int with the bone group index.
     - I implemented this into MetsTools. I don't think it would get approved for master because:
         - Armature bone groups and layers should be getting deprecated soon™ anyways.
         - There are no armature operators currently implemented in python.
         - We draw some properties that already exist(existing group colors), which goes against usual design.
         - When creating new group, the color preset selector is not consistent with the existing group preset selector, since the existing preset selector cannot be appended, because the bone group doesnt exist yet.
-        
+
 - BBone improvements
     - When BBone handle type is set to Automatic, let us still choose a handle target, and have it behave such that the changes the target would apply when the handle type is set to Tangent, are applied on top of the changes that are done currently when the handle type is Automatic, effectively allowing us to combine the two behaviors.
         - Gavrilov said this is not this simple. But I wish it was.
