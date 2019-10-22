@@ -112,3 +112,15 @@ Big things:
     - Bad idea probably.
 - Let weights be a separate datablock from object data
     - The goal would be to allow for a workflow where a rigger links a character to their file and assigns weights to it, while the rest of the mesh stays linked, allowing a character artist to make changes to the shape of the mesh (as long as they don't change vertex IDs)
+
+HOTKEY EDITOR:
+    - Operator search.
+    - The right click->Assign/Change Shortcut button should bring up the hotkey editor so users have proper access to the settings of the hotkey after they set it up.
+    - Conflict warning
+    - Better Visualization (with graphics of an actual keyboard layout)
+    - Not need to set up the same shortcut several times
+    - Let shortcuts be aware of what mode (and Tool within that mode) they are assigned to, as opposed to having modes and tools with a list of shortcuts inside them.
+        - This would avoid having to set up and maintain several of the same shortcuts.
+    - Weight Paint and Pose mode should either be considered the same mode, or should otherwise somehow be indicated that their shortcuts can conflict.
+    - The keyboard visualization would let you select which mode you want to see the hotkeys of.
+        - You can click on a key to see the shortcuts containing that key. Eg. if you set the mode to Object mode and select the "G" key it will show the shortcuts "G" and "Alt+G".

@@ -1,5 +1,0 @@
-
-Would it be possible to store add more space options, for example one that only includes animation curve transforms?
-    The issue is that right now, Local Space includes constraints + animation, but in some cases we want to ignore constraints.
-    I should show an example of this.
-- How to achieve Tangent+Automatic BBones better than what I did (very complicated to explain what I did though)
