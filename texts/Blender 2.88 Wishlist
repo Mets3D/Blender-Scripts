@@ -13,6 +13,11 @@ Medium things:
 - HIGH Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
 
 Small things: (All of these are small things)
+- ME Better context menu in pose mode (An actual menu with UI, instead of just a list of useless operators)
+    - BBone settings: Segments, Start/End Handle type and target.
+    - Parent bone (read-only in pose mode, which is still useful.)
+    - Deform checkbox
+    - Display options: Custom Object, Bone Size, Scale, Custom Shape Transform
 - When changing order of bone constraints, they don't get updated in the viewport.
 - When in paint modes(using a brush) and 2D Falloff is disabled, the brush cursor shouldn't display when the mouse isn't over the mesh's surface, to indicate that in these cases, the brush stroke will not do anything.
 - These things don't have an undo step:

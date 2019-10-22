@@ -84,14 +84,11 @@ class SetupActionConstraints(bpy.types.Operator):
 			# Creating Action constraints
 			if(len(constraints)==0):
 				if(utils.flip_name(b.name)==b.name):
-					if ( utils.flip_name(self.subtarget) == self.subtarget ):
-						# If bone name and target name are unflippable, split constraint in two.
-						c_l = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".L")
-						c_l.influence=0.5
-						constraints.append(c_l)
-						c_r = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".R")
-						c_l.influence=0.5
-						constraints.append(c_r)
+					# If bone name is unflippable, split constraint in two.
+					c_l = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".L")
+					constraints.append(c_l)
+					c_r = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".R")
+					constraints.append(c_r)
 				else:
 					c = utils.find_or_create_constraint(b, 'ACTION', constraint_name + suffix)
 					c.influence=1
@@ -102,17 +99,21 @@ class SetupActionConstraints(bpy.types.Operator):
 				
 				# TODO: Utils should have a way to detect and set a string to a specific side, rather than only flip. That way we wouldn't have to hard-code and only support .L/.R suffix.
 				
-				# If bone name indicates a side, force subtarget to that side
+				# If bone name indicates a side, force subtarget to that side, if subtarget is flippable.
 				if( b.name.endswith(".L") and self.subtarget.endswith(".R") ):
-					self.subtarget = self.subtarget[:-2]+".L"
+					if(utils.flip_name(self.subtarget) != self.subtarget):
+						self.subtarget = self.subtarget[:-2]+".L"
 				if( b.name.endswith(".R") and self.subtarget.endswith(".L") ):
-					self.subtarget = self.subtarget[:-2]+".R"
+					if(utils.flip_name(self.subtarget) != self.subtarget):
+						self.subtarget = self.subtarget[:-2]+".R"
 					
-				# If constraint name indicates a side, force subtarget to that side
+				# If constraint name indicates a side, force subtarget to that side and set influence to 0.5.
 				if( c.name.endswith(".L") and self.subtarget.endswith(".R") ):
 					self.subtarget = self.subtarget[:-2]+".L"
+					c_r.influence=0.5
 				if( c.name.endswith(".R") and self.subtarget.endswith(".L") ):
 					self.subtarget = self.subtarget[:-2]+".R"
+					c_r.influence=0.5
 
 				c.target_space = self.target_space
 				c.transform_channel = self.transform_channel
