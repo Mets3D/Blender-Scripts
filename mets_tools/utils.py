@@ -34,12 +34,13 @@ def uniform_scale():
 		o.dimensions = [1, 1, 1]
 		o.scale = [min(o.scale), min(o.scale), min(o.scale)]
 
-def find_or_create_bone(armature, bonename):
+def find_or_create_bone(armature, bonename, select=True):
 	assert armature.mode=='EDIT', "Armature must be in edit mode"
 
 	bone = armature.data.edit_bones.get(bonename)
 	if(not bone):
 		bone = armature.data.edit_bones.new(bonename)
+	bone.select = select
 	return bone
 
 def find_or_create_constraint(pb, ctype, name=None):
@@ -59,6 +60,63 @@ def find_or_create_constraint(pb, ctype, name=None):
 	if(name):
 		c.name = name
 	return c
+
+def bone_search(armature, search=None, start=None, end=None, edit_bone=False, selected=True):
+	""" Convenience function to get iterators for our for loops. """ #TODO: Could use regex.
+	bone_list = []
+	if(edit_bone):
+		bone_list = armature.data.edit_bones
+	else:
+		bone_list = armature.pose.bones
+	
+	filtered_list = []
+	if(search):
+		for b in bone_list:
+			if search in b.name:
+				if selected:
+					if edit_bone:
+						if b.select:
+							filtered_list.append(b)
+					else:
+						if b.bone.select:
+							filtered_list.append(b)
+				else:
+					filtered_list.append(b)
+	elif(start):
+		for b in filtered_list:
+			if not b.name.startswith(start):
+				filtered_list.remove(b)
+	elif(end):
+		for b in filtered_list:
+			if not b.name.endswith(end):
+				filtered_list.remove(b)
+	else:
+		assert False, "Nothing passed."
+	
+	return filtered_list
+
+def find_nearby_bones(armature, search_co, dist, ebones=None):
+	""" Bruteforce search for bones that are within a given distance of the given coordinates. """
+	""" Active object must be an armature. """	# TODO: Let armature be passed, maybe optionally. Do some assert sanity checks.
+	""" ebones: Only search in these bones. """
+	
+	assert armature.mode=='EDIT'	# TODO: Could use data.bones instead so we don't have to be in edit mode?
+	ret = []
+	if not ebones:
+		ebones = armature.data.edit_bones
+	
+	for eb in ebones:
+		if( (eb.head - search_co).length < dist):
+			ret.append(eb)
+	return ret
+
+def get_bone_chain(bone, ret=[]):
+	""" Recursively build a list of the first children. 
+		bone: Can be pose/data/edit bone, doesn't matter. """
+	ret.append(bone)
+	if(len(bone.children) > 0):
+		return get_bone_chain(bone.children[0], ret)
+	return ret
 
 def flip_name(from_name, only=True, must_change=False):
 	# based on BLI_string_flip_side_name in https://developer.blender.org/diffusion/B/browse/master/source/blender/blenlib/intern/string_utils.c
@@ -152,4 +210,3 @@ def copy_attributes(from_thing, to_thing, skip=[""], recursive=False):
 				#print(prop + ": " + str(from_value))
 			except AttributeError:	# We ignore read-only properties without a warning.
 				continue
-
