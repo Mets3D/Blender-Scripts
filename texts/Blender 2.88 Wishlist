@@ -13,6 +13,7 @@ Medium things:
 - HIGH Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
 
 Small things: (All of these are small things)
+- ME? Let us assign area split/join operation to a keyboard shortcut.
 - ME Better context menu in pose mode (An actual menu with UI, instead of just a list of useless operators)
     - BBone settings: Segments, Start/End Handle type and target.
     - Parent bone (read-only in pose mode, which is still useful.)

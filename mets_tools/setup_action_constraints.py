@@ -46,6 +46,14 @@ class SetupActionConstraints(bpy.types.Operator):
 	enabled: BoolProperty(name="Enabled", default=True)
 	delete: BoolProperty(name="Delete", default=False)
 
+	affect: EnumProperty(name="Affect Bones",
+		items=(
+			("SELECTED", "Selected", "Affect all selected bones"),
+			("ALL", "All", "Affect all bones in the active armature"),
+		),
+		default="ALL"
+		)
+
 	@classmethod
 	def poll(cls, context):
 		return context.object.type == 'ARMATURE' and context.object.mode in ['POSE', 'OBJECT']
@@ -61,12 +69,17 @@ class SetupActionConstraints(bpy.types.Operator):
 		action = bpy.data.actions[self.action]
 		constraint_name = "Action_" + action.name.replace("Rain_", "")	# TODO: Hard coded action naming convention.
 
+		affect_bones = armature.pose.bones if self.affect == 'ALL' else [b.name for b in context.selected_pose_bones]
+
 		# Getting a list of pose bones on the active armature corresponding to the selected action's keyframes
 		bones = []
 		for fc in action.fcurves:
 			# Extracting bone name from fcurve data path
 			if("pose.bones" in fc.data_path):
 				bone_name = fc.data_path.split('["')[1].split('"]')[0]
+				
+				if bone_name not in affect_bones: continue
+
 				bone = armature.pose.bones.get(bone_name)
 				if(bone and bone not in bones):
 					bones.append(bone)
@@ -83,8 +96,9 @@ class SetupActionConstraints(bpy.types.Operator):
 
 			# Creating Action constraints
 			if(len(constraints)==0):
-				if(utils.flip_name(b.name)==b.name):
-					# If bone name is unflippable, split constraint in two.
+				if(		utils.flip_name(b.name) == b.name 
+					and utils.flip_name(self.subtarget) != self.subtarget ):
+					# If bone name is unflippable, but target bone name is flippable, split constraint in two.
 					c_l = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".L")
 					constraints.append(c_l)
 					c_r = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".R")
@@ -128,13 +142,15 @@ class SetupActionConstraints(bpy.types.Operator):
 				c.mute = not self.enabled
 
 		# Deleting superfluous action constraints, if any
-		for b in armature.pose.bones:
+		for bn in affect_bones:
+			b = armature.pose.bones.get(bn)
 			for c in b.constraints:
 				if(c.type=='ACTION'):
 					# If the constraint targets this action
 					if(c.action == action):
 						if(constraint_name not in c.name	# but its name is wrong
 							or self.delete):				# or the user wants to delete it.
+							print("removing because " + constraint_name + " not in " + c.name)
 							b.constraints.remove(c)
 							continue
 						# If the name is fine, but there is no associated keyframe
@@ -190,6 +206,9 @@ class SetupActionConstraints(bpy.types.Operator):
 	
 	def draw(self, context):
 		layout = self.layout
+
+		layout.row().prop(self, "affect", expand=True)
+
 		layout.prop(self, "delete", text="Delete")
 
 		if(not self.delete):
