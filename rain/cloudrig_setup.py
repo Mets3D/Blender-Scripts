@@ -2,7 +2,6 @@ import bpy
 from mathutils import Vector
 from mets_tools.utils import *
 
-# Generate Auto+Tangent BBone setup, used for the face.
 # The long term goal for this is that the rig is generated based on a base set of bones that can be moved around in pose mode, akin to BlenRig's reproportion mode.
 
 arrow_shape = bpy.data.objects['Shape_Arrow']
@@ -113,9 +112,8 @@ def create_bbone_handles_for_chain(armature, chain):
 			chain[i].bbone_custom_handle_end = create_bbone_handle(armature, bone_start=None, bone_end=chain[i])
 			continue
 
-def face_bbone_setup(context, armature):
-	""" Set up the low level controls for the face, based on bones in a predefined group. """
-	# TODO: Also set up higher level controls...
+def setup_auto_tangent_bbones(context, armature):
+	""" Generate Auto+Tangent BBone setup, used for the face. """
 
 	assert armature.type=='ARMATURE', "Not an armature."
 
@@ -136,6 +134,7 @@ def face_bbone_setup(context, armature):
 	for pb in context.selected_pose_bones:		
 		if("Node_UserRotation_CTR-" in pb.name):
 			copy_rotation = find_or_create_constraint(pb, 'COPY_ROTATION')
+			copy_rotation.mix_mode = 'ADD'
 			copy_rotation.target = armature
 			copy_rotation.subtarget = pb.name.replace("Node_UserRotation_CTR-", "CTR-")
 			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
@@ -144,10 +143,13 @@ def face_bbone_setup(context, armature):
 			pb.custom_shape = arrow_shape
 			pb.use_custom_shape_bone_size = False
 			armature_const = find_or_create_constraint(pb, 'ARMATURE')
-			target = armature_const.targets.new()
-			target.target = armature
-			db = armature.data.bones.get(pb.name)
-			target.subtarget = db['parent']
+			pb.constraints.remove(armature_const)
+			armature_const = find_or_create_constraint(pb, 'ARMATURE')
+			if(len(armature_const.targets) == 0):
+				target = armature_const.targets.new()
+				target.target = armature
+				db = armature.data.bones.get(pb.name)
+				target.subtarget = db['parent']
 		
 		if('TAN-' not in pb.name): continue
 		
@@ -157,6 +159,7 @@ def face_bbone_setup(context, armature):
 			pb.bone_group = armature.pose.bone_groups.get('Face: TAN - BBone Tangent Handle Helpers')	# TODO: safe_create_bone_group()
 			pb.custom_shape_scale = 1.4
 			copy_rotation = find_or_create_constraint(pb, 'COPY_ROTATION')
+			copy_rotation.mix_mode = 'ADD'
 			copy_rotation.target = armature
 			copy_rotation.subtarget = pb.name.replace("TAN-", "Node_UserRotation_TAN-")
 			copy_rotation.target_space = copy_rotation.owner_space = 'LOCAL'
@@ -188,7 +191,7 @@ def run(context):
 	assert context.object.mode=='EDIT', "Armature must be in edit mode."
 	assert len(context.selected_editable_bones) > 0, "Some bones must be selected."
 
-	face_bbone_setup(context, armature)
+	setup_auto_tangent_bbones(context, armature)
 	bpy.ops.object.mode_set(mode='EDIT')
 	
 run(bpy.context)

@@ -46,6 +46,7 @@ Write a document about how the rig could be replicated on a new character. What 
 To make a rig generator, I need to learn how to use the new Rigify.
 
 Body/Limbs
+	LOW FK-Thumb2.R rotation should affect palm bulge
 	MEDIUM I think thigh might need some updates to be up to date with current shoulder tech. I wonder if its twist is managed(countered) correctly in IK mode.
 	MEDIUM Improve shoulder deformation
 	
@@ -68,10 +69,22 @@ Clothes
 
 
 Face
+	Let outer eyebrow corner side less side to side when eyebrow master is pulled down.
+	CTR2-P-Eyebrow_1.L has a translating action constraint instead of its parent.
+	expose eye master thing MSTR-Eyering.L
+	When MSTR-Head_Lower is rotated, the cheeks/jaw is losing too much volume
+	Delete auto translation thing on the jaw.
+
+	3 new controls for the cheek:
+		- Cheek puff (lattice or shape key magic probably)
+		- Outer Upper cheek (action methinks)
+		- Inner cheek(sneer control) - also auto-trigger this when lip corner is pushed up.
+
 	Lip roll should affect the corners a lot less, and not aim for so much a kiss shape, but instead aim for just rolling the lips in whatever pose they're in.
 	It should roll over the teeth, so made with the assumption that it's used when the mouth is open. If we have time, can try to do something clever to make it work when the mouth is closed.
 
 	Lip corners moving left/right and up/down should not move the lip corners forward/back. Instead, the lip control should be unlocked on its forward axis and only move the lip corner forward/back when moved along that axis. This means we will either need 3 actions to combine properly, or not use actions at all.
+	Rotation of lip corner control should affect the... rotation of the corner of the lips.
 
 	Add a lip zip functionality to scaling lip corner controls. If possible, make it so that scaling the bone up makes the lip shape more round.
 

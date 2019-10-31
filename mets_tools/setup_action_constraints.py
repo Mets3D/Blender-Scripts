@@ -69,7 +69,11 @@ class SetupActionConstraints(bpy.types.Operator):
 		action = bpy.data.actions[self.action]
 		constraint_name = "Action_" + action.name.replace("Rain_", "")	# TODO: Hard coded action naming convention.
 
-		affect_bones = armature.pose.bones if self.affect == 'ALL' else [b.name for b in context.selected_pose_bones]
+		affect_bones = []
+		if self.affect == 'ALL':
+			affect_bones = [b.name for b in armature.pose.bones] 
+		else:
+			affect_bones = [b.name for b in context.selected_pose_bones]
 
 		# Getting a list of pose bones on the active armature corresponding to the selected action's keyframes
 		bones = []
@@ -201,6 +205,9 @@ class SetupActionConstraints(bpy.types.Operator):
 						print("Updated operator values...")
 						break
 				if(done): break
+			if (not done):
+				self.subtarget = context.active_pose_bone.name
+
 
 		return wm.invoke_props_dialog(self)
 	
