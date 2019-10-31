@@ -24,7 +24,13 @@
 			"utility": "c",
 			"xmemory0": "c",
 			"xtr1common": "c",
-			"xutility": "c"
+			"xutility": "c",
+			"regex": "c",
+			"system_error": "c",
+			"xlocmon": "c",
+			"*.mm": "c",
+			"vector": "c",
+			"xstring": "c"
 		}
 	}
 }

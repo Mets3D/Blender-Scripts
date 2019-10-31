@@ -147,20 +147,6 @@ def smart_transfer_weights(obj_from, obj_to, weights, expand=2):
 	#bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
 
 w3_bone_dict_str = """{
-	'Hip_Def' : ['Gens_Root', 'Vagoo_Root', 'Anus_Root', 'Gens_Mid', 'Butt_Mid', 
-	'Vagoo_Top', 'Vagoo.L', 'Vagoo.R', 'Vagoo_Bottom', 
-	'Anus_Top', 'Anus_Bottom', 
-	'Anus.L.004', 'Anus.L.003', 'Anus.L.002', 'Anus.L.001', 'Anus.L', 
-	'Anus.R', 'Anus.R.001', 'Anus.R.002', 'Anus.R.003', 'Anus.R.004'],
-
-	'Butt.L' : ['Butt_Top.L', 'Butt_Inner.L', 'Butt_Bot.L', 'Butt_Outer.L'],
-
-	'Butt.R' : ['Butt_Top.R', 'Butt_Outer.R', 'Butt_Bot.R', 'Butt_Inner.R'],
-
-	'Breast.L' : ['Breast_Top.L', 'Breast_Outer.L', 'Breast_Inner.L', 'Breast_Bot.L', 'Breast_Nipple.L'],
-
-	'Breast.R' : ['Breast_Top.R', 'Breast_Inner.R', 'Breast_Outer.R', 'Breast_Bot.R'],
-
 	'Toe_Def.L' : ['Toe_Thumb1.L', 'Toe_Thumb2.L', 'Toe_Index1.L', 'Toe_Index2.L', 'Toe_Middle1.L', 'Toe_Middle2.L', 'Toe_Ring1.L', 'Toe_Ring2.L', 'Toe_Pinky1.L', 'Toe_Pinky2.L'],
 
 	'Toe_Def.R' : ['Toe_Thumb1.R', 'Toe_Thumb2.R', 'Toe_Index1.R', 'Toe_Index2.R', 'Toe_Middle1.R', 'Toe_Middle2.R', 'Toe_Ring1.R', 'Toe_Ring2.R', 'Toe_Pinky1.R', 'Toe_Pinky2.R'],
@@ -169,8 +155,6 @@ w3_bone_dict_str = """{
 
 	'Hand_Def.R' : ['r_thumb_roll', 'r_pinky0', 'r_index_knuckleRoll', 'r_middle_knuckleRoll', 'r_ring_knuckleRoll'],
 }"""
-
-w3_vgroups = ['Hip_Def', 'Butt_Mid', 'Neck_Def', 'Head_Def', 'Breast.R', 'Breast.L', 'Clavicle_Def.R', 'Clavicle_Adjust.R', 'Clavicle_Def.L', 'Clavicle_Adjust.L', 'Spine3_Def', 'Spine2_Def', 'Spine1_Def', 'Adjust_Knee.R', 'Twist_Leg_2.R', 'Twist_Leg_1.R', 'Foot_Def.R', 'Toes_Def.R', 'Toe_Def.R', 'Butt.R', 'Thigh_Def.R', 'Twist_Leg_3.R', 'Adjust_Thigh_Front.R', 'Adjust_Thigh_Side.R', 'Twist_Leg_4.R', 'Adjust_Knee.L', 'Twist_Leg_2.L', 'Twist_Leg_1.L', 'Foot_Def.L', 'Toes_Def.L', 'Toe_Def.L', 'Butt.L', 'Thigh_Def.L', 'Twist_Leg_3.L', 'Adjust_Thigh_Front.L', 'Adjust_Thigh_Side.L', 'Twist_Leg_4.L', 'Elbow_Def.R', 'Adjust_Elbow_Lower.R', 'Shoulder_Def.R', 'Adjust_Elbow_Upper.R', 'Twist_Arm_5.R', 'Twist_Arm_6.R', 'Twist_Arm_2.R', 'Twist_Arm_1.R', 'Twist_Arm_4.R', 'Twist_Arm_3.R', 'Hand_Def.R', 'Elbow_Def.L', 'Adjust_Elbow_Lower.L', 'Shoulder_Def.L', 'Adjust_Elbow_Upper.L', 'Twist_Arm_5.L', 'Twist_Arm_6.L', 'Twist_Arm_1.L', 'Twist_Arm_2.L', 'Twist_Arm_4.L', 'Twist_Arm_3.L', 'Hand_Def.L']
 
 class SmartWeightTransferOperator(bpy.types.Operator):
 	""" Transfer weights from active to selected objects based on weighted vert distances """
@@ -243,9 +227,6 @@ class SmartWeightTransferOperator(bpy.types.Operator):
 			elif(self.opt_source_vgroups == "DEFORM"):
 				vgroups = [source_obj.vertex_groups.get(b.name) for b in context.pose_object.data.bones if b.use_deform]
 				error = "there are no deform bones"
-			
-			# Using hard coded vertex group names because it's easier than selecting all the right bones, I guess? TODO: could turn that hardcoded list into a parameter, just like the bone dict.
-			# vgroups = [source_obj.vertex_groups.get(vgn) for vgn in w3_vgroups]
 			
 			# Clean up
 			vgroups = [vg for vg in vgroups if vg != None]

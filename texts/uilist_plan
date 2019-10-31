@@ -4,21 +4,43 @@ Issues:
     - When search/sort UI is hidden, it is still taking effect. To me this feels wrong, and changing it would also help when it comes to adding elements to the list (See below).
     - When search/sort is active:
         - When removing the active element, the new active element can easily jump around or worse, be hidden.
+        - Entering filter text can cause the active element to become hidden.
         - When adding a new element, it will be filtered out and also be hidden.
-        Having the active element hidden is terrible and must always be avoided, since the user can click the delete operator and delete stuff that they don't even know they have selected.
+        - Move element up/down operators behave unpredictably.
+        Having the active element hidden is bad because the user can click the delete operator and delete stuff that they don't even know they have selected.
+    - When deleting items, the active element moves up the list rather than down, which doesn't let you look ahead very well if you're deleting many items.
+    - When the active element becomes the index 0 element after a deletion, the delete button is disabled. This seems like a bug.
+    - When trying to move elements in the list with the move up/down operator, the result can be unpredictable when filtering is enabled.
+    - Alphabetical sorting and reverse sorting can be enabled at the same time, but their functionality does not combine (Reverse sorting overwrites alphabetical sorting).
 
-Proposal:
-    - Search and filter should be disabled when the UI for them is disabled.
-    - Let UIList store what index is drawn before and after the currently active one. This is updated directly from the drawing code, so it will stay accurate even if searching and filtering functionality is changed.
-    - (Bonus) The implementation of the stepping functionality can be greatly simplified, since we can remove the copy pasted sorting and filtering logic.
-    
+Proposed changes:
+    The overall idea is to let the uiList struct store whatever the hell we need to store, in order to let operators and user input reliably interact with it. This is:
+    - What element should become active on step up and step down?
+    - What element should become active on delete?
+    - Is the active element hidden by filtering?
+
     Removing elements:
-        - Return the UIList to python from template_list() function, so we can access these values from python.
-        - Pass these values to the "remove x" operator buttons. (Requires adding a new optional parameter to all these remove functions, which I think is correct.)
-
+        - (Done) Return the UIList to python from template_list() function, so we can access these values from python.
+        - (TODO REST) Pass these values to the "remove x" operator buttons. (Requires adding a new optional parameter to all functions that remove elements from UILists.)
+        - (Done) The new active element after a deletion is now the one that was below the deleted one. (Unless there isn't one)
+        - (TODO REST) The delete button is now disabled when the active element is hidden by a filter.
+    - (TODO) Search and filter should be disabled when the UI for them is disabled.
     Adding elements:
-        - Solution 1: Simply disable the search and filter UI, and therefore its functionality, when the number of elements increases(this can be done directly in UIList code)
-        - Solution 2: Use the filter text in the new name of the created element. (need to pass a new parameter to all the "add x" functions). For example, if the filter is "finger" the new Shape Key name would be "Key finger". 
+        - (Done) When search and filter UI is hidden, their functionality should be disabled.
+        - (Done) When the number of elements increases, disable the search and filter UI, and therefore its functionality.
+    Stepping selection (Up/Down arrow keys):
+        - (Done) Stepping up from the top now loops around to the bottom of the list and vice versa.
+        - (Done) When the active element is filtered out, stepping up/down will make the last/first displayed element active.
+    Moving elements (up/down operator buttons):
+        - (Done) Disable these when any sorting/filtering is active.
+    Sorting:
+        - (Done) Alphabetical and reverse sorting buttons disable one another.
+    
+
+    It can still rarely crash when deleting and undo-ing a bunch. Seems hard to reproduce, I can't make any sense of it.
+    On delete, the new active index is wrong after undo-ing deletions from the bottom of the list, but not undoing all of them. This only happens when the user doesn't move their mouse - It seems that in this case, the operator button does not refresh, therefore it doesn't get the correct new_active_index passed into it. Not a big deal imo, unless this is causing the above crash.
+
+
 
 
 
@@ -33,3 +55,9 @@ Proposal:
 Small additions (separate task):
     - Search functionality is not discoverable enough imo. The arrow is too small and non-descript.
     - Stepping up and down in the list is hard coded to Up/down arrow keys. Would be nice to expose it as a customizable shortcut, imo. I'm not sure how complicated this is, though.
+    - F2 to rename
+    - Ctrl+F to search
+
+Huge changes:
+    - Separation between Selected & Active
+    - Drag and drop ordering
