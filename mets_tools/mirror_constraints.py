@@ -116,12 +116,20 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 			if(b.name in cur.data_path):
 				curves.append(cur)
 		for cur in curves:
-			# Create opposite curves
 			opp_data_path = cur.data_path.replace(b.name, opp_b.name)
+			
+			# Nuke opposite curves - NOTE: This wouldn't be neccesary if I didn't fuck this up in the first place and accidentally created a bunch of duplicate curves.
+			while True:
+				opp_cur = action.fcurves.find(opp_data_path, index=cur.array_index)
+				if not opp_cur: break
+				action.fcurves.remove(opp_cur)
+
+			# Create opposite curves
 			opp_cur = action.fcurves.find(opp_data_path, index=cur.array_index)
 			
 			if(not opp_cur):
 				opp_cur = action.fcurves.new(opp_data_path, index=cur.array_index, action_group=opp_b.name)
+				print("new curve")
 			utils.copy_attributes(cur, opp_cur, skip=["data_path", "group"])
 			
 			# If the other curve already existed, wipe any existing keyframes
@@ -133,7 +141,7 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 				opp_kf = opp_cur.keyframe_points.insert(kf.co[0], kf.co[1])
 				utils.copy_attributes(kf, opp_kf, skip=["data_path"])
 				# Flip X location, Y and Z rotation... not sure if applies to all situations... probably not :S
-				if( ("location" in cur.data_path and cur.array_index==0) or
+				if( ("location" in cur.data_path and cur.array_index == 0) or
 					("rotation" in cur.data_path and cur.array_index in [1, 2]) ):
 						opp_kf.co[1] *= -1
 						opp_kf.handle_left[1] *=-1

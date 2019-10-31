@@ -128,10 +128,10 @@ class SetupActionConstraints(bpy.types.Operator):
 				# If constraint name indicates a side, force subtarget to that side and set influence to 0.5.
 				if( c.name.endswith(".L") and self.subtarget.endswith(".R") ):
 					self.subtarget = self.subtarget[:-2]+".L"
-					c_r.influence=0.5
+					c.influence = 0.5
 				if( c.name.endswith(".R") and self.subtarget.endswith(".L") ):
 					self.subtarget = self.subtarget[:-2]+".R"
-					c_r.influence=0.5
+					c.influence = 0.5
 
 				c.target_space = self.target_space
 				c.transform_channel = self.transform_channel

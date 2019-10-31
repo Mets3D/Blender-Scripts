@@ -69,7 +69,7 @@ Clothes
 
 
 Face
-	Let outer eyebrow corner side less side to side when eyebrow master is pulled down.
+	DONE Let outer eyebrow corner side less side to side when eyebrow master is pulled down.
 	CTR2-P-Eyebrow_1.L has a translating action constraint instead of its parent.
 	expose eye master thing MSTR-Eyering.L
 	When MSTR-Head_Lower is rotated, the cheeks/jaw is losing too much volume
@@ -77,8 +77,9 @@ Face
 
 	3 new controls for the cheek:
 		- Cheek puff (lattice or shape key magic probably)
-		- Outer Upper cheek (action methinks)
-		- Inner cheek(sneer control) - also auto-trigger this when lip corner is pushed up.
+		- DONE Outer Upper cheek (action methinks)
+		- Inner cheek(sneer control) 
+			- also auto-trigger this when lip corner is pushed up.
 
 	Lip roll should affect the corners a lot less, and not aim for so much a kiss shape, but instead aim for just rolling the lips in whatever pose they're in.
 	It should roll over the teeth, so made with the assumption that it's used when the mouth is open. If we have time, can try to do something clever to make it work when the mouth is closed.
@@ -117,11 +118,12 @@ Face
 	DONE Top/Bottom latice controls should have more influence
 	
 	DONE Old (action-based) eyelid controls on finger layer
-	WAITING FOR BUGFIX Clothing drivers broken T70919
+	BUGFIXED Clothing drivers broken T70919
 
 	DONE STR-P-UpperLip and lower are not visible without x-ray
 	DONE Make eyering CTR- bones bigger and move to Face Primary layer.
 	When lips roll in, try to preserve a more round shape while rolling.
+		The thing is, it feels like this round shape should exist by default. Maybe this is a matter of base shape?
 	When lips roll in, moustache area should 1.) have some way to be controlled 2.) be a bit more puffy.
 		Same for lower lip. Lower moustache area.
 
