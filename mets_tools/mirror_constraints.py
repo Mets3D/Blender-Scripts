@@ -111,6 +111,12 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 	# Need to mirror the curves in the action to the opposite bone.
 	if(c.type=='ACTION' and b != opp_b):
 		action = c.action
+		# Flip min/max in some cases.
+		if(c.transform_channel == 'ROTATION_Z'):
+			old_min = c.min
+			c.min = c.max
+			c.max = old_min
+
 		curves = []
 		for cur in action.fcurves:
 			if(b.name in cur.data_path):

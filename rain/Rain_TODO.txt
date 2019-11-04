@@ -70,29 +70,31 @@ Clothes
 
 Face
 	DONE Let outer eyebrow corner side less side to side when eyebrow master is pulled down.
-	CTR2-P-Eyebrow_1.L has a translating action constraint instead of its parent.
-	expose eye master thing MSTR-Eyering.L
-	When MSTR-Head_Lower is rotated, the cheeks/jaw is losing too much volume
-	Delete auto translation thing on the jaw.
+	DONE CTR2-P-Eyebrow_1.L is on the wrong layer.
+	DONE Expose MSTR-Eyering.L
+	DONE(need mirror) When MSTR-Head_Lower is rotated, the cheeks/jaw is losing too much volume
+	DONE Delete auto translation thing on the jaw.
 
-	3 new controls for the cheek:
-		- Cheek puff (lattice or shape key magic probably)
+	Limit Location and Action constraints in some circumstance don't seem to mirror correctly(see MouthCorner_In action)
+
+	DONE 3 new controls for the cheek:
+		- DONE Cheek puff (lattice or shape key magic probably)
 		- DONE Outer Upper cheek (action methinks)
-		- Inner cheek(sneer control) 
-			- also auto-trigger this when lip corner is pushed up.
+		- DONE Inner cheek(sneer control) 
+			- DONE also auto-trigger this when lip corner is pushed up.
 
-	Lip roll should affect the corners a lot less, and not aim for so much a kiss shape, but instead aim for just rolling the lips in whatever pose they're in.
-	It should roll over the teeth, so made with the assumption that it's used when the mouth is open. If we have time, can try to do something clever to make it work when the mouth is closed.
+	DONE Lip roll should affect the corners a lot less, and not aim for so much a kiss shape, but instead aim for just rolling the lips in whatever pose they're in.
+	DONE It should roll over the teeth, so made with the assumption that it's used when the mouth is open. If we have time, can try to do something clever to make it work when the mouth is closed.
 
-	Lip corners moving left/right and up/down should not move the lip corners forward/back. Instead, the lip control should be unlocked on its forward axis and only move the lip corner forward/back when moved along that axis. This means we will either need 3 actions to combine properly, or not use actions at all.
+	DONE Lip corners moving left/right and up/down should not move the lip corners forward/back. Instead, the lip control should be unlocked on its forward axis and only move the lip corner forward/back when moved along that axis. This means we will either need 3 actions to combine properly, or not use actions at all.
 	Rotation of lip corner control should affect the... rotation of the corner of the lips.
 
 	Add a lip zip functionality to scaling lip corner controls. If possible, make it so that scaling the bone up makes the lip shape more round.
 
-	LipWide action is currently sort of adding volume to the lips, by not squashing it. Make it squash, and let it lose volume, especially on the corners.
+	DONE(maybe too much) LipWide action is currently sort of adding volume to the lips, by not squashing it. Make it squash, and let it lose volume, especially on the corners.
 		https://storage.googleapis.com/blender-chat/r3Jx5ugeNPpZscrbD%2Fuploads%2F4bamYr64tNsi3KrZ8MmkqfDTXo3uR6jLLK%2F4bamYr64tNsi3KrZ8%2FSPvdKCzXa4GuurWir?GoogleAccessId=blender-chat%40blender-chat.iam.gserviceaccount.com&Expires=1571405643&Signature=rFrbG0VZ44J65DpiHGzR1WCO6wiNBQ2TH%2BODjhnJTDWGZ5TUJhJA3%2Ft3uPWKAbSgvB8NkjdeDIzF%2BzdOsgV9DCQDOx%2FZqJbwlUycMFZrBof6kfnWAN2%2F%2FSLrHKF%2BxvLXMZ%2FBw0oNg9THOEEjuxAr5YOr8JkN5Wh%2FfXVt6sMZc5gITAZJ5a9jrojP1c5fglkQEeekKN1GjjJotuKat6F5sepWzhxVuEE2aYYw9LFYP5Jux8Tc%2BiaFLMulnoZRLJMN4hrvCl5zDNkTiVtVEso20L0JS9rErMBPO%2BUjjSGhHAwYCBEhwd92dG%2BQxUPXpaJfa7XbLrDMpEfZsSQmVB2VDA%3D%3D&response-content-disposition=inline
 
-	Make the nostrils react less to Lip_Wide and more to Lip_UpDown.
+	DONE? Make the nostrils react less to Lip_Wide and more to Lip_UpDown.
 	Give face CTR- bones some colors.
 
 	DONE Make the eyebrow master behave more like a parent. Get rid of rotation-based action stuff. Middle eyebrow is not moving with the masters right now.
@@ -122,12 +124,12 @@ Face
 
 	DONE STR-P-UpperLip and lower are not visible without x-ray
 	DONE Make eyering CTR- bones bigger and move to Face Primary layer.
-	When lips roll in, try to preserve a more round shape while rolling.
-		The thing is, it feels like this round shape should exist by default. Maybe this is a matter of base shape?
+	DONE When lips roll in, try to preserve a more round shape while rolling.
+		DONE The thing is, it feels like this round shape should exist by default. Maybe this is a matter of base shape?
 	When lips roll in, moustache area should 1.) have some way to be controlled 2.) be a bit more puffy.
 		Same for lower lip. Lower moustache area.
 
-	Shouldn't lip corner and lip roll controls be owned by some child of TGT-MSTR-Mouth_Pivot ?
+	DONE Shouldn't lip corner and lip roll controls be owned by some child of TGT-MSTR-Mouth_Pivot ?
 	Lip CTR- bones are too small and not visible without x-ray!
 
 	Eyering CTR- bones should copy scale from their MSTR controls instead of the MSTR control one layer above(MSTR-Eyering)
@@ -151,6 +153,8 @@ Face
 	LOW Adjust weighting of the gums, such that they are weighted to face bones? Not sure about this... But I guess at least for the front area of the gums it could work and could be useful. Worth an experiment if we have the time.
 
 	Improve visuals of CTR2-Nose_Main (make a shape, make it yellow, rename to MSTR-Nose, make it orient with the nose with a DSP- bone)
+
+	Clean up weights on the inner mesh of the throat and mouth cavity.
 
 	Add sneer control?
 	MSTR-Eyering_Upper is an exposed control with a translating Action constraint. Needs a CONST- bone or someone to fix that bug.
