@@ -157,7 +157,7 @@ class SetupActionConstraints(bpy.types.Operator):
 					if(c.action == action):
 						if(c.name not in constraint_names	# but its name is wrong
 							or self.delete):				# or the user wants to delete it.
-							print("removing because " + c.name + " not in " + constraint_names)
+							print("removing because " + c.name + " not in " + str(constraint_names))
 							b.constraints.remove(c)
 							continue
 						# If the name is fine, but there is no associated keyframe
