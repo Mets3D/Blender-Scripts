@@ -18,12 +18,27 @@ class Driver(ID):
 			if type(source) == Driver:
 				# Make this a copy of the source Driver object.
 				utils.copy_attributes(source, self, recursive=True)
+			
 			if type(source) == bpy.types.FCurve:
 				# Allow passing FCurves, even though we don't care about any fields from here.
 				source = source.driver
 			if type(source) == bpy.types.Driver:
-				# If a Blender driver object is passed, read its data into this instance.
+				# If a Blender driver object is passed, read its data into this instance. Since our variable names match, a well implemented copy_attributes() can take care of everything.
 				utils.copy_attributes(source, self, recursive=True)
+
+	@staticmethod
+	def copy_drivers(obj_from, obj_to):
+		"""Copy all drivers from one object to another."""
+		if not obj_from.animation_data: return
+
+		for d in obj_from.animation_data.drivers:
+			copy_driver(d, obj_to, d.data_path, d.array_index)
+
+	@staticmethod
+	def copy_driver(BPY_driver, obj, data_path, index=-1):
+		"""Copy a driver to some other data path."""
+		driver = Driver(BPY_driver)
+		driver.make_real(obj, data_path, index)
 
 	@staticmethod
 	def get_driver_by_data_path(obj, data_path):
@@ -32,6 +47,18 @@ class Driver(ID):
 		for d in obj.animation_data.drivers:
 			if(d.data_path == data_path):
 				return d.driver
+
+	def flip(self, targets=False, subtargets=True, paths=True):
+		"""Mirror this driver around the X axis.
+		targets: Attempt to flip target object names.
+		subtargets: Attempt to flip subtarget names(bones, vertex groups)
+		paths: Attempt to flip Single Property data paths.
+		"""
+		#TODO: Pass as parameter whatever information is required in order to do this correctly. Try to keep parameters in this function specific to the driver itself(eg. don't pass bone orientation. That stuff should be figured out outside of this, and something conclusive passed into this that relates directly to the driver and its variables.)
+
+		# Flip variable target bones.
+		pass
+
 
 	def make_var(self, name="var"):
 		new_var = DriverVariable(name)
