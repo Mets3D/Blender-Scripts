@@ -11,6 +11,7 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 	# Mirrors all drivers from one bone to another. from_bone and to_bone should be pose bones.
 	# If from_constraint is specified, to_constraint also must be, and then copy and mirror drivers between constraints instead of bones.
 	# TODO: This should use new abstraction implementation, and be split up to copy_driver and flip_driver, each of which should handle only one driver at a time.
+	#	Actually, copy_driver would just be reading a driver into an abstract driver and then making it real somewhere else.
 	if(not armature.animation_data): return	# No drivers to mirror.
 
 	for d in armature.animation_data.drivers:					# Look through every driver on the armature
@@ -112,7 +113,7 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 	if(c.type=='ACTION' and b != opp_b):
 		action = c.action
 		# Flip min/max in some cases.
-		if(c.transform_channel == 'ROTATION_Z'):
+		if(c.transform_channel in ['ROTATION_Z', 'LOCATION_X']):
 			opp_c.min = c.max
 			opp_c.max = c.min
 
@@ -151,7 +152,7 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 						opp_kf.handle_left[1] *=-1
 						opp_kf.handle_right[1] *=-1
 
-	if(c.type=='ARMATURE'):
+	elif(c.type=='ARMATURE'):
 		for t in c.targets:
 			opp_t = opp_c.targets.new()
 			flipped_target = bpy.data.objects.get( utils.flip_name(t.target.name) )
@@ -160,7 +161,7 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 			opp_t.subtarget = flipped_subtarget
 			opp_t.weight = t.weight
 
-	if(c.type=='CHILD_OF' and c.target!=None):
+	elif(c.type=='CHILD_OF' and c.target!=None):
 		return # I don't care about child of constraints anymore, I use Armature Constraints now instead.
 
 		org_influence = opp_c.influence
@@ -177,12 +178,17 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 		opp_c.influence=0
 		armature.data.bones.active = org_active
 
-	if(c.type=='IK'):
+	elif(c.type=='IK'):
 		opp_c.pole_target = c.pole_target
 		opp_c.pole_subtarget = utils.flip_name(c.pole_subtarget)
 		opp_c.pole_angle = (-pi/2) - (c.pole_angle + pi/2)
+
+	elif(c.type=='LIMIT_LOCATION'):
+		# X: Flipped and inverted.
+		opp_c.min_x = c.max_x *-1
+		opp_c.max_x = c.min_x *-1
 		
-	if(c.type=='TRANSFORM'):
+	elif(c.type=='TRANSFORM'):
 		###### SOURCES #######
 		
 		### Source Locations
@@ -398,7 +404,7 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 					opp_c.to_max_z_scale = c.to_min_z_scale
 			
 			# Scale to Scale is all same.
-	
+
 	mirror_drivers(armature, b, opp_b, c, opp_c)
 
 class XMirrorConstraints(bpy.types.Operator):

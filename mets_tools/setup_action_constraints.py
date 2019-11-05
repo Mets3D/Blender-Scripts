@@ -67,9 +67,10 @@ class SetupActionConstraints(bpy.types.Operator):
 		else:
 			target = armature
 		action = bpy.data.actions[self.action]
+		constraint_name = "Action_" + action.name.replace("Rain_", "")
 		constraint_name_left = "Action_" + action.name.replace("Rain_", "") + ".L"	# TODO: Hard coded action naming convention.
 		constraint_name_right = "Action_" + action.name.replace("Rain_", "") + ".R"
-		constraint_names = [constraint_name_left, constraint_name_right]
+		constraint_names = [constraint_name, constraint_name_left, constraint_name_right]
 
 		affect_bones = []
 		if self.affect == 'ALL':
@@ -92,12 +93,6 @@ class SetupActionConstraints(bpy.types.Operator):
 
 		# Adding or updating Action constraint on the bones
 		for b in bones:
-			constraint_name = constraint_name_left[:-2]
-			if(b.name.endswith(".L")):
-				constraint_name = constraint_name_left
-			if(b.name.endswith(".R")):
-				constraint_name = constraint_name_right
-			
 			constraints = [c for c in b.constraints if c.name in constraint_names]
 
 			# Creating Action constraints
