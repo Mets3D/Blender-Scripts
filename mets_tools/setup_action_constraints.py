@@ -67,7 +67,9 @@ class SetupActionConstraints(bpy.types.Operator):
 		else:
 			target = armature
 		action = bpy.data.actions[self.action]
-		constraint_name = "Action_" + action.name.replace("Rain_", "")	# TODO: Hard coded action naming convention.
+		constraint_name_left = "Action_" + action.name.replace("Rain_", "") + ".L"	# TODO: Hard coded action naming convention.
+		constraint_name_right = "Action_" + action.name.replace("Rain_", "") + ".R"
+		constraint_names = [constraint_name_left, constraint_name_right]
 
 		affect_bones = []
 		if self.affect == 'ALL':
@@ -90,25 +92,25 @@ class SetupActionConstraints(bpy.types.Operator):
 
 		# Adding or updating Action constraint on the bones
 		for b in bones:
-			suffix = ""
+			constraint_name = constraint_name_left[:-2]
 			if(b.name.endswith(".L")):
-				suffix=".L"
+				constraint_name = constraint_name_left
 			if(b.name.endswith(".R")):
-				suffix=".R"
+				constraint_name = constraint_name_right
 			
-			constraints = [c for c in b.constraints if constraint_name in c.name]
+			constraints = [c for c in b.constraints if c.name in constraint_names]
 
 			# Creating Action constraints
 			if(len(constraints)==0):
 				if(		utils.flip_name(b.name) == b.name 
 					and utils.flip_name(self.subtarget) != self.subtarget ):
 					# If bone name is unflippable, but target bone name is flippable, split constraint in two.
-					c_l = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".L")
+					c_l = utils.find_or_create_constraint(b, 'ACTION', constraint_name_left)
 					constraints.append(c_l)
-					c_r = utils.find_or_create_constraint(b, 'ACTION', constraint_name + ".R")
+					c_r = utils.find_or_create_constraint(b, 'ACTION', constraint_name_right)
 					constraints.append(c_r)
 				else:
-					c = utils.find_or_create_constraint(b, 'ACTION', constraint_name + suffix)
+					c = utils.find_or_create_constraint(b, 'ACTION', constraint_name)
 					c.influence=1
 					constraints.append(c)
 
@@ -153,9 +155,9 @@ class SetupActionConstraints(bpy.types.Operator):
 				if(c.type=='ACTION'):
 					# If the constraint targets this action
 					if(c.action == action):
-						if(constraint_name not in c.name	# but its name is wrong
+						if(c.name not in constraint_names	# but its name is wrong
 							or self.delete):				# or the user wants to delete it.
-							print("removing because " + constraint_name + " not in " + c.name)
+							print("removing because " + c.name + " not in " + constraint_names)
 							b.constraints.remove(c)
 							continue
 						# If the name is fine, but there is no associated keyframe

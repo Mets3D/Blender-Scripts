@@ -100,8 +100,6 @@ Face
 			Store DEF- children in a custom property, then if we still need the face setup script we can rely on that custom property instead of the actual child.
 			Then parent DEF- bones to CTR- bones and inherit some sort of scale, and nuke the Copy Scale constraints, and hope that doesn't work like shit.
 
-	Add some shapes for upper/lower face master controls.
-	
 	Slap some simple shape keys in there to get the nose wrinkles and better eyebrow shapes, at least when moved with the master control.
 
 	LOW Adjust weighting of the gums, such that they are weighted to face bones? Not sure about this... But I guess at least for the front area of the gums it could work and could be useful. Worth an experiment if we have the time.
