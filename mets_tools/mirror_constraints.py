@@ -8,9 +8,9 @@ from bpy.props import *
 # Split constraint mirror into a util function.
 
 def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constraint=None):
-	# Creates a mirrored driver on to_bone. from_bone and to_bone should be pose bones.
-	# If from_constraint is specified, to_constraint also must be.
-	# If from_constraint is specified, only drivers belonging to that constraint will be copied, not drivers belonging directly to bone properties.
+	# Mirrors all drivers from one bone to another. from_bone and to_bone should be pose bones.
+	# If from_constraint is specified, to_constraint also must be, and then copy and mirror drivers between constraints instead of bones.
+	# TODO: This should use new abstraction implementation, and be split up to copy_driver and flip_driver, each of which should handle only one driver at a time.
 	if(not armature.animation_data): return	# No drivers to mirror.
 
 	for d in armature.animation_data.drivers:					# Look through every driver on the armature
@@ -113,9 +113,8 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 		action = c.action
 		# Flip min/max in some cases.
 		if(c.transform_channel == 'ROTATION_Z'):
-			old_min = c.min
-			c.min = c.max
-			c.max = old_min
+			opp_c.min = c.max
+			opp_c.max = c.min
 
 		curves = []
 		for cur in action.fcurves:
@@ -124,7 +123,7 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 		for cur in curves:
 			opp_data_path = cur.data_path.replace(b.name, opp_b.name)
 			
-			# Nuke opposite curves - NOTE: This wouldn't be neccesary if I didn't fuck this up in the first place and accidentally created a bunch of duplicate curves.
+			# Nuke opposite curves, just to be safe.
 			while True:
 				opp_cur = action.fcurves.find(opp_data_path, index=cur.array_index)
 				if not opp_cur: break
@@ -135,7 +134,6 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 			
 			if(not opp_cur):
 				opp_cur = action.fcurves.new(opp_data_path, index=cur.array_index, action_group=opp_b.name)
-				print("new curve")
 			utils.copy_attributes(cur, opp_cur, skip=["data_path", "group"])
 			
 			# If the other curve already existed, wipe any existing keyframes
