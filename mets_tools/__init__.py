@@ -51,6 +51,7 @@ from . import mirror_rig
 from . import armature_apply_scale
 from . import scale_control_to_bbone_handles
 from . import assign_bone_group
+from . import refresh_drivers
 
 def register():
 	from bpy.utils import register_class
@@ -75,6 +76,7 @@ def register():
 	armature_apply_scale.register()
 	scale_control_to_bbone_handles.register()
 	assign_bone_group.register()
+	refresh_drivers.register()
 
 	#bpy.types.VIEW3D_MT_pose_specials.append(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.append(draw_func_MarkSharpByAutoSmooth)
@@ -103,6 +105,7 @@ def unregister():
 	armature_apply_scale.unregister()
 	scale_control_to_bbone_handles.unregister()
 	assign_bone_group.unregister()
+	refresh_drivers.unregister()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.remove(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.remove(draw_func_MarkSharpByAutoSmooth)
