@@ -32,27 +32,22 @@ Clothes
 Face
 		Keep in mind when re-generating face controls: Eyelids shouldn't affect eyerings, and eyebrows shouldn't affect themselves, that is to say, automatic bbone handle should be disabled on these areas. Same for lips.
 		With that said, a lot of the bones from those areas should be able to be deleted.
-
-	Give face BB- bones some colors.
-	Stop using Body STR groups for the face. Or any other body bonegroups.
-	Also give bone groups a general cleanup pass.
 	
 	Maybe delete old action based eyering controls (and their relevant actions and constraints)?
-	
-	Slap some simple shape keys to get the nose wrinkles and better eyebrow shapes, at least when moved with the master control.
 
-	Rotation of lip corner control should affect the... rotation of the corner of the lips.
 	Add a lip zip functionality to scaling lip corner controls. If possible, make it so that scaling the bone up makes the lip shape more round.
 	
-	Eyering CTR- bones should copy scale from their MSTR controls instead of the MSTR control one layer above(MSTR-Eyering)
-	But then again, I'm not a fan of these copy scale constraints to begin with. I need to remind myself why they exist.
-		I guess I did them because the face setup script relies on DEF- bones being parented as chains.
-		But this is utterly flawed. This scale must be inherited from the CTR- parents appropriately. Copy Scale != Inherit Scale. That said, an Inherit Scale constraint would be interesting.
-		Idea: 
-			Store DEF- children in a custom property, then if we still need the face setup script we can rely on that custom property instead of the actual child.
-			Then parent DEF- bones to CTR- bones and inherit some sort of scale, and nuke the Copy Scale constraints, and hope that doesn't work like shit.
+	Scale Propagation
+		Eyering CTR- bones should copy scale from their MSTR controls instead of the MSTR control one layer above(MSTR-Eyering)
+		But then again, I'm not a fan of these copy scale constraints to begin with. I need to remind myself why they exist.
+			I guess I did them because the face setup script relies on DEF- bones being parented as chains.
+			But this is utterly flawed. This scale must be inherited from the BB- parents appropriately. Copy Scale != Inherit Scale. That said, an Inherit Scale constraint would be interesting.
+			Idea: 
+				Store DEF- children in a custom property, then if we still need the face setup script we can rely on that custom property instead of the actual child.
+				Then parent DEF- bones to BB- bones and inherit some sort of scale, and nuke the Copy Scale constraints, and hope that doesn't work like shit.
+				While we're at it, we should also store some sort of flag for which bones should use Auto+Tangent functionality to begin with. Find the bones that don't want to have this via find_hidden_constraints.py.
 
-	LOW (Kinda DONE?) Try to see if eyebrow CTR bones can behave a bit better when rotated, but not high priority.
+	LOW (Kinda DONE?) Try to see if eyebrow GRP bones can behave a bit better when rotated, but not high priority.
 	LOW Adjust weighting of the gums, such that they are weighted to face bones? Not sure about this... But I guess at least for the front area of the gums it could work and could be useful. Worth an experiment if we have the time.
 	LOW MSTR-Eyering_Upper is an exposed control with a translating Action constraint... Not ideal, but not worth fixing for now.
 
@@ -61,10 +56,9 @@ Face
 	DONE(maybe too much) LipWide action should squash the lips, to make them preserve volume.
 	DONE? Make the nostrils react less to Lip_Wide and more to Lip_UpDown.
 
-	NEXT RIG Hook up the scale of CTR bones to the bbone scale of deform bones.
-	NEXT RIG Think about how to add more lower level control for the eyebrows.
-
 Final Cleanup
+	We used to have some bones next to the ROOT bone that were used to organize bones that used Armature Constraint for parenting. What happened with that setup? I want it back.
+
 	Find constraints that are disabled and remove them.
 	Make sure no invalid constraints or drivers exist (and driver is not showing any warnings of any kind)
 	Make script to nuke unnecessary curves in actions (performance boost).

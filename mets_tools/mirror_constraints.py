@@ -26,8 +26,8 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 			new_d = None
 			if("constraints[" in data_path_from_bone):
 				data_path_from_constraint = data_path_from_bone.split("].", 1)[1]
-				if(from_constraint.type=='ARMATURE'):
-					# Armature constraints need special special treatment...
+				# Armature constraints need special special treatment...
+				if(from_constraint.type=='ARMATURE' and "targets[" in data_path_from_constraint):
 					target_idx = int(data_path_from_constraint.split("targets[")[1][0])
 					target = to_constraint.targets[target_idx]
 
@@ -130,19 +130,13 @@ def mirror_constraint(armature, bone, constraint, allow_split=True):
 				if not opp_cur: break
 				action.fcurves.remove(opp_cur)
 
-			# Create opposite curves
-			opp_cur = action.fcurves.find(opp_data_path, index=cur.array_index)
-			
-			if(not opp_cur):
-				opp_cur = action.fcurves.new(opp_data_path, index=cur.array_index, action_group=opp_b.name)
+			# Create opposite curve
+			opp_cur = action.fcurves.new(opp_data_path, index=cur.array_index, action_group=opp_b.name)
 			utils.copy_attributes(cur, opp_cur, skip=["data_path", "group"])
-			
-			# If the other curve already existed, wipe any existing keyframes
-			for kf in reversed(opp_cur.keyframe_points):
-				opp_cur.keyframe_points.remove(kf)
 			
 			# Copy keyframes
 			for kf in cur.keyframe_points:
+				# TODO: Maybe this part is unneccessary if we do recursive copy attributes above?
 				opp_kf = opp_cur.keyframe_points.insert(kf.co[0], kf.co[1])
 				utils.copy_attributes(kf, opp_kf, skip=["data_path"])
 				# Flip X location, Y and Z rotation... not sure if applies to all situations... probably not :S
