@@ -281,11 +281,75 @@ def clean_node_tree(node_tree, delete_unused_nodes=True, fix_groups=False, cente
 							n.node_tree = existing
 						else:
 							n.node_tree.name = n.node_tree.name[:-4]
-	
+
+class CleanUpAction(bpy.types.Operator):
+	"""Remove keyframes and curves that don't do anything from Actions."""
+	bl_idname = "action.clean_up"
+	bl_label = "Clean Up Action"
+	bl_options = {'REGISTER', 'UNDO'}
+
+	opt_all: BoolProperty(name="All Actions", default=False)
+	opt_method: EnumProperty(name="Cleanup Method",
+		items=(
+			("INDIVIDUAL", "Individual", "If an individual curve doesn't do anything, remove it."),
+			("TRANSFORM", "Per Transform Group", "If an entire group of curves don't do anything, remove them. Eg, only remove rotation curves if none of the rotation curves do anything."),
+			("BONE", "Per Bone", "Only remove curves if all curves belonging to that bone don't do anything.")
+		),
+		default="TRANSFORM")
+	opt_delete_default: BoolProperty(name="Delete Base Keyframes", description="If a curve only has one keyframe, and that keyframe is the default pose, delete it.", default=True)
+
+	def execute(self, context):
+		actions = bpy.data.actions if self.opt_all else [context.object.animation_data.action]
+
+		for action in actions:
+			bad_curves = {}	# Dict of data_path:[curves] where the list of curves is all curves for that data path(different array_index value though)
+			for curve in action.fcurves:
+				bad_kfs = []
+				for i, kf in enumerate(curve.keyframe_points):
+					if i==0: continue
+
+					if kf.co[1] == curve.keyframe_points[i-1].co[1]: 			# Keyframe same as previous one
+						if i != len(curve.keyframe_points)-1: 					# This is not the last keyframe
+							if kf.co[1] == curve.keyframe_points[i+1].co[1]:	# And keyframe same as next one
+								bad_kfs.append(kf)
+						else:
+							bad_kfs.append(kf)
+				
+				# Delete marked keyframes.
+				for bkf in bad_kfs:
+					try:	# TODO Idk why but it seems bad_kfs is sometimes not re-initialized as an empty list???
+						curve.keyframe_points.remove(bkf)
+					except: pass
+
+				# Mark bad curve if there is only one keyframe and it is a default pose keyframe.
+				if len(curve.keyframe_points) == 1:
+					kf = curve.keyframe_points[0]
+					bad = False
+					if "scale" in curve.data_path:
+						if kf.co[1] == 1.0:
+							bad = True
+					else:
+						if kf.co[1] == 1.0 and "rotation_quaternion" in curve.data_path and curve.array_index==0:
+							bad = True
+						elif kf.co[1] == 0.0:
+							bad = True
+					if bad:
+						if curve.data_path not in bad_curves:
+							bad_curves[curve.data_path] = []
+						bad_curves[curve.data_path].append(curve)
+			
+			for group in bad_curves.keys():
+				# For now, just delete all bad curves.
+				for curve in bad_curves[group]:
+					action.fcurves.remove(curve)
+					# TODO:
+					# based on opt_method, check if other required curves are marked for delete.
+					# If they all are, delete them all (and only then).
+
 class CleanUpArmature(bpy.types.Operator):
 	# TODO: turn into a valid operator
 	# TODO: disable Deform tickbox on bones with no corresponding vgroups. (This would ideally be done before vgroup cleanup) - Always print a warning for this.
-	# TODO: vice versa, warn is a non-deform bone has a corresponding vgroup.
+	# TODO: vice versa, warn if a non-deform bone has a corresponding vgroup.
 	def execute(self, context):
 		armature = context.object
 
@@ -605,6 +669,8 @@ def register():
 	#register_class(CleanUpArmatures)
 	register_class(CleanUpMaterials)
 	register_class(CleanUpScene)
+	register_class(CleanUpAction)
+
 
 def unregister():
 	bpy.types.MATERIAL_MT_context_menu.remove(DeleteUnusedMaterialSlots.draw)
@@ -617,3 +683,4 @@ def unregister():
 	#unregister_class(CleanUpArmatures)
 	unregister_class(CleanUpMaterials)
 	unregister_class(CleanUpScene)
+	unregister_class(CleanUpAction)

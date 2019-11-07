@@ -35,8 +35,6 @@ Face
 	
 	Maybe delete old action based eyering controls (and their relevant actions and constraints)?
 
-	Add a lip zip functionality to scaling lip corner controls. If possible, make it so that scaling the bone up makes the lip shape more round.
-	
 	Scale Propagation
 		Eyering CTR- bones should copy scale from their MSTR controls instead of the MSTR control one layer above(MSTR-Eyering)
 		But then again, I'm not a fan of these copy scale constraints to begin with. I need to remind myself why they exist.
