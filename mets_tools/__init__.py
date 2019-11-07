@@ -52,6 +52,7 @@ from . import armature_apply_scale
 from . import scale_control_to_bbone_handles
 from . import assign_bone_group
 from . import refresh_drivers
+from . import weld_normals
 
 def register():
 	from bpy.utils import register_class
@@ -77,6 +78,7 @@ def register():
 	scale_control_to_bbone_handles.register()
 	assign_bone_group.register()
 	refresh_drivers.register()
+	weld_normals.register()
 
 	#bpy.types.VIEW3D_MT_pose_specials.append(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.append(draw_func_MarkSharpByAutoSmooth)
@@ -106,6 +108,7 @@ def unregister():
 	scale_control_to_bbone_handles.unregister()
 	assign_bone_group.unregister()
 	refresh_drivers.unregister()
+	weld_normals.unregister()
 	
 	#bpy.types.VIEW3D_MT_pose_specials.remove(draw_func_MakePhysicsBones)
 	#bpy.types.VIEW3D_MT_edit_mesh.remove(draw_func_MarkSharpByAutoSmooth)
