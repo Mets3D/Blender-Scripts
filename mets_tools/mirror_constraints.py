@@ -416,6 +416,9 @@ class XMirrorConstraints(bpy.types.Operator):
 		return context.object.mode=='POSE'
 
 	def execute(self, context):
+		# TODO: We should fail with error on any bone that we don't find an opposite for, or any bone with unflippable name.
+		# Opposite bone also selected should also be an error, since then the mirroring order is unpredictable.
+
 		for b in context.selected_pose_bones:
 			#TODO: Make a separate operator for "splitting" constraints in left/right parts. (by halving their influence, then mirror copying them onto the same bone)
 			

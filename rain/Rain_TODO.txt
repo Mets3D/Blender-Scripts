@@ -34,17 +34,9 @@ Face
 		With that said, a lot of the bones from those areas should be able to be deleted.
 	
 	Maybe delete old action based eyering controls (and their relevant actions and constraints)?
-
-	Scale Propagation
-		Eyering CTR- bones should copy scale from their MSTR controls instead of the MSTR control one layer above(MSTR-Eyering)
-		But then again, I'm not a fan of these copy scale constraints to begin with. I need to remind myself why they exist.
-			I guess I did them because the face setup script relies on DEF- bones being parented as chains.
-			But this is utterly flawed. This scale must be inherited from the BB- parents appropriately. Copy Scale != Inherit Scale. That said, an Inherit Scale constraint would be interesting.
-			Idea: 
-				Store DEF- children in a custom property, then if we still need the face setup script we can rely on that custom property instead of the actual child.
-				Then parent DEF- bones to BB- bones and inherit some sort of scale, and nuke the Copy Scale constraints, and hope that doesn't work like shit.
-				While we're at it, we should also store some sort of flag for which bones should use Auto+Tangent functionality to begin with. Find the bones that don't want to have this via find_hidden_constraints.py.
-
+	Delete unused face deform bones
+	Delete unused auto+tangent helpers
+	
 	LOW (Kinda DONE?) Try to see if eyebrow GRP bones can behave a bit better when rotated, but not high priority.
 	LOW Adjust weighting of the gums, such that they are weighted to face bones? Not sure about this... But I guess at least for the front area of the gums it could work and could be useful. Worth an experiment if we have the time.
 	LOW MSTR-Eyering_Upper is an exposed control with a translating Action constraint... Not ideal, but not worth fixing for now.

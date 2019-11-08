@@ -95,7 +95,7 @@ def bone_search(armature, search=None, start=None, end=None, edit_bone=False, se
 	
 	return filtered_list
 
-def find_nearby_bones(armature, search_co, dist, ebones=None):
+def find_nearby_bones(armature, search_co, dist=0.0005, ebones=None):
 	""" Bruteforce search for bones that are within a given distance of the given coordinates. """
 	""" Active object must be an armature. """	# TODO: Let armature be passed, maybe optionally. Do some assert sanity checks.
 	""" ebones: Only search in these bones. """
