@@ -8,6 +8,8 @@ Write a document about some of the challenges and improvements made over the pas
 Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 To make a rig generator, I need to learn how to use the new Rigify.
 
+Write a document on what could be done on blender development side to make my workflow better, and what things I will need to learn and do in order to rig new characters.
+
 Body/Limbs
 	LOW FK-Thumb2.R rotation should affect palm bulge
 	MEDIUM I think thigh might need some updates to be up to date with current shoulder tech. I wonder if its twist is managed(countered) correctly in IK mode.

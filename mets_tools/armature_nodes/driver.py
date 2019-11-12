@@ -23,8 +23,15 @@ class Driver(ID):
 				# Allow passing FCurves, even though we don't care about any fields from here.
 				source = source.driver
 			if type(source) == bpy.types.Driver:
-				# If a Blender driver object is passed, read its data into this instance. Since our variable names match, a well implemented copy_attributes() can take care of everything.
-				utils.copy_attributes(source, self, recursive=True)
+				# If a Blender driver object is passed, read its data into this instance.	# TODO: How could we just do this with a recursive copy_attributes, without fucking up the list types?
+				utils.copy_attributes(source, self, skip=["variables"])
+				for i_v in range(len(source.variables)):
+					bpy_v = source.variables[i_v]
+					v = DriverVariable()
+					self.variables.append(v)
+					utils.copy_attributes(bpy_v, v, skip=["targets"])
+					for i_t in range(len(bpy_v.targets)):
+						utils.copy_attributes(bpy_v.targets[i_t], v.targets[i_t])
 
 	@staticmethod
 	def copy_drivers(obj_from, obj_to):

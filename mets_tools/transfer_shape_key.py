@@ -9,11 +9,14 @@ bl_info = {
 }
 
 import bpy
+from bpy.props import *
+import bmesh
+
 import mathutils
 from mathutils import Vector
 import math
-from bpy.props import *
-import bmesh
+
+from mets_tools.armature_nodes.driver import Driver
 
 def build_kdtree(vertices):
 	kd = mathutils.kdtree.KDTree(len(vertices))
@@ -22,8 +25,8 @@ def build_kdtree(vertices):
 	kd.balance()
 	return kd
 
-def sk_transfer(obj_from, obj_to, expand=2):
-	""" Transfer Shape Key """
+def smart_sk_transfer(obj_from, obj_to, expand=2):
+	""" Transfer Shape Key (This is actually dumb, not smart. Or at least, it works poorly.) """
 
 	# For each target vertex
 	# Find x number of nearest source vertices
@@ -116,6 +119,98 @@ def sk_transfer(obj_from, obj_to, expand=2):
 		# Apply result vector to this vertex in the new shape key.
 		new_sk.data[t_i].co += result_vector
 
+def surface_deform_transfer_sk(context, obj_from, obj_to, sk_indices=[]):
+	# Enable pin button on shape key thingie on both objects
+	# For each shape key name
+		# Add a surface deform modifier to obj_to
+		# set both objects to Basis shape
+		# Bind surface deform modifier
+		# Set obj_from to the desired(original) shape key
+		# Apply surface deform modifier as shape key
+		# Rename shape key to source shape key name
+		# Bonus: Copy driver from source shape key's value if there is one.
+	
+	context.view_layer.objects.active = obj_to
+
+	obj_from.show_only_shape_key = True
+	obj_to.show_only_shape_key = True
+
+	for i in sk_indices:
+		sk = obj_from.data.shape_keys.key_blocks[i]
+		obj_from.active_shape_key_index = 0
+
+		surf_def = obj_to.modifiers.new(name=sk.name, type='SURFACE_DEFORM')
+		surf_def.target = obj_from
+		bpy.ops.object.surfacedeform_bind(modifier=sk.name)
+		obj_from.active_shape_key_index = i
+
+		bpy.ops.object.modifier_apply(apply_as='SHAPE', modifier=sk.name)
+
+		new_sk = obj_from.data.shape_keys.key_blocks[-1]
+
+		driver_data_path = 'key_blocks["' + sk.name + '"].value'
+		driver = obj_from.data.shape_keys.animation_data.drivers.find(driver_data_path)
+		if driver:
+			Driver.copy_driver(driver, obj_to.data.shape_keys, driver_data_path)
+	
+	context.view_layer.objects.active = obj_from
+
+class CheckBoxWithName(bpy.types.PropertyGroup):
+	"""Checkbox with a name and index.
+	"""
+	
+	index: IntProperty()
+	value: BoolProperty(
+		name='Boolean Value',
+		description='',
+	)
+
+class ShapeKeyTransferOperatorSD(bpy.types.Operator):
+	"""Transfer selected shape keys from active to selected objects using Surface Deform modifier."""
+	bl_idname = "object.shape_key_transfer_sd"
+	bl_label = "Transfer Shape Key With Surface Deform"
+	bl_options = {'REGISTER', 'UNDO'}
+
+	@classmethod
+	def poll(cls, context):
+		return context.object is not None
+
+	def invoke(self, context, event):
+		context.scene.shape_keys_transferred.clear()
+		for i, sk in enumerate(context.object.data.shape_keys.key_blocks):
+			checkbox = context.scene.shape_keys_transferred.add()
+			checkbox.value = False
+			checkbox.name = sk.name
+			checkbox.index = i
+		
+		wm = context.window_manager
+		return wm.invoke_props_dialog(self)
+
+	def draw(self, context):
+		layout = self.layout
+		col = layout.column()
+
+		for checkbox in context.scene.shape_keys_transferred:
+			col.prop(checkbox, 'value', text=checkbox.name)
+
+	def execute(self, context):
+		assert len(context.selected_objects) > 1, "At least two objects must be selected. Select the source object last."
+
+		sk_indices = []
+		for checkbox in context.scene.shape_keys_transferred:
+			if checkbox.value == True:
+				sk_indices.append(checkbox.index)
+		
+		for o in context.selected_objects:
+			if o == context.object: continue
+			if o.type!='MESH': continue
+			if not o.data or not o.data.shape_keys: continue
+			surface_deform_transfer_sk(context, context.object, o, sk_indices)
+		
+		context.scene.shape_keys_transferred.clear()
+
+		return { 'FINISHED' }
+
 class ShapeKeyTransferOperator(bpy.types.Operator):
 	""" Transfer a shape key from active to selected objects based on weighted vert distances """
 	bl_idname = "object.shape_key_transfer"
@@ -145,7 +240,7 @@ class ShapeKeyTransferOperator(bpy.types.Operator):
 			
 			mask_vgroup = o.vertex_groups.get(self.opt_mask_vgroup)
 			
-			sk_transfer(source_obj, o, mask_vgroup)
+			smart_sk_transfer(source_obj, o, mask_vgroup)
 			
 			bpy.context.view_layer.objects.active = o
 		
@@ -153,8 +248,13 @@ class ShapeKeyTransferOperator(bpy.types.Operator):
 
 def register():
 	from bpy.utils import register_class
-	register_class(ShapeKeyTransferOperator)
+	register_class(CheckBoxWithName)
+	register_class(ShapeKeyTransferOperatorSD)
+	bpy.types.Scene.shape_keys_transferred = bpy.props.CollectionProperty(type=CheckBoxWithName)
 
 def unregister():
 	from bpy.utils import unregister_class
-	unregister_class(ShapeKeyTransferOperator)
+	unregister_class(CheckBoxWithName)
+	register_class(ShapeKeyTransferOperatorSD)
+
+register()

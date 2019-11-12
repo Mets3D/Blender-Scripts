@@ -1,16 +1,20 @@
-Medium things:
+Potential workflow improvements
 - HIGH Let me access armature layers(or whatever they become) from weight paint mode.
+- MED Sculpting works poorly with mirror modifier, especially when sculpting shape keys, especially especially when sculpting shape keys on a mesh deformed by an armature.
+- HIGH Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
+- When in paint modesand 2D Falloff is disabled, the brush cursor shouldn't display when the mouse isn't over the mesh's surface, to indicate that in these cases, the brush stroke will not do anything. This would also be extremely helpful in communicating whether 2D Falloff is enabled or not, and would help avoid mistakes that happen regularly and can set me back hours, by accidently painting through the mesh.
+
+
+Medium things:
 - LOW Thicker/brighter edge drawing for bone shapes (Or edges in general)
 - MED Mask for Surface Deform modifier
 
-- MED Sculpting works poorly with mirror modifier, especially when sculpting shape keys, especially especially when sculpting shape keys on a mesh deformed by an armature.
 - LOW Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
 - HIGH Weight paint: Changing brushes is an absolute pain and there's no way around it, even with a custom addon.
 - Let this behaviour be the default, just like in sculpt mode:
     Left Mouse Button - paint Add
     Ctrl + Left Mouse Button - paint Substract
     Shift + Left Mouse Button - paint Blur
-- HIGH Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
 
 Small things: (All of these are small things)
 - ME? Let us assign area split/join operation to a keyboard shortcut.
@@ -20,7 +24,6 @@ Small things: (All of these are small things)
     - Deform checkbox
     - Display options: Custom Object, Bone Size, Scale, Custom Shape Transform
 - When changing order of bone constraints, they don't get updated in the viewport.
-- When in paint modes(using a brush) and 2D Falloff is disabled, the brush cursor shouldn't display when the mouse isn't over the mesh's surface, to indicate that in these cases, the brush stroke will not do anything.
 - These things don't have an undo step:
 	- Unlink Action
 	- Clear Pose Constraints operator
