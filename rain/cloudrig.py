@@ -1,35 +1,35 @@
-"Version: 2.0"
-"19/08/19"
+"Version: 0.0"
+"13/11/19"
 
 import bpy
 from bpy.props import *
-import webbrowser
 
 def get_rigs():
-	""" Find all MetsRig armatures in the file. """
-	ret = []
-	armatures = [o for o in bpy.data.objects if o.type=='ARMATURE']
-	for o in armatures:
-		if("metsrig") in o:
-			ret.append(o)
-	if(len(ret)==0):
-		ret = [None]
-	return ret
+	""" Find all cloudrig armatures in the file."""
+	return [o for o in bpy.data.objects if o.type=='ARMATURE' and 'cloudrig' in o]
 
 def get_rig():
+	"""If the active object is a cloudrig, return it."""
 	rig = bpy.context.object
-	if rig and rig.type == 'ARMATURE' and 'metsrig' in rig:
+	if rig and rig.type == 'ARMATURE' and 'cloudrig' in rig:
 		return rig
 
+def get_char_bone(rig):
+	for b in rig.pose.bones:
+		if b.name.startswith("Properties_Character"):
+			return b
+
 def pre_depsgraph_update(scene, depsgraph=None):
-	""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
+	""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties.
+		Most of these changes are handled by drivers instead, but this thing is here for cases where drivers are inconvenient or cause performance issues.
+	"""
 	rig = get_rig()
 	if not rig: return
 	
 	# Grabbing relevant data
-	mets_props = rig.data.metsrig_properties
-	character_bone = rig.pose.bones.get("Properties_Character_"+mets_props.metsrig_chars)
-	outfit_bone = rig.pose.bones.get("Properties_Outfit_"+mets_props.metsrig_outfits)
+	rig_props = rig.data.rig_properties
+	char_bone = get_char_bone(rig)
+	outfit_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
 	
 	if('update' not in rig.data):
 		rig.data['update'] = 0
@@ -47,14 +47,14 @@ def pre_depsgraph_update(scene, depsgraph=None):
 			if(p=="prop_hierarchy"): continue
 			current_props[list_id][p] = prop_owner[p]
 	
-	if(character_bone):
-		save_props(character_bone, 0)
+	if(char_bone):
+		save_props(char_bone, 0)
 	else:
-		print("Warning: Character bone for " + mets_props.metsrig_chars + " not found. It needs to be named 'Properties_Character_CharName'.")
+		print("Warning: Character bone not found. It needs to be named 'Properties_Character_CharName'.")
 	if(outfit_bone):
 		save_props(outfit_bone, 1)
 	else:
-		print("Warning: Outfit bone for " + mets_props.metsrig_outfits + " not found. It should be named 'Properties_Outfit_OutfitName' and its parent should be the character bone.")
+		print("Warning: Outfit bone for " + rig_props.outfit + " not found. It should be named 'Properties_Outfit_OutfitName' and its parent should be the character bone.")
 	save_props(rig.data, 2)
 	
 	# Retrieving the list of dictionaries from the ID Property - have to use to_dict() on each dictionary due to the way ID properties... are.
@@ -70,33 +70,33 @@ def pre_depsgraph_update(scene, depsgraph=None):
 	# If they do not match, that means there was user input, and it's time to update stuff.
 	if( current_props != prev_props ):
 		# Materials need to update before the depsgraph update, otherwise they will not update even in rendered view.
-		rig.data.metsrig_properties.update_node_values(bpy.context)
 		rig.data['prev_props'] = [current_props[0], current_props[1], current_props[2]]
 		# However, updating meshes before depsgraph update will cause an infinite loop, so we use a flag to let post_depsgraph_update know that it should update meshes.
 		rig.data['update'] = 1
 
 def post_depsgraph_update(scene, depsgraph=None):
-	"""Runs after every depsgraph update. If any user input to the rig properties was detected by pre_depsgraph_update(), this will call update_meshes(). """
-	
+	"""Runs after every depsgraph update. If any user input to the rig properties was detected by pre_depsgraph_update(), we can do any fancy updates we want here. """
+	# NOTE: Avoid changing user-facing values from here, it could send us for an infinite loop!
+
 	rig = get_rig()
 	if not rig: return
 	
 	if(rig.data['update'] == 1):
-		rig.data.metsrig_properties.update_meshes(bpy.context)
+		### << Do fancy stuff here, like toggling Mask modifiers >>
 		rig.data['update'] = 0
 
-class MetsRig_BoolProperties(bpy.types.PropertyGroup):
+class Rig_BoolProperties(bpy.types.PropertyGroup):
 	""" Store a BoolProperty referencing an outfit/character property whose min==0 and max==1.
 		This BoolProperty will be used to display the property as a toggle button in the UI.
 	"""
-	# This is currently only used for outfit/character settings, NOT rig settings. Those booleans are instead hard-coded into metsrig_properties.
+	# This is currently only used for outfit/character settings, NOT rig settings. Those booleans are instead hard-coded into rig_properties.
 
 	def update_id_prop(self, context):
 		""" Callback function to update the corresponding ID property when this BoolProperty's value is changed. """
 		rig = self.rig
-		metsrig_props = rig.metsrig_properties
-		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+metsrig_props.metsrig_outfits)
-		char_bone = rig.pose.bones.get("Properties_Character_"+metsrig_props.metsrig_chars)
+		rig_props = rig.data.rig_properties
+		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
+		char_bone = get_char_bone(rig)
 		for prop_owner in [outfit_bone, char_bone]:
 			if(prop_owner != None):
 				if(self.name in prop_owner):
@@ -109,29 +109,30 @@ class MetsRig_BoolProperties(bpy.types.PropertyGroup):
 		update=update_id_prop
 	)
 
-class MetsRig_Properties(bpy.types.PropertyGroup):
-	# PropertyGroup for storing MetsRig related properties in.
-	# Character and Outfit specific properties will still be stored in their relevant Properties bones (eg. Properties_Outfit_Ciri_Default).
-	
+class Rig_Properties(bpy.types.PropertyGroup):
+	""" PropertyGroup for storing fancy custom properties in.
+		Character and Outfit specific properties will still be stored in their relevant Properties bones (eg. Properties_Outfit_Rain).
+	"""
+
 	def get_rig(self):
-		""" Find the armature object that is using this instance of MetsRig_Properties. """
+		""" Find the armature object that is using this instance (self). """
 
 		for rig in get_rigs():
-			if(rig.metsrig_properties == self):
+			if(rig.data.rig_properties == self):
 				return rig
 
 	def update_bool_properties(self, context):
-		""" Create BoolProperties out of those outfit/character properties whose min==0 and max==1.
+		""" Create BoolProperties out of those outfit properties whose min==0 and max==1.
 			These BoolProperties are necessarry because only BoolProperties can be displayed in the UI as toggle buttons.
 		"""
 		
 		rig = self.get_rig()
-		bool_props = rig.metsrig_boolproperties
+		bool_props = rig.data.rig_boolproperties
 		bool_props.clear()	# Nuke all the bool properties
 		
-		outfit_bone = rig.pose.bones.get("Properties_Outfit_" + self.metsrig_outfits)
-		character_bone = rig.pose.bones.get("Properties_Character_" + self.metsrig_chars)
-		for prop_owner in [outfit_bone, character_bone]:
+		outfit_bone = rig.pose.bones.get("Properties_Outfit_" + self.outfit)
+		char_bone = get_char_bone(rig)
+		for prop_owner in [outfit_bone, char_bone]:
 			if(prop_owner==None): continue
 			for p in prop_owner.keys():
 				if( type(prop_owner[p]) != int or p.startswith("_") ): continue
@@ -144,20 +145,17 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					new_bool.rig = rig
 	
 	def outfits(self, context):
-		""" Callback function for finding the list of available outfits for the metsrig_outfits enum. """
+		""" Callback function for finding the list of available outfits for the outfit enum.
+			Based on naming convention. Bones storing an outfit's properties must be named "Properties_Outfit_OutfitName".
+		"""
 		rig = self.get_rig()
-		chars = [self.metsrig_chars]
-		if(self.metsrig_sets == 'Generic'):
-			chars = ['Generic']
-		elif(self.metsrig_sets == 'All'):
-			chars = [b.name.replace("Properties_Character_", "") for b in rig.pose.bones if "Properties_Character_" in b.name]
-		
+
 		outfits = []
-		for char in chars:
-			char_bone = rig.pose.bones.get("Properties_Character_"+char)
-			if(not char_bone): continue
-			outfits.extend([c.name.replace("Properties_Outfit_", "") for c in char_bone.children if "Properties_Outfit_" in c.name])
+		for b in rig.pose.bones:
+			if b.name.startswith("Properties_Outfit_"):
+				outfits.append(b.name.replace("Properties_Outfit_", ""))
 		
+		# Convert the list into what an EnumProperty expects.
 		items = []
 		for i, outfit in enumerate(outfits):
 			items.append((outfit, outfit, outfit, i))	# Identifier, name, description, can all be the character name.
@@ -168,88 +166,23 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		
 		return items
 	
-	def chars(self, context):
-		""" Callback function for finding the list of available chars for the metsrig_chars enum. """
-		items = []
-		chars = [b.name.replace("Properties_Character_", "") for b in self.get_rig().pose.bones if "Properties_Character_" in b.name]
-		for char in chars:
-			if(char=='Generic'): continue
-			items.append((char, char, char))
-		
-		# If no characters were found, don't return an empty list so the console doesn't spam "'0' matches no enum" warnings.
-		if(items==[]):
-			return [(('identifier', 'name', 'description'))]
-		
-		return items
-	
-	def hairs(self, context):
-		""" Callback function for finding the list of available hairs for the metsrig_hairs enum. """
-		rig = self.get_rig()
-		hairs = []
-		char_bones = [b for b in rig.pose.bones if "Properties_Character_" in b.name]
-		outfit_bones = [b for b in rig.pose.bones if "Properties_Outfit_" in b.name]
-		for bone in char_bones+outfit_bones:
-			if("Hair" not in bone): continue
-			bone_hairs = bone['Hair'].split(", ")
-			for bh in bone_hairs:
-				if(bh not in hairs):
-					hairs.append(bh)
-		
-		items = [('None', 'None', 'None')]
-		for hair in hairs:
-			items.append((hair, hair, hair))
-		return items
-	
 	def change_outfit(self, context):
-		""" Update callback of metsrig_outfits enum. """
+		""" Update callback of outfit enum. """
 		
 		rig = self.get_rig()
-		char_bone = rig.pose.bones.get("Properties_Character_"+self.metsrig_chars)
 		
-		if( (self.metsrig_outfits == '') ):
-			self.metsrig_outfits = self.outfits(context)[0][0]
+		if( (self.outfit == '') ):
+			self.outfit = self.outfits(context)[0][0]
 		
-		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+self.metsrig_outfits)
-
-		if('Hair' in char_bone):
-			self.metsrig_hairs = char_bone['Hair'].split(", ")[0]
-		if('Hair' in outfit_bone):
-			self.metsrig_hairs = outfit_bone['Hair']
+		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+self.outfit)
 		
 		self.update_bool_properties(context)
 
-	def change_characters(self, context):
-		""" Update callback of metsrig_chars enum. """
-		rig = self.get_rig()
-		char_bone = rig.pose.bones.get("Properties_Character_"+self.metsrig_chars)
-		
-		self.change_outfit(context)
-	
-	metsrig_chars: EnumProperty(
-		name="Character",
-		items=chars,
-		update=change_characters)
-	
-	metsrig_sets: EnumProperty(
-		name="Outfit Set",
-		description = "Set of outfits to choose from",
-		items={
-			('Character', "Canon Outfits", "Outfits of the selected character", 1),
-			('Generic', "Generic Outfits", "Outfits that don't belong to a character", 2),
-			('All', "All Outfits", "All outfits, including those of other characters", 3)
-		},
-		default='Character',
-		update=change_outfit)
-	
-	metsrig_outfits: EnumProperty(
+	outfit: EnumProperty(
 		name="Outfit",
 		items=outfits,
 		update=change_outfit)
 	
-	metsrig_hairs: EnumProperty(
-		name="Hairstyle",
-		items=hairs)
-
 	render_modifiers: BoolProperty(
 		name='render_modifiers',
 		description='Enable SubSurf, Solidify, Bevel, etc. modifiers in the viewport')
@@ -258,150 +191,74 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='use_proxy',
 		description='Use Proxy Meshes')
 
-	show_fkik: BoolProperty(
-		name="FK/IK",
-		description="Show FK/IK Switches"
-	)
-
-class MetsRigUI(bpy.types.Panel):
+class RigUI(bpy.types.Panel):
 	bl_space_type = 'VIEW_3D'
 	bl_region_type = 'UI'
-	bl_category = 'MetsRig'
+	bl_category = 'CloudRig'
 	
 	@classmethod
 	def poll(cls, context):
-		return 'metsrig' in context.object
+		return 'cloudrig' in context.object
 
 	def draw(self, context):
 		layout = self.layout
 
-class MetsRigUI_Properties(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_properties"
+class RigUI_Outfits(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_properties"
 	bl_label = "Outfits"
 
 	@classmethod
 	def poll(cls, context):
 		if(not super().poll(context)):
 			return False
-		# Only display this panel if there is either an outfit with options, multiple outfits, or multiple characters.
+
+		# Only display this panel if there is either an outfit with options, multiple outfits, or character options.
 		rig = context.object
 		if(not rig): return False
-		mets_props = rig.metsrig_properties
-		bool_props = rig.metsrig_boolproperties
-		multiple_chars = len(mets_props.chars(context)) > 1	# Whether the rig has multiple characters. If not, we won't display Character and OutfitSet menus.
-		multiple_outfits = len(mets_props.outfits(context)) > 1
-		outfit_properties_bone = rig.pose.bones.get("Properties_Outfit_"+mets_props.metsrig_outfits)
-		character_properties_bone = rig.pose.bones.get("Properties_Character_"+mets_props.metsrig_chars)
-		outfit_properties_exist = False
-		character_properties_exist = False
-		if(outfit_properties_bone):
-			keys = [k for k in outfit_properties_bone.keys() if not k.startswith("_")]
-			outfit_properties_exist = len(keys) > 0
-		if(character_properties_bone):
-			keys = [k for k in character_properties_bone.keys() if not k.startswith("_")]
-			character_properties_exist = len(keys) > 0
+		rig_props = rig.data.rig_properties
+		bool_props = rig.data.rig_boolproperties
+		multiple_outfits = len(rig_props.outfits(context)) > 1
+		outfit_properties_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
+		char_bone = get_char_bone(rig)
 
-		return multiple_chars or multiple_outfits or outfit_properties_exist or character_properties_exist
+		return multiple_outfits or outfit_properties_bone or char_bone
 
 	def draw(self, context):
 		layout = self.layout
 		rig = context.object
-		
-		self.bl_label = rig.name
 
-		mets_props = rig.metsrig_properties
-		bool_props = rig.metsrig_boolproperties
+		rig_props = rig.data.rig_properties
+		bool_props = rig.data.rig_boolproperties
 		
-		character = mets_props.metsrig_chars
-		multiple_chars = len(mets_props.chars(context)) > 1
-		
-		character_properties_bone = rig.pose.bones.get("Properties_Character_"+character)
-		outfitset = mets_props.metsrig_sets
-		outfit = mets_props.metsrig_outfits
-		outfit_properties_bone = rig.pose.bones.get("Properties_Outfit_"+outfit)
-
-		if(multiple_chars):
-			self.bl_label = "Characters and Outfits"
-			layout.prop(mets_props, 'metsrig_chars')
+		char_bone = get_char_bone(rig)
+		outfit_properties_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
 		
 		def add_props(prop_owner):
-			""" Add all properties of prop_owner to the layout. 
-				A property hierarchy can be specified in a property named 'prop_hierarchy'.
-				It needs to be a string:list_of_strings dictionary, where string is the parent and list_of_strings are the children.
-				For example this is the prop_hierarchy of the outfit "Ciri_Default":
-				{"Corset" : ["Back_Pouch", "Belt_Medallion", "Dagger", "Front_Pouch", "Squares"], "Hood-23" : ["Coat"]}
-				(The Coat child of Hood only shows up when Hood is 2 or 3) - TODO This is pretty messy
-			"""
-		
-			# Drawing properties with hierarchy
 			props_done = []
-			if( 'prop_hierarchy' in prop_owner ):
-				prop_hierarchy = eval(prop_owner['prop_hierarchy'])
-				
-				for parent_prop_name in prop_hierarchy.keys():
-					if( parent_prop_name == '_RNA_UI' ): continue
-					parent_prop_name_without_values = parent_prop_name	# VERBOSE AF
-					values = [1]	# Values which this property needs to be for its children to show. For bools this is always 1.
-					# Preparing parenting to non-bool properties. In prop_hierarchy the convention for these is "Prop_Name-###".
-					if('-' in parent_prop_name):
-						split = parent_prop_name.split('-')
-						parent_prop_name_without_values = split[0]
-						values = [int(val) for val in split[1]]	# Convert them to an int list ( eg. '23' -> [2, 3] )
-					
-					parent_prop_value = prop_owner[parent_prop_name_without_values]
-					
-					icon = 'TRIA_DOWN' if parent_prop_value in values else 'TRIA_RIGHT'
-					# Drawing parent prop, if it wasn't drawn yet.
-					if(parent_prop_name_without_values not in props_done):
-						if(parent_prop_name_without_values in bool_props):
-							bp = bool_props[parent_prop_name_without_values]
-							layout.prop(bp, 'value', toggle=True, text=bp.name.replace("_", " "), icon=icon)
-						else:
-							layout.prop(prop_owner, '["'+parent_prop_name_without_values+'"]', slider=True, text=parent_prop_name_without_values.replace("_", " "))
-					
-					# Marking parent prop as done drawing.
-					props_done.append(parent_prop_name_without_values)
-					
-					# Marking child props as done drawing. (Before they're drawn, since if the parent is disabled, we don't want to draw them.)
-					for child_prop_name in prop_hierarchy[parent_prop_name]:
-						props_done.append(child_prop_name)
-					
-					# Checking if we should draw children.
-					if(parent_prop_value not in values): continue
-					
-					# Drawing children.
-					childrens_box = layout.box()
-					for child_prop_name in prop_hierarchy[parent_prop_name]:
-						if(child_prop_name in bool_props):
-							bp = bool_props[child_prop_name]
-							childrens_box.prop(bp, 'value', toggle=True, text=bp.name)
-						else:
-							childrens_box.prop(prop_owner, '["'+child_prop_name+'"]')
-			
-			# Drawing properties without hierarchy
+
 			for prop_name in prop_owner.keys():
 				if( prop_name in props_done or prop_name.startswith("_") ): continue
 				# Int Props
 				if(prop_name not in bool_props and type(prop_owner[prop_name]) in [int, float] ):
 					layout.prop(prop_owner, '["'+prop_name+'"]', slider=True, text=prop_name.replace("_", " "))
+					props_done.append(prop_name)
 			# Bool Props
 			for bp in bool_props:
 				if(bp.name in prop_owner.keys() and bp.name not in props_done):
 					layout.prop(bp, 'value', toggle=True, text=bp.name.replace("_", " "))
-		
-		if( character_properties_bone != None ):
-			add_props(character_properties_bone)
+
+		# Add character properties to the UI, if any.
+		if( char_bone ):
+			add_props(char_bone)
 			layout.separator()
 
-		if(multiple_chars):
-			layout.prop(mets_props, 'metsrig_sets')
-		layout.prop(mets_props, 'metsrig_outfits')
-		
+		# Add outfit properties to the UI, if any. Always add outfit selector.
+		layout.prop(rig_props, 'outfit')
 		if( outfit_properties_bone != None ):
 			add_props(outfit_properties_bone)
 
-class MetsRigUI_Layers(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_layers"
+class RigUI_Layers(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_layers"
 	bl_label = "Layers"
 	
 	def draw(self, context):
@@ -429,7 +286,7 @@ class MetsRigUI_Layers(MetsRigUI):
 		layout.row().prop(data, 'layers', index=6, toggle=True, text='Hair')
 		layout.row().prop(data, 'layers', index=7, toggle=True, text='Clothes')
 		
-		layout.separator()
+		# Draw secret layers
 		if('dev' in rig and rig['dev']==1):
 			layout.separator()
 			layout.prop(rig, '["dev"]', text="Secret Layers")
@@ -454,17 +311,21 @@ class MetsRigUI_Layers(MetsRigUI):
 			death_row.prop(data, 'layers', index=30, toggle=True, text='Properties')
 			death_row.prop(data, 'layers', index=31, toggle=True, text='Black Box')
 
-class MetsRigUI_IKFK(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_settings"
+class RigUI_Settings_FKIK(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_settings"
 	bl_label = "Settings"
 	
 	def draw(self, context):
 		layout = self.layout
+		rig = context.object
 
-class MetsRigUI_IKFK_Switch(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_ikfk_switch"
+		rig_props = rig.data.rig_properties
+		layout.row().prop(rig_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
+
+class RigUI_Settings_FKIK_Switch(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_ikfk_switch"
 	bl_label = "FK/IK Switch"
-	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+	bl_parent_id = "OBJECT_PT_rig_ui_settings"
 
 	def draw(self, context):
 		layout = self.layout
@@ -479,10 +340,10 @@ class MetsRigUI_IKFK_Switch(MetsRigUI):
 		legs_row.prop(ikfk_props, '["ik_leg_left"]', slider=True, text='Left Leg')
 		legs_row.prop(ikfk_props, '["ik_leg_right"]', slider=True, text='Right Leg')
 
-class MetsRigUI_IK_Settings(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_ik"
+class RigUI_Settings_IK(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_ik"
 	bl_label = "IK Settings"
-	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+	bl_parent_id = "OBJECT_PT_rig_ui_settings"
 
 	def draw(self, context):
 		layout = self.layout
@@ -521,15 +382,15 @@ class MetsRigUI_IK_Settings(MetsRigUI):
 		pole_row.prop(ikfk_props, '["ik_pole_follow_hands"]', slider=True, text='Arms')
 		pole_row.prop(ikfk_props, '["ik_pole_follow_feet"]',  slider=True, text='Legs')
 
-class MetsRigUI_FK_Settings(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_fk"
+class RigUI_Settings_FK(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_fk"
 	bl_label = "FK Settings"
-	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+	bl_parent_id = "OBJECT_PT_rig_ui_settings"
 
 	def draw(self, context):
 		layout = self.layout
 		rig = context.object
-		mets_props = rig.metsrig_properties
+		rig_props = rig.data.rig_properties
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 		face_props = rig.pose.bones.get('Properties_Face')
 
@@ -547,10 +408,10 @@ class MetsRigUI_FK_Settings(MetsRigUI):
 		layout.prop(face_props, '["neck_hinge"]', slider=True, text='Neck Hinge')
 		layout.prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
 
-class MetsRigUI_Face_Settings(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_face"
+class RigUI_Settings_Face(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_face"
 	bl_label = "Face Settings"
-	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+	bl_parent_id = "OBJECT_PT_rig_ui_settings"
 
 	def draw(self, context):
 		layout = self.layout
@@ -565,15 +426,15 @@ class MetsRigUI_Face_Settings(MetsRigUI):
 		# Mouth settings
 		layout.prop(face_props, '["teeth_follow_mouth"]', text='Teeth Follow Mouth', slider=True)
 
-class MetsRigUI_Misc_Settings(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_misc"
+class RigUI_Settings_Misc(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_misc"
 	bl_label = "Misc"
-	bl_parent_id = "OBJECT_PT_metsrig_ui_settings"
+	bl_parent_id = "OBJECT_PT_rig_ui_settings"
 
 	def draw(self, context):
 		layout = self.layout
 		rig = context.object
-		mets_props = rig.metsrig_properties
+		rig_props = rig.data.rig_properties
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 		face_props = rig.pose.bones.get('Properties_Face')
 
@@ -588,77 +449,25 @@ class MetsRigUI_Misc_Settings(MetsRigUI):
 		eye_parents = ['Root', 'Torso', 'Torso_Loc', 'Head']
 		row.prop(ikfk_props, '["eye_target_parent"]',  text=eye_parents[ikfk_props["eye_target_parent"]], slider=True)
 
-class MetsRigUI_Extras(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_extras"
-	bl_label = "Extras"
-	
-	def draw(self, context):
-		layout = self.layout
-		rig = context.object
-		mets_props = rig.metsrig_properties
-	
-		layout.row().prop(mets_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
-		#layout.row().prop(mets_props, 'use_proxy', text='Use Proxy Meshes', toggle=True)
-
-class Link_Button(bpy.types.Operator):
-	"""Open a link in a web browser"""
-	bl_idname = "ops.open_link"
-	bl_label = "Open a link in web browser"
-	bl_options = {'REGISTER'}
-	
-	url: StringProperty(name='URL',
-		description="URL",
-		default="http://blender.org/"
-	)
-
-	def execute(self, context):
-		webbrowser.open_new(self.url) # opens in default browser
-		return {'FINISHED'}
-
-class MetsRigUI_Links(MetsRigUI):
-	bl_idname = "OBJECT_PT_metsrig_ui_support"
-	bl_label = "Links"
-	
-	url_cloud = "https://cloud.blender.org/welcome"
-	url_dev_fund = "https://fund.blender.org/"
-	url_dev_blog = "https://code.blender.org/"
-	url_blender_chat = "https://blender.chat/"
-	
-	def draw(self, context):
-		layout = self.layout
-		
-		cloud_button = layout.operator('ops.open_link', text="Blender Cloud")
-		cloud_button.url = self.url_cloud
-		#cloud_button.description = "Subscribe to the Blender Cloud!" #TODO: Can I have unique descriptions per button? I think not, but would be nice.
-		fund_button = layout.operator('ops.open_link', text="Blender Dev Fund")
-		fund_button.url = self.url_dev_fund
-		blog_button = layout.operator('ops.open_link', text="Blender Dev Blog")
-		blog_button.url = self.url_dev_blog
-		chat_button = layout.operator('ops.open_link', text="Blender Chat")
-		chat_button.url = self.url_blender_chat
-
 classes = (
-	MetsRig_Properties,
-	MetsRig_BoolProperties,
-	MetsRigUI_Properties,
-	MetsRigUI_Layers,
-	MetsRigUI_IKFK,
-	MetsRigUI_IKFK_Switch,
-	MetsRigUI_IK_Settings,
-	MetsRigUI_FK_Settings,
-	MetsRigUI_Face_Settings,
-	MetsRigUI_Misc_Settings,
-	MetsRigUI_Extras,
-	Link_Button,
-	MetsRigUI_Links,
+	Rig_Properties,
+	Rig_BoolProperties,
+	RigUI_Outfits,
+	RigUI_Layers,
+	RigUI_Settings_FKIK,
+	RigUI_Settings_FKIK_Switch,
+	RigUI_Settings_IK,
+	RigUI_Settings_FK,
+	RigUI_Settings_Face,
+	RigUI_Settings_Misc,
 )
 
 from bpy.utils import register_class
 for c in classes:
 	register_class(c)
 
-bpy.types.Object.metsrig_properties = bpy.props.PointerProperty(type=MetsRig_Properties)
-bpy.types.Object.metsrig_boolproperties = bpy.props.CollectionProperty(type=MetsRig_BoolProperties)
+bpy.types.Armature.rig_properties = bpy.props.PointerProperty(type=Rig_Properties)
+bpy.types.Armature.rig_boolproperties = bpy.props.CollectionProperty(type=Rig_BoolProperties)
 
 bpy.app.handlers.depsgraph_update_post.append(post_depsgraph_update)
 bpy.app.handlers.depsgraph_update_pre.append(pre_depsgraph_update)
