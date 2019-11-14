@@ -41,8 +41,10 @@ Face
 	
 	rename Node_UserRotation shit to something else. Update in the setup script too I suppose.
 
-	When eyebrow master is moved up, make it go inwards so it follows the shape of the skull.
-	When eyebrow master is moved inward, keep outside eyebrow control outside so it keeps the shape of the skull.
+	DONE When eyebrow master is moved up, make it go inwards so it follows the shape of the skull.
+	DONE When eyebrow master is moved inward, keep outside eyebrow control outside so it keeps the shape of the skull.
+
+	DONE Expose material color for each object somewhere in the rig UI.
 
 	Upper lip moustache area control should activate a different shape key when the lip is not rolled. Or alternatively, it should be designed for when the lip is not rolled, and hope that it still gives good results when the lip is rolled.
 		Probably same for lower lip.

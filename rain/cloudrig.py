@@ -27,14 +27,14 @@ def pre_depsgraph_update(scene, depsgraph=None):
 	if not rig: return
 	
 	# Grabbing relevant data
-	rig_props = rig.data.rig_properties
+	rig_props = rig.rig_properties
 	char_bone = get_char_bone(rig)
 	outfit_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
 	
-	if('update' not in rig.data):
-		rig.data['update'] = 0
-	if('prev_props' not in rig.data):
-		rig.data['prev_props'] = ""
+	if('update' not in rig):
+		rig['update'] = 0
+	if('prev_props' not in rig):
+		rig['prev_props'] = ""
 	
 	# Saving those properties into a list of dictionaries. 
 	current_props = [{}, {}, {}]
@@ -70,9 +70,9 @@ def pre_depsgraph_update(scene, depsgraph=None):
 	# If they do not match, that means there was user input, and it's time to update stuff.
 	if( current_props != prev_props ):
 		# Materials need to update before the depsgraph update, otherwise they will not update even in rendered view.
-		rig.data['prev_props'] = [current_props[0], current_props[1], current_props[2]]
+		rig['prev_props'] = [current_props[0], current_props[1], current_props[2]]
 		# However, updating meshes before depsgraph update will cause an infinite loop, so we use a flag to let post_depsgraph_update know that it should update meshes.
-		rig.data['update'] = 1
+		rig['update'] = 1
 
 def post_depsgraph_update(scene, depsgraph=None):
 	"""Runs after every depsgraph update. If any user input to the rig properties was detected by pre_depsgraph_update(), we can do any fancy updates we want here. """
@@ -81,9 +81,43 @@ def post_depsgraph_update(scene, depsgraph=None):
 	rig = get_rig()
 	if not rig: return
 	
-	if(rig.data['update'] == 1):
+	if(rig['update'] == 1):
 		### << Do fancy stuff here, like toggling Mask modifiers >>
-		rig.data['update'] = 0
+		rig['update'] = 0
+
+class Reset_Rig_Colors(bpy.types.Operator):
+	"""Reset rig color properties to their stored default."""
+	bl_idname = "object.reset_rig_colors"
+	bl_label = "Reset Rig Colors"
+	bl_options = {'REGISTER', 'UNDO'}
+
+	@classmethod
+	def poll(cls, context):
+		return 'cloudrig' in context.object
+
+	def execute(self, context):
+		rig = context.object
+		for cp in rig.rig_colorproperties:
+			cp.color = cp.default
+		return {'FINISHED'}
+
+class Rig_ColorProperties(bpy.types.PropertyGroup):
+	""" Store a ColorProperty that can be used to drive colors on the rig, and then be controlled even when the rig is linked.
+	"""
+	default: FloatVectorProperty(
+		name='Default',
+		description='',
+		subtype='COLOR',
+		min=0,
+		max=1
+	)
+	color: FloatVectorProperty(
+		name='Color',
+		description='',
+		subtype='COLOR',
+		min=0,
+		max=1
+	)
 
 class Rig_BoolProperties(bpy.types.PropertyGroup):
 	""" Store a BoolProperty referencing an outfit/character property whose min==0 and max==1.
@@ -94,7 +128,7 @@ class Rig_BoolProperties(bpy.types.PropertyGroup):
 	def update_id_prop(self, context):
 		""" Callback function to update the corresponding ID property when this BoolProperty's value is changed. """
 		rig = self.rig
-		rig_props = rig.data.rig_properties
+		rig_props = rig.rig_properties
 		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
 		char_bone = get_char_bone(rig)
 		for prop_owner in [outfit_bone, char_bone]:
@@ -118,7 +152,7 @@ class Rig_Properties(bpy.types.PropertyGroup):
 		""" Find the armature object that is using this instance (self). """
 
 		for rig in get_rigs():
-			if(rig.data.rig_properties == self):
+			if(rig.rig_properties == self):
 				return rig
 
 	def update_bool_properties(self, context):
@@ -127,7 +161,7 @@ class Rig_Properties(bpy.types.PropertyGroup):
 		"""
 		
 		rig = self.get_rig()
-		bool_props = rig.data.rig_boolproperties
+		bool_props = rig.rig_boolproperties
 		bool_props.clear()	# Nuke all the bool properties
 		
 		outfit_bone = rig.pose.bones.get("Properties_Outfit_" + self.outfit)
@@ -215,8 +249,8 @@ class RigUI_Outfits(RigUI):
 		# Only display this panel if there is either an outfit with options, multiple outfits, or character options.
 		rig = context.object
 		if(not rig): return False
-		rig_props = rig.data.rig_properties
-		bool_props = rig.data.rig_boolproperties
+		rig_props = rig.rig_properties
+		bool_props = rig.rig_boolproperties
 		multiple_outfits = len(rig_props.outfits(context)) > 1
 		outfit_properties_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
 		char_bone = get_char_bone(rig)
@@ -227,8 +261,8 @@ class RigUI_Outfits(RigUI):
 		layout = self.layout
 		rig = context.object
 
-		rig_props = rig.data.rig_properties
-		bool_props = rig.data.rig_boolproperties
+		rig_props = rig.rig_properties
+		bool_props = rig.rig_boolproperties
 		
 		char_bone = get_char_bone(rig)
 		outfit_properties_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
@@ -319,7 +353,7 @@ class RigUI_Settings_FKIK(RigUI):
 		layout = self.layout
 		rig = context.object
 
-		rig_props = rig.data.rig_properties
+		rig_props = rig.rig_properties
 		layout.row().prop(rig_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
 
 class RigUI_Settings_FKIK_Switch(RigUI):
@@ -390,7 +424,7 @@ class RigUI_Settings_FK(RigUI):
 	def draw(self, context):
 		layout = self.layout
 		rig = context.object
-		rig_props = rig.data.rig_properties
+		rig_props = rig.rig_properties
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 		face_props = rig.pose.bones.get('Properties_Face')
 
@@ -434,7 +468,7 @@ class RigUI_Settings_Misc(RigUI):
 	def draw(self, context):
 		layout = self.layout
 		rig = context.object
-		rig_props = rig.data.rig_properties
+		rig_props = rig.rig_properties
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 		face_props = rig.pose.bones.get('Properties_Face')
 
@@ -449,9 +483,22 @@ class RigUI_Settings_Misc(RigUI):
 		eye_parents = ['Root', 'Torso', 'Torso_Loc', 'Head']
 		row.prop(ikfk_props, '["eye_target_parent"]',  text=eye_parents[ikfk_props["eye_target_parent"]], slider=True)
 
+class RigUI_Viewport_Display(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_viewport_display"
+	bl_label = "Viewport Display"
+
+	def draw(self, context):
+		layout = self.layout
+		rig = context.object
+		layout.operator(Reset_Rig_Colors.bl_idname, text="Reset Colors")
+		layout.separator()
+		for cp in rig.rig_colorproperties:
+			layout.prop(cp, "color", text=cp.name)
+
 classes = (
-	Rig_Properties,
+	Rig_ColorProperties,
 	Rig_BoolProperties,
+	Rig_Properties,
 	RigUI_Outfits,
 	RigUI_Layers,
 	RigUI_Settings_FKIK,
@@ -460,14 +507,17 @@ classes = (
 	RigUI_Settings_FK,
 	RigUI_Settings_Face,
 	RigUI_Settings_Misc,
+	RigUI_Viewport_Display,
+	Reset_Rig_Colors
 )
 
 from bpy.utils import register_class
 for c in classes:
 	register_class(c)
 
-bpy.types.Armature.rig_properties = bpy.props.PointerProperty(type=Rig_Properties)
-bpy.types.Armature.rig_boolproperties = bpy.props.CollectionProperty(type=Rig_BoolProperties)
+bpy.types.Object.rig_properties = bpy.props.PointerProperty(type=Rig_Properties)
+bpy.types.Object.rig_boolproperties = bpy.props.CollectionProperty(type=Rig_BoolProperties)
+bpy.types.Object.rig_colorproperties = bpy.props.CollectionProperty(type=Rig_ColorProperties)
 
 bpy.app.handlers.depsgraph_update_post.append(post_depsgraph_update)
 bpy.app.handlers.depsgraph_update_pre.append(pre_depsgraph_update)

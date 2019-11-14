@@ -108,6 +108,7 @@ class DriverVariableTarget(ID):
 		self.id_type = 'OBJECT'
 		self.id = None
 		self.bone_target = ""
+		self.data_path = ""
 		self.transform_type = 'ROT_X'
 		self.transform_space = 'LOCAL_SPACE'
 		self.rotation_mode = 'AUTO'
