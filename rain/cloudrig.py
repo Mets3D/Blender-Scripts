@@ -55,15 +55,15 @@ def pre_depsgraph_update(scene, depsgraph=None):
 		save_props(outfit_bone, 1)
 	else:
 		print("Warning: Outfit bone for " + rig_props.outfit + " not found. It should be named 'Properties_Outfit_OutfitName' and its parent should be the character bone.")
-	save_props(rig.data, 2)
+	save_props(rig, 2)
 	
 	# Retrieving the list of dictionaries from the ID Property - have to use to_dict() on each dictionary due to the way ID properties... are.
 	prev_props = []
-	if(rig.data['prev_props'] != ""):
+	if(rig['prev_props'] != ""):
 		prev_props = [
-			rig.data['prev_props'][0].to_dict(), 
-			rig.data['prev_props'][1].to_dict(), 
-			rig.data['prev_props'][2].to_dict(), 
+			rig['prev_props'][0].to_dict(), 
+			rig['prev_props'][1].to_dict(), 
+			rig['prev_props'][2].to_dict(), 
 		]
 	
 	# Finally, we compare the current and previous properties.
