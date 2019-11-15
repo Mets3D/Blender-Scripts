@@ -19,72 +19,6 @@ def get_char_bone(rig):
 		if b.name.startswith("Properties_Character"):
 			return b
 
-def pre_depsgraph_update(scene, depsgraph=None):
-	""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties.
-		Most of these changes are handled by drivers instead, but this thing is here for cases where drivers are inconvenient or cause performance issues.
-	"""
-	rig = get_rig()
-	if not rig: return
-	
-	# Grabbing relevant data
-	rig_props = rig.rig_properties
-	char_bone = get_char_bone(rig)
-	outfit_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
-	
-	if('update' not in rig):
-		rig['update'] = 0
-	if('prev_props' not in rig):
-		rig['prev_props'] = ""
-	
-	# Saving those properties into a list of dictionaries. 
-	current_props = [{}, {}, {}]
-	
-	saved_types = [int, float]	# Types of properties that we save for user input checks.
-	def save_props(prop_owner, list_id):
-		for p in prop_owner.keys():
-			if(p=='_RNA_UI' or p=='prev_props'): continue	# TODO this check would be redundant if we didn't save strings, and the 2nd part is already redundant due to next line.
-			if(type(prop_owner[p]) not in saved_types): continue
-			if(p=="prop_hierarchy"): continue
-			current_props[list_id][p] = prop_owner[p]
-	
-	if(char_bone):
-		save_props(char_bone, 0)
-	else:
-		print("Warning: Character bone not found. It needs to be named 'Properties_Character_CharName'.")
-	if(outfit_bone):
-		save_props(outfit_bone, 1)
-	else:
-		print("Warning: Outfit bone for " + rig_props.outfit + " not found. It should be named 'Properties_Outfit_OutfitName' and its parent should be the character bone.")
-	save_props(rig, 2)
-	
-	# Retrieving the list of dictionaries from the ID Property - have to use to_dict() on each dictionary due to the way ID properties... are.
-	prev_props = []
-	if(rig['prev_props'] != ""):
-		prev_props = [
-			rig['prev_props'][0].to_dict(), 
-			rig['prev_props'][1].to_dict(), 
-			rig['prev_props'][2].to_dict(), 
-		]
-	
-	# Finally, we compare the current and previous properties.
-	# If they do not match, that means there was user input, and it's time to update stuff.
-	if( current_props != prev_props ):
-		# Materials need to update before the depsgraph update, otherwise they will not update even in rendered view.
-		rig['prev_props'] = [current_props[0], current_props[1], current_props[2]]
-		# However, updating meshes before depsgraph update will cause an infinite loop, so we use a flag to let post_depsgraph_update know that it should update meshes.
-		rig['update'] = 1
-
-def post_depsgraph_update(scene, depsgraph=None):
-	"""Runs after every depsgraph update. If any user input to the rig properties was detected by pre_depsgraph_update(), we can do any fancy updates we want here. """
-	# NOTE: Avoid changing user-facing values from here, it could send us for an infinite loop!
-
-	rig = get_rig()
-	if not rig: return
-	
-	if(rig['update'] == 1):
-		### << Do fancy stuff here, like toggling Mask modifiers >>
-		rig['update'] = 0
-
 class Reset_Rig_Colors(bpy.types.Operator):
 	"""Reset rig color properties to their stored default."""
 	bl_idname = "object.reset_rig_colors"
@@ -518,6 +452,3 @@ for c in classes:
 bpy.types.Object.rig_properties = bpy.props.PointerProperty(type=Rig_Properties)
 bpy.types.Object.rig_boolproperties = bpy.props.CollectionProperty(type=Rig_BoolProperties)
 bpy.types.Object.rig_colorproperties = bpy.props.CollectionProperty(type=Rig_ColorProperties)
-
-bpy.app.handlers.depsgraph_update_post.append(post_depsgraph_update)
-bpy.app.handlers.depsgraph_update_pre.append(pre_depsgraph_update)

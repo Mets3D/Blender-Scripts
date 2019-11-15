@@ -5,30 +5,26 @@ I should make an addon to help the editing of shape keys and weights in any orde
 		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
 Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
-Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 To make a rig generator, I need to learn how to use the new Rigify.
 
-Write a document on what could be done on blender development side to make my workflow better, and what things I will need to learn and do in order to rig new characters.
+HIGH Write a document on what could be done on blender development side to make my workflow better, and what things I will need to learn and do in order to rig new characters.
+HIGH Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 
 Body/Limbs
 	LOW FK-Thumb2.R rotation should affect palm bulge
 	MEDIUM I think thigh might need some updates to be up to date with current shoulder tech. I wonder if its twist is managed(countered) correctly in IK mode.
-	MEDIUM Improve shoulder deformation
+	MEDIUM Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it. Maybe this should instead be achieved with a bone that stretches from shoulder to wrist, and a constraint that copies its midpoint and activates only when its length is greated than default.
 	
 	Scale propagation
 		Knee, butt and shoulder deform correctives need to be replaced by shape keys.
 			They are also currently parented to STR- bones, which is not necessarily bad but probably worth noting?
-				The reason for this is because DEF- bones don't inherit scale, they get their scale from BBone scale, which can only be inherited by Armature Constraint, which works poorly for some reason.
+				The reason for this is because DEF- bones don't inherit scale, they get their scale from BBone scale, which can only be inherited by Armature Constraint, which works poorly in this case for some reason.
 					This does mean that we cannot parent anything to DEF- bones, which is not ideal.
 
-	DONE Stretch controls are kind of a total mess right now, especially when it comes to rotating them.
-		Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it.
-		We could hook up the Y scale of stretch controls to the Ease In/Out values, the X and Z scale values to the Bbone X/Y In/Out scales, via drivers.
-
+		
 	NEXT RIG Re-add the Auto-Clavicle functionality.
 
 Clothes
-	HIGH Write a script to transfer shape keys from base mesh to the clothes with Surface Deform modifier. Also need to copy drivers, and then clean up weights and shape keys.
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
 
 Face
@@ -46,13 +42,11 @@ Face
 
 	DONE Expose material color for each object somewhere in the rig UI.
 
-	Upper lip moustache area control should activate a different shape key when the lip is not rolled. Or alternatively, it should be designed for when the lip is not rolled, and hope that it still gives good results when the lip is rolled.
-		Probably same for lower lip.
-	When the lips are moved inward, make the corners match more with the sculpt with a shape key.
+	DONE Upper and lower lip puff should be designed for when the lip is not rolled, and hope that it still gives good results when the lip is rolled.
+	DONE When the lips are moved inward, make the corners match more with the sculpt with a shape key.
 
-	When the jaw is opened, add corrective action to make the lips more circular.
-
-	When activating lip zip, it should trigger the middle of the mouth a fair bit later.
+	DONE When the jaw is opened, add corrective action to make the lips more circular.
+	DONE When activating lip zip, it should trigger the middle of the mouth a fair bit later.
 
 	LONG TERM Maybe lip corner can be oriented to the curvature of the lip so when moved on local Z the mouth corner doesnt have to be manually pushed in by the animator, but can still be adjusted.
 
