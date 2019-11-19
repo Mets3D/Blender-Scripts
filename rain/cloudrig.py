@@ -1,5 +1,5 @@
-"Version: 0.0"
-"13/11/19"
+"Version: 1.0"
+"18/11/19"
 
 import bpy
 from bpy.props import *
@@ -61,7 +61,7 @@ class Rig_BoolProperties(bpy.types.PropertyGroup):
 
 	def update_id_prop(self, context):
 		""" Callback function to update the corresponding ID property when this BoolProperty's value is changed. """
-		rig = self.rig
+		rig = get_rig()
 		rig_props = rig.rig_properties
 		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
 		char_bone = get_char_bone(rig)
@@ -69,8 +69,8 @@ class Rig_BoolProperties(bpy.types.PropertyGroup):
 			if(prop_owner != None):
 				if(self.name in prop_owner):
 					prop_owner[self.name] = self.value
-	
-	rig: PointerProperty(type=bpy.types.Object)
+		
+
 	value: BoolProperty(
 		name='Boolean Value',
 		description='',
@@ -452,3 +452,7 @@ for c in classes:
 bpy.types.Object.rig_properties = bpy.props.PointerProperty(type=Rig_Properties)
 bpy.types.Object.rig_boolproperties = bpy.props.CollectionProperty(type=Rig_BoolProperties)
 bpy.types.Object.rig_colorproperties = bpy.props.CollectionProperty(type=Rig_ColorProperties)
+
+# Certain render settings must be enabled for this character!
+bpy.context.scene.eevee.use_ssr = True
+bpy.context.scene.eevee.use_ssr_refraction = True
