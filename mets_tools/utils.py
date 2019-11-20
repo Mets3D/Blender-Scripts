@@ -1,5 +1,33 @@
 # Collection of functions that are either used by other parts of the addon, or random code snippets that I wanted to include but aren't actually used.
 
+def find_invalid_constraints(context, hidden_is_invalid=False):
+	# If hidden=True, disabled constraints are considered invalid.
+	o = context.object
+	present = True
+
+	if(present):
+		o.data.layers = [True] * 32
+
+	for b in o.pose.bones:
+		if len(b.constraints) == 0:
+			b.bone.hide = True
+		for c in b.constraints:
+			if not c.is_valid or (hidden_is_invalid and c.mute):
+				b.bone.hide = False
+				break
+			else:
+				b.bone.hide = True
+
+def reset_stretch(armature):
+	for b in armature.pose.bones:
+		for c in b.constraints:
+			if(c.type=='STRETCH_TO'):
+				c.rest_length = 0
+				c.use_bulge_min=True
+				c.use_bulge_max=True
+				c.bulge_min=1
+				c.bulge_max=1
+	
 def assign_object_and_material_ids(start=1):
 	counter = start
 
