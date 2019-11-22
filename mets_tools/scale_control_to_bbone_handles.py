@@ -56,24 +56,31 @@ class Setup_BBone_Scale_Controls(bpy.types.Operator):
 
 				### Ease In/Out
 				my_d = Driver()
-				my_var = my_d.make_var("scale")
-				my_var.type = 'TRANSFORMS'
 
-				my_d.expression = "scale-1"
+				my_d.expression = "scale-Y"
 
-				var_tgt = my_var.targets[0]
-				var_tgt.id = context.object
-				var_tgt.transform_type = 'SCALE_Y'
-				var_tgt.transform_space = 'LOCAL_SPACE'
+				scale_var = my_d.make_var("scale")
+				scale_var.type = 'TRANSFORMS'
+				scale_tgt = scale_var.targets[0]
+				scale_tgt.id = context.object
+				scale_tgt.transform_type = 'SCALE_Y'
+				scale_tgt.transform_space = 'LOCAL_SPACE'
+
+				Y_var = my_d.make_var("Y")
+				Y_var.type = 'TRANSFORMS'
+				Y_tgt = Y_var.targets[0]
+				Y_tgt.id = context.object
+				Y_tgt.transform_type = 'SCALE_AVG'
+				Y_tgt.transform_space = 'LOCAL_SPACE'
 
 				# Ease In
 				if (b.bbone_handle_type_start == 'TANGENT' and b.bbone_custom_handle_start):
-					var_tgt.bone_target = b.bbone_custom_handle_start.name
+					Y_tgt.bone_target = scale_tgt.bone_target = b.bbone_custom_handle_start.name
 					my_d.make_real(pb, "bbone_easein")
 
 				# Ease Out
 				if (b.bbone_handle_type_end == 'TANGENT' and b.bbone_custom_handle_end):
-					var_tgt.bone_target = b.bbone_custom_handle_end.name
+					Y_tgt.bone_target = scale_tgt.bone_target = b.bbone_custom_handle_end.name
 					my_d.make_real(pb, "bbone_easeout")
 
 			else:
