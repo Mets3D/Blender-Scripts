@@ -51,8 +51,8 @@ class BoneDataContainer:
 				return bd
 		return None
 	
-	def new(self, name="Bone", armature=None, edit_bone=None):
-		bd = BoneData(name, armature, edit_bone)
+	def new(self, name="Bone", armature=None, source=None):
+		bd = BoneData(name, armature, source)
 		self.bone_datas.append(bd)
 		return bd
 
@@ -91,11 +91,11 @@ class BoneDataContainer:
 
 class BoneData:
 	"""Container and creator of bones."""
-	def __init__(self, name="Bone", armature=None, edit_bone=None):
+	def __init__(self, name="Bone", armature=None, source=None):
 		self.constraints = []	# List of (Type, attribs{}) tuples where attribs{} is a dictionary with the attributes of the constraint. I'm too lazy to implement a container for every constraint type...
 		self.name = name
 		self.head = Vector((0,0,0))
-		self.tail = Vector((0,0,0))
+		self.tail = Vector((0,1,0))
 		self.roll = 0
 		self.rotation_mode = 'QUATERNION'
 		self.bbone_curveinx = 0
@@ -132,38 +132,51 @@ class BoneData:
 		self.bbone_custom_handle_start = None
 		self.bbone_custom_handle_end = None
 
-		if(armature and edit_bone):
+		if(source and type(source)==bpy.types.EditBone):
 			#print("reading BoneData from: " +edit_bone.name)
-			self.read_data(armature, edit_bone)
+			self.read_from_bone(source)
+		elif(source and type(source)==BoneData):
+			self.read_from_bone_data(armature, source)
 
-	def read_data(self, armature, edit_bone):
+	def read_from_bone_data(self, bone_data):
+		"""Called from __init__ to initialize using existing BoneData."""
+		my_dict = self.__dict__
+		skip = ["name"]
+		for attr in my_dict.keys():
+			if attr in skip: continue
+			setattr( self, attr, getattr(bone_data, attr) )
+
+	def read_from_bone(self, armature, edit_bone):
 		"""Called from __init__ to initialize using existing bone."""
 		my_dict = self.__dict__
-		eb_attribs = []
+		skip = ["name", "constraints"]
 		for attr in my_dict.keys():
+			if attr in skip: continue
 			if(hasattr(edit_bone, attr)):
-				eb_attribs.append(attr)
+				skip.append(attr)
 				setattr( self, attr, getattr(edit_bone, attr) )
 		#print("Read BoneData: " + self.name)
 		
-		# If this bone has a pose bone, also read its constraints.
-		
+		# If this bone has a pose bone, also read its constraints. Need to pass armature for this.
+		if not armature: return
 		pose_bone = armature.pose.bones.get(edit_bone.name)
+		if not pose_bone: return
+
 		for attr in my_dict.keys():
-			if( hasattr(pose_bone, attr) 
-			and attr not in eb_attribs
-			and attr not in ['constraints'] ):
+			if attr in skip: continue
+
+			if hasattr(pose_bone, attr):
 				setattr( self, attr, getattr(pose_bone, attr) )
-		if(pose_bone):
-			for c in pose_bone.constraints:
-				constraint_data = (c.type, {})
+		for c in pose_bone.constraints:
+			constraint_data = (c.type, {})
 
-				for attr in dir(c):
-					if("__" in attr): continue
-					if(attr in ['bl_rna', 'type', 'rna_type', 'error_location', 'error_rotation', 'is_proxy_local', 'is_valid']): continue
-					constraint_data[1][attr] = getattr(c, attr)
+			# TODO: Why are we using dir() here instead of __dict__?
+			for attr in dir(c):
+				if("__" in attr): continue
+				if(attr in ['bl_rna', 'type', 'rna_type', 'error_location', 'error_rotation', 'is_proxy_local', 'is_valid']): continue
+				constraint_data[1][attr] = getattr(c, attr)
 
-				self.constraints.append(constraint_data)
+			self.constraints.append(constraint_data)
 
 	def add_constraint(self, contype, props={}, armature=None, true_defaults=False):
 		"""Add a constraint to this bone.
@@ -199,8 +212,9 @@ class BoneData:
 					if(type(self_value) == str):
 						real_bone = armature.data.edit_bones.get(self_value)
 					elif(type(self_value) == BoneData):
-						# If the target doesn't exist yet, create it.
+						# If the target doesn't exist yet, create it. TODO: Don't do this.
 						real_bone = find_or_create_bone(armature, self_value.name)
+					#TODO: Probably shouldn't support these types and instead enfore str or BoneData.
 					elif(type(self_value) == bpy.types.Bone):
 						real_bone = armature.data.edit_bones.get(self_value.name)
 					elif(type(self_value) == bpy.types.EditBone):
@@ -222,14 +236,12 @@ class BoneData:
 		my_dict = self.__dict__
 
 		# Pose bone data...
+		skip = ['constraints', 'head', 'tail', 'parent', 'length', 'use_connect']
 		for attr in my_dict.keys():
 			if(hasattr(pose_bone, attr)):
-				if(attr in ['constraints', 'head', 'tail', 'parent', 'length', 'use_connect']): continue
+				if(attr in skip): continue
 				if('bbone' in attr): continue
-				print("")
-				print(attr)
 				value = my_dict[attr]
-				print("FUCKING REEE " + str(my_dict[attr]))
 				if(attr in ['custom_shape_transform'] and my_dict[attr]):
 					continue
 					value = armature.pose.bones.get(my_dict[attr])
@@ -239,7 +251,7 @@ class BoneData:
 		for attr in my_dict.keys():
 			if(hasattr(data_bone, attr)):
 				value = my_dict[attr]
-				if(attr in ['constraints', 'head', 'tail', 'parent', 'length', 'use_connect']): continue
+				if(attr in skip): continue
 				if(attr in ['bbone_custom_handle_start', 'bbone_custom_handle_end']):
 					if(type(value)==str):
 						value = armature.data.bones.get(value)
