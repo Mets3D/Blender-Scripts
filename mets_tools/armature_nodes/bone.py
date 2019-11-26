@@ -1,65 +1,72 @@
 # Data Container and utilities for de-coupling bone creation and setup from BPY.
 # Lets us easily create bones without having to worry about edit/pose mode.
-def get_defaults(contype, armature):
-    """Return my preferred defaults for each constraint type."""
-    ret = {
-        "target_space" : 'LOCAL',
-        "owner_space" : 'LOCAL',
-        "target" : armature,
-     }
+import bpy
+from mathutils import *
+from mets_tools.utils import *
 
-    if contype == 'STRETCH_TO':
-        ret["use_bulge_min"] = True
-        ret["use_bulge_max"] = True
-    elif contype in ['COPY_LOCATION', 'COPY_SCALE']:
-        ret["use_offset"] = True
-    elif contype == 'COPY_ROTATION':
-        ret["use_offset"] = True
-        ret["mix_mode"] = 'BEFORE'
-    elif contype in ['COPY_TRANSFORMS', 'ACTION']:
-        ret["mix_mode"] = 'BEFORE'
-    elif contype == 'LIMIT_SCALE':
-        ret["min_x"] = 1
-        ret["max_x"] = 1
-        ret["min_y"] = 1
-        ret["max_y"] = 1
-        ret["min_z"] = 1
-        ret["max_z"] = 1
-        ret["use_transform_limit"] = True
-    elif contype in ['LIMIT_LOCATION', 'LIMIT_ROTATION']:
-        ret["use_transform_limit"] = True
-    elif contype == 'IK':
-        ret["chain_count"] = 2
-        ret["pole_target"] = armature
-    elif contype == 'ARMATURE':
-        # Create two targets in armature constraints.
-        ret["targets"] = [{"target" : armature}, {"target" : armature}]
+def get_defaults(contype, armature):
+	"""Return my preferred defaults for each constraint type."""
+	ret = {
+		"target_space" : 'LOCAL',
+		"owner_space" : 'LOCAL',
+		"target" : armature,
+	 }
+
+	if contype == 'STRETCH_TO':
+		ret["use_bulge_min"] = True
+		ret["use_bulge_max"] = True
+	elif contype in ['COPY_LOCATION', 'COPY_SCALE']:
+		ret["use_offset"] = True
+	elif contype == 'COPY_ROTATION':
+		ret["use_offset"] = True
+		ret["mix_mode"] = 'BEFORE'
+	elif contype in ['COPY_TRANSFORMS', 'ACTION']:
+		ret["mix_mode"] = 'BEFORE'
+	elif contype == 'LIMIT_SCALE':
+		ret["min_x"] = 1
+		ret["max_x"] = 1
+		ret["min_y"] = 1
+		ret["max_y"] = 1
+		ret["min_z"] = 1
+		ret["max_z"] = 1
+		ret["use_transform_limit"] = True
+	elif contype in ['LIMIT_LOCATION', 'LIMIT_ROTATION']:
+		ret["use_transform_limit"] = True
+	elif contype == 'IK':
+		ret["chain_count"] = 2
+		ret["pole_target"] = armature
+	elif contype == 'ARMATURE':
+		# Create two targets in armature constraints.
+		ret["targets"] = [{"target" : armature}, {"target" : armature}]
 
 class BoneDataContainer:
-    def __init__():
-        bone_datas = {}
+	# TODO: implement __iter__ and such.
+	def __init__(self):
+		self.bone_datas = []
 
-    def get_bone_data(self, name):
+	def find(self, name):
 		"""Find a BoneData instance by name, if it exists."""
 		for bd in self.bone_datas:
 			if(bd.name == name):
 				return bd
 		return None
-    
-    def new_bone_data(self, name="Bone", armature=None, edit_bone=None):
-        bd = BoneData(name, armature, edit_bone)
-        self.bone_datas[name] = bd
-        return bd
+	
+	def new(self, name="Bone", armature=None, edit_bone=None):
+		bd = BoneData(name, armature, edit_bone)
+		self.bone_datas.append(bd)
+		return bd
 
 	def create_multiple_bones(self, armature, bone_datas):
-		# A more optimized way, since this will only switch between modes twice.
-		armature.select_set(True)
-		bpy.context.view_layer.objects.active = armature
+		"""This will only switch between modes twice, so it is the preferred way of creating bones."""
+		assert armature.select_get() or bpy.context.view_layer.objects.active == armature, "Armature must be selected or active."
+		
+		org_mode = armature.mode
+
 		bpy.ops.object.mode_set(mode='EDIT')
 		# First we create all the bones.
-        for bd in bone_datas:
+		for bd in bone_datas:
 			edit_bone = find_or_create_bone(armature, bd.name)
-        
+		
 		# Now that all the bones are created, loop over again to set the properties.
 		for bd in bone_datas:
 			edit_bone = armature.data.edit_bones.get(bd.name)
@@ -70,11 +77,13 @@ class BoneDataContainer:
 		for bd in bone_datas:
 			pose_bone = armature.pose.bones.get(bd.name)
 			bd.write_pose_data(armature, pose_bone)
+		
+		bpy.ops.object.mode_set(mode=org_mode)
 
 	def create_all_bones(self, armature, clear=True):
 		self.create_multiple_bones(armature, self.bone_datas)
 		if clear:
-            self.clear()
+			self.clear()
 	
 	def clear(self):
 		self.bone_datas = []
@@ -82,9 +91,7 @@ class BoneDataContainer:
 
 class BoneData:
 	"""Container and creator of bones."""
-
 	def __init__(self, name="Bone", armature=None, edit_bone=None):
-		self.__class__.bone_datas.append(self)
 		self.constraints = []	# List of (Type, attribs{}) tuples where attribs{} is a dictionary with the attributes of the constraint. I'm too lazy to implement a container for every constraint type...
 		self.name = name
 		self.head = Vector((0,0,0))
@@ -130,7 +137,7 @@ class BoneData:
 			self.read_data(armature, edit_bone)
 
 	def read_data(self, armature, edit_bone):
-        """Called from __init__ to initialize using existing bone."""
+		"""Called from __init__ to initialize using existing bone."""
 		my_dict = self.__dict__
 		eb_attribs = []
 		for attr in my_dict.keys():
@@ -158,30 +165,30 @@ class BoneData:
 
 				self.constraints.append(constraint_data)
 
-    def add_constraint(self, contype, props={}, armature=None, true_defaults=False):
-        """Add a constraint to this bone.
-        contype: Type of constraint, eg. 'STRETCH_TO'.
-        props: Dictionary of properties and values that this constraint type would have.
-        true_defaults: When False, we use a set of arbitrary default values that I consider better than Blender's defaults.
-        """
-        
-        # Override defaults with better ones.
-        if not true_defaults:
-            new_props = get_defaults(contype)
-            for k in props.keys():
-                new_props[k] = props[k]
-            props = new_props
-        
-        self.constraints.append((contype : props))
+	def add_constraint(self, contype, props={}, armature=None, true_defaults=False):
+		"""Add a constraint to this bone.
+		contype: Type of constraint, eg. 'STRETCH_TO'.
+		props: Dictionary of properties and values.
+		true_defaults: When False, we use a set of arbitrary default values that I consider better than Blender's defaults.
+		"""
+		
+		# Override defaults with better ones.
+		if not true_defaults:
+			new_props = get_defaults(contype)
+			for k in props.keys():
+				new_props[k] = props[k]
+			props = new_props
+		
+		self.constraints.append((contype, props))
 
 	def write_edit_data(self, armature, edit_bone):
-        """Write relevant data into an EditBone."""
-        assert armature.mode == 'EDIT', "Armature must be in Edit Mode when writing bone data"
+		"""Write relevant data into an EditBone."""
+		assert armature.mode == 'EDIT', "Armature must be in Edit Mode when writing bone data"
 
-        # Check for 0-length bones. Warn and skip if so.
-        if (self.head - self.tail).length == 0:
-            print("WARNING: 0-length bone could not be written: " + self.name)
-            return
+		# Check for 0-length bones. Warn and skip if so.
+		if (self.head - self.tail).length == 0:
+			print("WARNING: 0-length bone could not be written: " + self.name)
+			return
 
 		my_dict = self.__dict__
 		for attr in my_dict.keys():
@@ -208,7 +215,7 @@ class BoneData:
 
 	def write_pose_data(self, armature, pose_bone):
 		"""Write relevant data into a PoseBone and its (Data)Bone."""
-        assert armature.mode != 'EDIT', "Armature cannot be in Edit Mode when writing pose data"
+		assert armature.mode != 'EDIT', "Armature cannot be in Edit Mode when writing pose data"
 
 		data_bone = armature.data.bones.get(pose_bone.name)
 
@@ -252,7 +259,7 @@ class BoneData:
 
 		bpy.ops.object.mode_set(mode='EDIT')
 		edit_bone = find_or_create_bone(armature, self.name)
-		self.write_data(edit_bone)
+		self.write_edit_data(edit_bone)
 
 		bpy.ops.object.mode_set(mode='POSE')
 		pose_bone = armature.pose.bones.get(self.name)
