@@ -56,8 +56,8 @@ class BoneInfoContainer:
 				return bd
 		return None
 	
-	def new(self, name="Bone", armature=None, source=None):
-		bi = BoneInfo(self, name, armature, source)
+	def new(self, name="Bone", source=None, armature=None, **kwargs):
+		bi = BoneInfo(self, name, source, armature, **kwargs)
 		self.bones.append(bi)
 		return bi
 
@@ -96,7 +96,7 @@ class BoneInfoContainer:
 
 class BoneInfo:
 	"""Container of all info relating to a Bone."""
-	def __init__(self, container, name="Bone", armature=None, source=None):
+	def __init__(self, container, name="Bone", source=None, armature=None, **kwargs):
 		self.container = container # Need a reference to what BoneInfoContainer this BoneInfo belongs to.
 		self.constraints = []	# List of (Type, attribs{}) tuples where attribs{} is a dictionary with the attributes of the constraint. I'm too lazy to implement a container for every constraint type...
 		self.name = name
@@ -142,6 +142,10 @@ class BoneInfo:
 			self.copy_info(source)
 		elif(source and type(source)==bpy.types.EditBone):
 			self.copy_bone(armature, source)
+		
+		# Override copied properties with arbitrary keyword arguments if any were passed.
+		for key, value in kwargs.items():
+			setattr(self, key, value)
 
 	@property
 	def bbone_width(self):
@@ -212,7 +216,7 @@ class BoneInfo:
 				setattr(self, attr, value)
 				skip.append(attr)
 
-		# Read Pose Bone data (only if armature was passed) TODO: I think edit bones store a reference to their armature, so no need to pass it.
+		# Read Pose Bone data (only if armature was passed)
 		if not armature: return
 		pose_bone = armature.pose.bones.get(edit_bone.name)
 		if not pose_bone: return
