@@ -3,6 +3,11 @@
 import bpy
 from mathutils import *
 from mets_tools.utils import *
+import copy
+
+# Attributes that reference an actual bone ID. These should get special treatment, because we don't want to store said bone ID. 
+# Ideally we would store a BoneInfo, but a string is allowed too(less safe).
+bone_attribs = ['parent', 'bbone_custom_handle_start', 'bbone_custom_handle_end']
 
 def get_defaults(contype, armature):
 	"""Return my preferred defaults for each constraint type."""
@@ -39,24 +44,24 @@ def get_defaults(contype, armature):
 		# Create two targets in armature constraints.
 		ret["targets"] = [{"target" : armature}, {"target" : armature}]
 
-class BoneDataContainer:
+class BoneInfoContainer:
 	# TODO: implement __iter__ and such.
 	def __init__(self):
-		self.bone_datas = []
+		self.bones = []
 
 	def find(self, name):
-		"""Find a BoneData instance by name, if it exists."""
-		for bd in self.bone_datas:
+		"""Find a BoneInfo instance by name, if it exists."""
+		for bd in self.bones:
 			if(bd.name == name):
 				return bd
 		return None
 	
 	def new(self, name="Bone", armature=None, source=None):
-		bd = BoneData(name, armature, source)
-		self.bone_datas.append(bd)
-		return bd
+		bi = BoneInfo(self, name, armature, source)
+		self.bones.append(bi)
+		return bi
 
-	def create_multiple_bones(self, armature, bone_datas):
+	def create_multiple_bones(self, armature, bones):
 		"""This will only switch between modes twice, so it is the preferred way of creating bones."""
 		assert armature.select_get() or bpy.context.view_layer.objects.active == armature, "Armature must be selected or active."
 		
@@ -64,34 +69,35 @@ class BoneDataContainer:
 
 		bpy.ops.object.mode_set(mode='EDIT')
 		# First we create all the bones.
-		for bd in bone_datas:
+		for bd in bones:
 			edit_bone = find_or_create_bone(armature, bd.name)
 		
 		# Now that all the bones are created, loop over again to set the properties.
-		for bd in bone_datas:
+		for bd in bones:
 			edit_bone = armature.data.edit_bones.get(bd.name)
 			bd.write_edit_data(armature, edit_bone)
 
 		# And finally a third time, after switching to pose mode, so we can add constraints.
 		bpy.ops.object.mode_set(mode='POSE')
-		for bd in bone_datas:
+		for bd in bones:
 			pose_bone = armature.pose.bones.get(bd.name)
 			bd.write_pose_data(armature, pose_bone)
 		
 		bpy.ops.object.mode_set(mode=org_mode)
 
 	def create_all_bones(self, armature, clear=True):
-		self.create_multiple_bones(armature, self.bone_datas)
+		self.create_multiple_bones(armature, self.bones)
 		if clear:
 			self.clear()
 	
 	def clear(self):
-		self.bone_datas = []
+		self.bones = []
 
 
-class BoneData:
-	"""Container and creator of bones."""
-	def __init__(self, name="Bone", armature=None, source=None):
+class BoneInfo:
+	"""Container of all info relating to a Bone."""
+	def __init__(self, container, name="Bone", armature=None, source=None):
+		self.container = container # Need a reference to what BoneInfoContainer this BoneInfo belongs to.
 		self.constraints = []	# List of (Type, attribs{}) tuples where attribs{} is a dictionary with the attributes of the constraint. I'm too lazy to implement a container for every constraint type...
 		self.name = name
 		self.head = Vector((0,0,0))
@@ -119,7 +125,7 @@ class BoneData:
 		self.custom_shape_transform = None # Bone name
 		self.use_custom_shape_bone_size = False
 		self.use_endroll_as_inroll = False
-		self.use_connect = False
+		# self.use_connect = False
 		self.use_deform = False
 		self.use_inherit_rotation = True
 		self.use_inherit_scale = True
@@ -127,37 +133,49 @@ class BoneData:
 		self.use_envelope_multiply = False
 		self.use_relative_parent = False
 
-		# We don't want to store a real Bone ID because we want to be able to set the parent before the parent was really created. So this is either a String or a BoneData instance.
+		# We don't want to store a real Bone ID because we want to be able to set the parent before the parent was really created. So this is either a String or a BoneInfo instance.
 		self.parent = None
 		self.bbone_custom_handle_start = None
 		self.bbone_custom_handle_end = None
 
-		if(source and type(source)==bpy.types.EditBone):
-			#print("reading BoneData from: " +edit_bone.name)
-			self.read_from_bone(source)
-		elif(source and type(source)==BoneData):
-			self.read_from_bone_data(armature, source)
+		if(source and type(source)==BoneInfo):
+			self.copy_info(source)
+		elif(source and type(source)==bpy.types.EditBone):
+			self.copy_bone(armature, source)
 
-	def read_from_bone_data(self, bone_data):
-		"""Called from __init__ to initialize using existing BoneData."""
+	def copy_info(self, bone_info):
+		"""Called from __init__ to initialize using existing BoneInfo."""
 		my_dict = self.__dict__
 		skip = ["name"]
 		for attr in my_dict.keys():
 			if attr in skip: continue
-			setattr( self, attr, getattr(bone_data, attr) )
+			setattr( self, attr, getattr(bone_info, copy.deepcopy(attr)) )
 
-	def read_from_bone(self, armature, edit_bone):
+	def copy_bone(self, armature, edit_bone):
 		"""Called from __init__ to initialize using existing bone."""
 		my_dict = self.__dict__
-		skip = ["name", "constraints"]
+		skip = ['name', 'constraints', 'bl_rna', 'type', 'rna_type', 'error_location', 'error_rotation', 'is_proxy_local', 'is_valid']
+		
 		for attr in my_dict.keys():
 			if attr in skip: continue
 			if(hasattr(edit_bone, attr)):
+				value = getattr(edit_bone, attr)
+				# EDIT BONE CLASSES CANNOT BE SAVED SO EASILY. THEY NEED TO BE DEEPCOPIED. OTHERWISE THEY ARE DESTROYED WHEN RIGIFY LEAVES EDIT MODE. FURTHER ACCESS TO THEM SHOULD, IDEALLY, CAUSE A CRASH. BUT SOMETIMES IT JUST SO HAPPENS TO LAND CONSISTENTLY ON SOME OTHER VECTOR'S MEMORY ADDRESS, THEREFORE FAILING COMPLETELY SILENTLY. NEVER SAVE REFERENCES TO EDIT BONE PROPERTIES!
+				print("saving attribute: " + attr)
+				if attr in bone_attribs and value:
+					# TODO: Instead of just saving the name as a string, we should check if our BoneInfoContainer has a bone with this name, and if not, even go as far as to create it.
+					# Look for the BoneInfo object corresponding to this bone in our BoneInfoContainer.
+					bone_info = self.container.find(value.name)
+					if not bone_info:
+						# If it doesn't exist, create it.
+						bone_info = self.container.new(name=value.name, armature=armature, source=value)
+					value = bone_info
+				else:
+					value = copy.deepcopy(getattr(edit_bone, attr))
+				setattr(self, attr, value)
 				skip.append(attr)
-				setattr( self, attr, getattr(edit_bone, attr) )
-		#print("Read BoneData: " + self.name)
-		
-		# If this bone has a pose bone, also read its constraints. Need to pass armature for this.
+
+		# Read Pose Bone data (only if armature was passed) TODO: I think edit bones store a reference to their armature, so no need to pass it.
 		if not armature: return
 		pose_bone = armature.pose.bones.get(edit_bone.name)
 		if not pose_bone: return
@@ -167,13 +185,14 @@ class BoneData:
 
 			if hasattr(pose_bone, attr):
 				setattr( self, attr, getattr(pose_bone, attr) )
+
+		# Read Constraint data
 		for c in pose_bone.constraints:
 			constraint_data = (c.type, {})
-
 			# TODO: Why are we using dir() here instead of __dict__?
 			for attr in dir(c):
-				if("__" in attr): continue
-				if(attr in ['bl_rna', 'type', 'rna_type', 'error_location', 'error_rotation', 'is_proxy_local', 'is_valid']): continue
+				if "__" in attr: continue
+				if attr in skip: continue
 				constraint_data[1][attr] = getattr(c, attr)
 
 			self.constraints.append(constraint_data)
@@ -194,38 +213,41 @@ class BoneData:
 		
 		self.constraints.append((contype, props))
 
+	def clear_constraints(self):
+		self.constraints = []
+
 	def write_edit_data(self, armature, edit_bone):
 		"""Write relevant data into an EditBone."""
 		assert armature.mode == 'EDIT', "Armature must be in Edit Mode when writing bone data"
 
 		# Check for 0-length bones. Warn and skip if so.
 		if (self.head - self.tail).length == 0:
-			print("WARNING: 0-length bone could not be written: " + self.name)
+			print("WARNING: Skpping 0-length bone: " + self.name)
 			return
 
 		my_dict = self.__dict__
 		for attr in my_dict.keys():
 			if(hasattr(edit_bone, attr)):
-				if(attr in ['parent', 'bbone_custom_handle_start', 'bbone_custom_handle_end']):
+				if(attr in bone_attribs):
 					self_value = self.__dict__[attr]
+					if not self_value: continue
+
 					real_bone = None
 					if(type(self_value) == str):
 						real_bone = armature.data.edit_bones.get(self_value)
-					elif(type(self_value) == BoneData):
-						# If the target doesn't exist yet, create it. TODO: Don't do this.
-						real_bone = find_or_create_bone(armature, self_value.name)
-					#TODO: Probably shouldn't support these types and instead enfore str or BoneData.
-					elif(type(self_value) == bpy.types.Bone):
-						real_bone = armature.data.edit_bones.get(self_value.name)
-					elif(type(self_value) == bpy.types.EditBone):
-						real_bone = self_value
+					elif(type(self_value) == BoneInfo):
+						real_bone = self_value.get_real(armature)
+						if not real_bone:
+							print("WARNING: Parent %s not found for bone: %s" % (self.parent.name, self.name))
+					else:
+						# TODO: Maybe this should be raised when assigning the parent to the variable in the first place(via @property setter/getter)
+						assert False, "ERROR: Unsupported parent type: " + str(type(self_value))
 					
 					if(real_bone):
 						setattr(edit_bone, attr, real_bone)
 				else:
-					setattr(edit_bone, attr, my_dict[attr])
-		
-		#print("Wrote data to bone: " + edit_bone.name)
+					# We don't want Blender to destroy my object references(particularly vectors) when leaving edit mode, so pass in a deepcopy instead.
+					setattr(edit_bone, attr, copy.deepcopy(my_dict[attr]))
 
 	def write_pose_data(self, armature, pose_bone):
 		"""Write relevant data into a PoseBone and its (Data)Bone."""
@@ -235,37 +257,39 @@ class BoneData:
 
 		my_dict = self.__dict__
 
-		# Pose bone data...
+		# Pose bone data.
 		skip = ['constraints', 'head', 'tail', 'parent', 'length', 'use_connect']
 		for attr in my_dict.keys():
 			if(hasattr(pose_bone, attr)):
-				if(attr in skip): continue
-				if('bbone' in attr): continue
+				if attr in skip: continue
+				if 'bbone' in attr: continue
 				value = my_dict[attr]
 				if(attr in ['custom_shape_transform'] and my_dict[attr]):
 					continue
 					value = armature.pose.bones.get(my_dict[attr])
 				setattr(pose_bone, attr, value)
 
-		# Data bone data...
+		# Data bone data.
 		for attr in my_dict.keys():
 			if(hasattr(data_bone, attr)):
 				value = my_dict[attr]
-				if(attr in skip): continue
-				if(attr in ['bbone_custom_handle_start', 'bbone_custom_handle_end']):
+				if attr in skip: continue
+				if attr in ['bbone_custom_handle_start', 'bbone_custom_handle_end']:
 					if(type(value)==str):
 						value = armature.data.bones.get(value)
 				setattr(data_bone, attr, value)
 		
+		# Constraints.
 		for cd in self.constraints:
 			name = cd[1]['name'] if 'name' in cd[1] else None
 			c = find_or_create_constraint(pose_bone, cd[0], name)
 			for attr in cd[1].keys():
 				if(hasattr(c, attr)):
 					setattr(c, attr, cd[1][attr])
-
-	def create_bone(self, armature):
+		
+	def create_real(self, armature):
 		# Create a single bone and its constraints. Needs to switch between object modes.
+		# It is preferred to create bones in bulk via BoneDataContainer.create_all_bones().
 		armature.select_set(True)
 		bpy.context.view_layer.objects.active = armature
 
@@ -276,3 +300,9 @@ class BoneData:
 		bpy.ops.object.mode_set(mode='POSE')
 		pose_bone = armature.pose.bones.get(self.name)
 		self.write_pose_data(armature, pose_bone)
+	
+	def get_real(self, armature):
+		if armature.mode == 'EDIT':
+			return armature.data.edit_bones.get(self.name)
+		else:
+			return armature.pose.bones.get(self.name)
