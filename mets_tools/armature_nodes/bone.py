@@ -46,8 +46,10 @@ def get_defaults(contype, armature):
 
 class BoneInfoContainer:
 	# TODO: implement __iter__ and such.
-	def __init__(self):
+	def __init__(self, defaults={}):
+		# TODO: Bone layers and groups go here too I think? Actually, maybe not. We need an even higher level place to store those, so that it's associated with the cloudrig featureset.
 		self.bones = []
+		self.defaults = defaults	# For overriding arbitrary properties' default values when creating bones in this container.
 
 	def find(self, name):
 		"""Find a BoneInfo instance by name, if it exists."""
@@ -93,12 +95,12 @@ class BoneInfoContainer:
 	def clear(self):
 		self.bones = []
 
-
 class BoneInfo:
 	"""Container of all info relating to a Bone."""
-	def __init__(self, container, name="Bone", source=None, armature=None, **kwargs):
+	def __init__(self, container, name="Bone", source=None, armature=None, only_transform=False, **kwargs):
 		self.container = container # Need a reference to what BoneInfoContainer this BoneInfo belongs to.
 		self.constraints = []	# List of (Type, attribs{}) tuples where attribs{} is a dictionary with the attributes of the constraint. I'm too lazy to implement a container for every constraint type...
+		# TODO: Let us specify Custom Properties, for both EditBone and PoseBone.
 		self.name = name
 		self.head = Vector((0,0,0))
 		self.tail = Vector((0,1,0))
@@ -122,7 +124,6 @@ class BoneInfo:
 		self.bone_group = None
 		self.custom_shape = None   # Object ID?
 		self.custom_shape_scale = 1.0
-		self.custom_shape_transform = None # Bone name
 		self.use_custom_shape_bone_size = False
 		self.use_endroll_as_inroll = False
 		# self.use_connect = False
@@ -134,14 +135,25 @@ class BoneInfo:
 		self.use_relative_parent = False
 
 		# We don't want to store a real Bone ID because we want to be able to set the parent before the parent was really created. So this is either a String or a BoneInfo instance.
+		# TODO: These should be handled uniformally.
+		# TODO: Maybe they should be forced to be BoneInfo instance, and don't allow str. Seems pointless and unneccessarily non-foolproof.
+		self.custom_shape_transform = None # Bone name
 		self.parent = None
 		self.bbone_custom_handle_start = None
 		self.bbone_custom_handle_end = None
-
-		if(source and type(source)==BoneInfo):
-			self.copy_info(source)
-		elif(source and type(source)==bpy.types.EditBone):
-			self.copy_bone(armature, source)
+		
+		if only_transform:
+			assert source, "If only_transform==True, source cannot be None!"
+			self.head=source.head
+			self.tail=source.tail
+			self.roll=source.roll
+			self.bbone_x=source.bbone_x
+			self.bbone_z=source.bbone_z
+		else:
+			if(source and type(source)==BoneInfo):
+				self.copy_info(source)
+			elif(source and type(source)==bpy.types.EditBone):
+				self.copy_bone(armature, source)
 		
 		# Override copied properties with arbitrary keyword arguments if any were passed.
 		for key, value in kwargs.items():
@@ -301,13 +313,12 @@ class BoneInfo:
 		# Pose bone data.
 		skip = ['constraints', 'head', 'tail', 'parent', 'length', 'use_connect']
 		for attr in my_dict.keys():
+			value = my_dict[attr]
 			if(hasattr(pose_bone, attr)):
 				if attr in skip: continue
 				if 'bbone' in attr: continue
-				value = my_dict[attr]
-				if(attr in ['custom_shape_transform'] and my_dict[attr]):
-					continue
-					value = armature.pose.bones.get(my_dict[attr])
+				if(attr in ['custom_shape_transform'] and value):
+					value = armature.pose.bones.get(value.name)
 				setattr(pose_bone, attr, value)
 
 		# Data bone data.
@@ -315,6 +326,7 @@ class BoneInfo:
 			if(hasattr(data_bone, attr)):
 				value = my_dict[attr]
 				if attr in skip: continue
+				# TODO: It should be more explicitly defined what properties we want to be setting here exactly, because I don't even know. Same for Pose and Edit data.
 				if attr in ['bbone_custom_handle_start', 'bbone_custom_handle_end']:
 					if(type(value)==str):
 						value = armature.data.bones.get(value)
