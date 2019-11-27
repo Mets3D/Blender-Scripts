@@ -4,7 +4,7 @@ from mets_tools import utils
 class ID:
 	def __init__(self):
 		self.name = ""
-		self.custom_properties = {}
+		self.custom_properties = {}	# (name : CustomProp()) dictionary
 
 	def __str__(self):
 		return self.name

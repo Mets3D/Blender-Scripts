@@ -1,6 +1,7 @@
 # Data Container and utilities for de-coupling bone creation and setup from BPY.
 # Lets us easily create bones without having to worry about edit/pose mode.
 import bpy
+from .id import *
 from mathutils import *
 from mets_tools.utils import *
 import copy
@@ -44,7 +45,7 @@ def get_defaults(contype, armature):
 		# Create two targets in armature constraints.
 		ret["targets"] = [{"target" : armature}, {"target" : armature}]
 
-class BoneInfoContainer:
+class BoneInfoContainer(ID):
 	# TODO: implement __iter__ and such.
 	def __init__(self, defaults={}):
 		# TODO: Bone layers and groups go here too I think? Actually, maybe not. We need an even higher level place to store those, so that it's associated with the cloudrig featureset.
@@ -87,7 +88,7 @@ class BoneInfoContainer:
 		
 		bpy.ops.object.mode_set(mode=org_mode)
 
-	def create_all_bones(self, armature, clear=True):
+	def make_real(self, armature, clear=True):
 		self.create_multiple_bones(armature, self.bones)
 		if clear:
 			self.clear()
@@ -95,11 +96,17 @@ class BoneInfoContainer:
 	def clear(self):
 		self.bones = []
 
-class BoneInfo:
+class BoneInfo(ID):
 	"""Container of all info relating to a Bone."""
 	def __init__(self, container, name="Bone", source=None, armature=None, only_transform=False, **kwargs):
 		self.container = container # Need a reference to what BoneInfoContainer this BoneInfo belongs to.
+		
+		# All of the following store abstractions, not the real thing.
+		self.custom_props = {}		# PoseBone custom properties.
+		self.custom_props_edit = {}	# EditBone custom properties.
+		self.drivers = {}
 		self.constraints = []	# List of (Type, attribs{}) tuples where attribs{} is a dictionary with the attributes of the constraint. I'm too lazy to implement a container for every constraint type...
+		
 		# TODO: Let us specify Custom Properties, for both EditBone and PoseBone.
 		self.name = name
 		self.head = Vector((0,0,0))
@@ -339,12 +346,17 @@ class BoneInfo:
 			for attr in cd[1].keys():
 				if(hasattr(c, attr)):
 					setattr(c, attr, cd[1][attr])
-
-	def create_real(self, armature):
+		
+		# Custom Properties.
+		for key, prop in self.custom_props.items():
+			prop.make_real(pose_bone)
+	
+	def make_real(self, armature):
 		# Create a single bone and its constraints. Needs to switch between object modes.
 		# It is preferred to create bones in bulk via BoneDataContainer.create_all_bones().
 		armature.select_set(True)
 		bpy.context.view_layer.objects.active = armature
+		org_mode = armature.mode
 
 		bpy.ops.object.mode_set(mode='EDIT')
 		edit_bone = find_or_create_bone(armature, self.name)
@@ -353,6 +365,8 @@ class BoneInfo:
 		bpy.ops.object.mode_set(mode='POSE')
 		pose_bone = armature.pose.bones.get(self.name)
 		self.write_pose_data(armature, pose_bone)
+
+		bpy.ops.object.mode_set(mode=org_mode)
 	
 	def get_real(self, armature):
 		if armature.mode == 'EDIT':
