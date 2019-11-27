@@ -143,6 +143,44 @@ class BoneInfo:
 		elif(source and type(source)==bpy.types.EditBone):
 			self.copy_bone(armature, source)
 
+	@property
+	def bbone_width(self):
+		return self.bbone_x
+
+	@bbone_width.setter
+	def bbone_width(self, value):
+		self.bbone_x = value
+		self.bbone_z = value
+
+	@property
+	def vec(self):
+		"""Vector pointing from head to tail."""
+		return self.tail-self.head
+
+	@property
+	def length(self):
+		return (self.tail-self.head).size
+
+	@property
+	def center(self):
+		return self.head + self.vec/2
+
+	@length.setter
+	def length(self, value):
+		assert value > 0, "Length cannot be 0!"
+		self.tail = self.head + self.vec.normalized() * value
+
+	def put(self, loc, length=None, width=None):
+		offset = loc-self.head
+		self.head = loc
+		self.tail = loc+offset
+		
+		if length:
+			self.length=length
+		
+		if width:
+			self.bbone_width = width
+	
 	def copy_info(self, bone_info):
 		"""Called from __init__ to initialize using existing BoneInfo."""
 		my_dict = self.__dict__
@@ -161,7 +199,6 @@ class BoneInfo:
 			if(hasattr(edit_bone, attr)):
 				value = getattr(edit_bone, attr)
 				# EDIT BONE CLASSES CANNOT BE SAVED SO EASILY. THEY NEED TO BE DEEPCOPIED. OTHERWISE THEY ARE DESTROYED WHEN RIGIFY LEAVES EDIT MODE. FURTHER ACCESS TO THEM SHOULD, IDEALLY, CAUSE A CRASH. BUT SOMETIMES IT JUST SO HAPPENS TO LAND CONSISTENTLY ON SOME OTHER VECTOR'S MEMORY ADDRESS, THEREFORE FAILING COMPLETELY SILENTLY. NEVER SAVE REFERENCES TO EDIT BONE PROPERTIES!
-				print("saving attribute: " + attr)
 				if attr in bone_attribs and value:
 					# TODO: Instead of just saving the name as a string, we should check if our BoneInfoContainer has a bone with this name, and if not, even go as far as to create it.
 					# Look for the BoneInfo object corresponding to this bone in our BoneInfoContainer.
@@ -286,7 +323,7 @@ class BoneInfo:
 			for attr in cd[1].keys():
 				if(hasattr(c, attr)):
 					setattr(c, attr, cd[1][attr])
-		
+
 	def create_real(self, armature):
 		# Create a single bone and its constraints. Needs to switch between object modes.
 		# It is preferred to create bones in bulk via BoneDataContainer.create_all_bones().
