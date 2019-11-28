@@ -5,9 +5,9 @@ BUGS
     https://developer.blender.org/T71213
     https://docs.google.com/document/d/1dOnT5-oQjtsShhsMQSXHwy5mH0vZooXU1hj-dzKyRqs/edit
 FEATURES
-- HIGH Let me access armature layers(or whatever they become) from weight paint mode.
+- HIGH Let me access armature data from weight paint mode. (can be done with addon, but it should be in Blender)
 - MED Sculpting works poorly with mirror modifier, especially when sculpting shape keys, especially especially when sculpting shape keys on a mesh deformed by an armature.
-- HIGH Weight paint: Overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
+- HIGH Weight paint overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
 - When in paint modes and 2D Falloff is disabled, the brush cursor shouldn't display when the mouse isn't over the mesh's surface, to indicate that in these cases, the brush stroke will not do anything. This would also be extremely helpful in communicating whether 2D Falloff is enabled or not, and would help avoid mistakes that happen regularly and can set me back hours, by accidently painting through the mesh.
 - Let Alt+(Right)Click selection work in pose mode, to easily select a specific bone out of a lot of overlapping bones.
 

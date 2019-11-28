@@ -279,12 +279,16 @@ class BoneInfo(ID):
 	def write_edit_data(self, armature, edit_bone):
 		"""Write relevant data into an EditBone."""
 		assert armature.mode == 'EDIT', "Armature must be in Edit Mode when writing bone data"
+		
+		print("HELLO??")
+		print(edit_bone.name)
 
 		# Check for 0-length bones. Warn and skip if so.
 		if (self.head - self.tail).length == 0:
 			print("WARNING: Skpping 0-length bone: " + self.name)
 			return
 
+		# Edit Bone Properties.
 		my_dict = self.__dict__
 		for attr in my_dict.keys():
 			if(hasattr(edit_bone, attr)):
@@ -308,6 +312,14 @@ class BoneInfo(ID):
 				else:
 					# We don't want Blender to destroy my object references(particularly vectors) when leaving edit mode, so pass in a deepcopy instead.
 					setattr(edit_bone, attr, copy.deepcopy(my_dict[attr]))
+		
+		# Custom Properties.
+		for key, prop in self.custom_props_edit.items():
+			print("Edit bone custom property on bone: " + edit_bone.name)
+			print(key)
+			print(prop)
+			print(prop.default)
+			prop.make_real(edit_bone)
 
 	def write_pose_data(self, armature, pose_bone):
 		"""Write relevant data into a PoseBone and its (Data)Bone."""
