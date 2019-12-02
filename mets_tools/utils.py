@@ -247,5 +247,5 @@ def copy_attributes(from_thing, to_thing, skip=[""], recursive=False):
 			try:
 				setattr(to_thing, prop, from_value)
 				#print(prop + ": " + str(from_value))
-			except AttributeError:	# Read-Only properties throw AttributeError. We ignore silently.
+			except AttributeError:	# Read-Only properties throw AttributeError. We ignore silently, which is not great.
 				continue

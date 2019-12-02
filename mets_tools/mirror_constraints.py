@@ -55,7 +55,12 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 						to_var.targets[i].id_type			= from_var.targets[i].id_type
 					to_var.targets[i].id 				= from_var.targets[i].id
 					to_var.targets[i].bone_target 		= new_target_bone
-					to_var.targets[i].data_path 		= utils.flip_name(from_var.targets[i].data_path, only=False)
+					data_path = from_var.targets[i].data_path
+					if "pose.bones" in data_path:
+						bone_name = data_path.split('pose.bones["')[1].split('"')[0]
+						flipped_name = utils.flip_name(bone_name, only=False)
+						data_path = data_path.replace(bone_name, flipped_name)
+					to_var.targets[i].data_path 		= data_path
 					to_var.targets[i].transform_type 	= from_var.targets[i].transform_type
 					to_var.targets[i].transform_space 	= from_var.targets[i].transform_space
 					# TODO: If transform is X Rotation, have a "mirror" option, to invert it in the expression. Better yet, detect if the new_target_bone is the opposite of the original.
