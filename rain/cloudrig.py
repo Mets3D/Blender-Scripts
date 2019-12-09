@@ -43,14 +43,16 @@ class Rig_ColorProperties(bpy.types.PropertyGroup):
 		description='',
 		subtype='COLOR',
 		min=0,
-		max=1
+		max=1,
+		options={'LIBRARY_EDITABLE'}
 	)
 	color: FloatVectorProperty(
 		name='Color',
 		description='',
 		subtype='COLOR',
 		min=0,
-		max=1
+		max=1,
+		options={'LIBRARY_EDITABLE'}
 	)
 
 class Rig_BoolProperties(bpy.types.PropertyGroup):
@@ -74,7 +76,8 @@ class Rig_BoolProperties(bpy.types.PropertyGroup):
 	value: BoolProperty(
 		name='Boolean Value',
 		description='',
-		update=update_id_prop
+		update=update_id_prop,
+		options={'LIBRARY_EDITABLE'}
 	)
 
 class Rig_Properties(bpy.types.PropertyGroup):
