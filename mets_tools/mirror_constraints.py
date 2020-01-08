@@ -60,6 +60,11 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 						bone_name = data_path.split('pose.bones["')[1].split('"')[0]
 						flipped_name = utils.flip_name(bone_name, only=False)
 						data_path = data_path.replace(bone_name, flipped_name)
+					# HACK
+					if "left" in data_path:
+						data_path = data_path.replace("left", "right")
+					elif "right" in data_path:
+						data_path = data_path.replace("right", "left")
 					to_var.targets[i].data_path 		= data_path
 					to_var.targets[i].transform_type 	= from_var.targets[i].transform_type
 					to_var.targets[i].transform_space 	= from_var.targets[i].transform_space

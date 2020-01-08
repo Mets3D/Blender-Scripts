@@ -10,14 +10,32 @@ To make a rig generator, I need to learn how to use the new Rigify.
 HIGH Write a document on what could be done on blender development side to make my workflow better, and what things I will need to learn and do in order to rig new characters.
 HIGH Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 
-Bring back eye dot
-Add Eye render/dummy switch
-Merge body and head
+CLOUDRIGIFY
+	Differences from usual Rigify:
+		All UI elements should be displayed at all times, just like Rain.
+	Differences from Rain:
+		Rigify's operator-based parent switching and IK/FK switching/snapping should be used.
+	
+	Ideas:
+		Should probably turn constraints into a class. At least it would let us more easily add drivers to them.
+		I should implement a CollectionProperty-like class, for ID collections, similar to BoneInfoContainer.
+		BoneInfo and other ID classes could perhaps live without all their values pre-assigned in __init__. The only ones that need to be pre-assigned are the ones that other things rely on, like how the length property relies on head and tail existing.
+		I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
+
+	Next up:
+		Spine
+		Neck and head? Is this separate from the spine?
+		Face... Q_Q
+		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
+
+		Complicate the hand a bit more.
+	
+	Could eventually refactor all of the code to be a bit more compliant with Rigify's coding style - Maybe even abandon our abstractions.
 
 Body/Limbs
-	LOW FK-Thumb2.R rotation should affect palm bulge
-	MEDIUM I think thigh might need some updates to be up to date with current shoulder tech. I wonder if its twist is managed(countered) correctly in IK mode.
-	MEDIUM Scaling any parent of STR-Elbow.L fucks up the IK stretching trick on it. Maybe this should instead be achieved with a bone that stretches from shoulder to wrist, and a constraint that copies its midpoint and activates only when its length is greated than default.
+	HIGH Pablico found a pose in which the spine starts twisting out like crazy for a small amount of degrees. I couldn't reproduce, and he said it wasn't important, but it would still be nice to know what causes it.
+
+	LOW FK-Thumb2.R rotation should affect palm bulge (This might be fixed, I reckon it was that .rength mirroring issue)
 	
 	Scale propagation
 		Knee, butt and shoulder deform correctives need to be replaced by shape keys.
@@ -32,26 +50,24 @@ Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
 
 Face
+	HIGH Action Constraint fix is now in master, so delete CTR-P- or whatever-they-are-now bones, and rename action curves with script while trying not to break anything.
 		Keep in mind when re-generating face controls: Eyelids shouldn't affect eyerings, and eyebrows shouldn't affect themselves, that is to say, automatic bbone handle should be disabled on these areas. Same for lips.
 		With that said, a lot of the bones from those areas should be able to be deleted.
 	
+	Eye
+		Bring back eye dot (Add a bone for it)
+		Add Eye render/dummy switch
+		Add dilate controls
+		Merge body and head
+
+	Some more detailed controls for the ears.
+
+	Forehead deform bones shouldn't be affected by eyebrow controls (disable aim constraints on TAN-AIM bones)
+
 	Maybe delete old action based eyering controls (and their relevant actions and constraints)?
 	Delete unused face deform bones
 	Delete unused auto+tangent helpers
 	
-	DONE rename Node_UserRotation shit to something else. Update in the setup script too I suppose.
-
-	DONE When eyebrow master is moved up, make it go inwards so it follows the shape of the skull.
-	DONE When eyebrow master is moved inward, keep outside eyebrow control outside so it keeps the shape of the skull.
-
-	DONE Expose material color for each object somewhere in the rig UI.
-
-	DONE Upper and lower lip puff should be designed for when the lip is not rolled, and hope that it still gives good results when the lip is rolled.
-	DONE When the lips are moved inward, make the corners match more with the sculpt with a shape key.
-
-	DONE When the jaw is opened, add corrective action to make the lips more circular.
-	DONE When activating lip zip, it should trigger the middle of the mouth a fair bit later.
-
 	LONG TERM Maybe lip corner can be oriented to the curvature of the lip so when moved on local Z the mouth corner doesnt have to be manually pushed in by the animator, but can still be adjusted.
 
 	LOW Try weighting the gums to the face bones? Not sure about this... But I guess at least for the front area of the gums it could work and could be useful. Worth an experiment if we have the time.
@@ -61,7 +77,7 @@ Final Cleanup
 	We used to have some bones next to the ROOT bone that were used to organize bones that used Armature Constraint for parenting. What happened with that setup? I want it back.
 
 	Find constraints that are disabled and remove them.
-	DONE Make sure no invalid constraints or drivers exist (and driver is not showing any warnings of any kind)
+	Make sure no invalid constraints or drivers exist (and driver is not showing any warnings of any kind)
 	DONE Make script to nuke unnecessary curves in actions (performance boost).
 	Set "dev" custom property on the rig to 0 to hide mech layers from the UI.
 	Ensure UVs are fixed.

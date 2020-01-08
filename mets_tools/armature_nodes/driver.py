@@ -15,10 +15,6 @@ class Driver(ID):
 		self.last_data_path = ""	# Data path of the Blender Driver that this Driver object was last applied to.
 
 		if source:
-			if type(source) == Driver:
-				# Make this a copy of the source Driver object.
-				utils.copy_attributes(source, self, recursive=True)
-			
 			if type(source) == bpy.types.FCurve:
 				# Allow passing FCurves, even though we don't care about any fields from here.
 				source = source.driver
@@ -32,6 +28,15 @@ class Driver(ID):
 					utils.copy_attributes(bpy_v, v, skip=["targets"])
 					for i_t in range(len(bpy_v.targets)):
 						utils.copy_attributes(bpy_v.targets[i_t], v.targets[i_t])
+
+	def clone(self):
+		"""Return a copy of this Driver description."""
+		new = Driver()
+		new.expression = self.expression
+		new.use_self = self.use_self
+		new.type = self.type
+		for var in self.variables:
+			new.variables.append(var.clone())
 
 	@staticmethod
 	def copy_drivers(obj_from, obj_to):
@@ -66,7 +71,6 @@ class Driver(ID):
 		# Flip variable target bones.
 		pass
 
-
 	def make_var(self, name="var"):
 		new_var = DriverVariable(name)
 		self.variables.append(new_var)
@@ -95,6 +99,20 @@ class DriverVariable(ID):
 		self.name = name
 		self.type = ['SINGLE_PROP', 'TRANSFORMS', 'ROTATION_DIFF', 'LOC_DIFF'][0]
 	
+	def clone(self):
+		new = DriverVariable(self.name)
+		new.type = self.type
+		for i, t in enumerate(self.targets):
+			#I guess let's clone targets here instead of making them copy themselves, because we should never create targets outside of the __init__
+			new.targets[i].id_type = self.targets[i].id_type
+			new.targets[i].id = self.targets[i].id
+			new.targets[i].bone_target = self.targets[i].bone_target
+			new.targets[i].data_path = self.targets[i].data_path
+			new.targets[i].transform_type = self.targets[i].transform_type
+			new.targets[i].transform_space = self.targets[i].transform_space
+			new.targets[i].transform_space = self.targets[i].transform_space
+			new.targets[i].rotation_mode = self.targets[i].rotation_mode
+
 	def make_real(self, BPY_driver):
 		"""Add this variable to a driver."""
 		BPY_d_var = BPY_driver.variables.new()
