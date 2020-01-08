@@ -10,6 +10,7 @@ from bpy.props import *
 def flip_driver_targets(obj):
 	# We just need to flip the bone targets on every driver.
 	shape_keys = obj.data.shape_keys
+	if not hasattr(shape_keys.animation_data, "drivers"): return
 	drivers = shape_keys.animation_data.drivers
 
 	for sk in shape_keys.key_blocks:
@@ -135,56 +136,57 @@ class ForceApplyMirror(bpy.types.Operator):
 		combined_object = bpy.context.object
 		
 		# Copy drivers from the duplicate... TODO THIS IS A COMPLETE FUCKING MESS! AAAAARGH! We are partially flipping the drivers in flip_driver_targets() and we do the rest here... I fucking hate the drivers python API... 
-		for old_D in copy_of_flipped.data.shape_keys.animation_data.drivers:
-			for sk in combined_object.data.shape_keys.key_blocks:
-				if(sk.name in old_D.data_path):
-					# Create the driver...
-					new_D = combined_object.data.shape_keys.driver_add('key_blocks["' + sk.name + '"].value')
-					new_d = new_D.driver
-					old_d = old_D.driver
-					
-					expression = old_d.expression
-					# The beginning of shape key names will indicate which axes should be flipped... What an awful solution! :)
-					flip_x = False
-					flip_y = False
-					flip_z = False
-					flip_flags = sk.name.split("_")[0]
-					if(flip_flags in ['XYZ', 'XZ', 'XY', 'YZ', 'Z']):	# This code is just getting better :)
-						if('X') in flip_flags:
-							flip_x = True
-						if('Y') in flip_flags:
-							flip_y = True
-						if('Z') in flip_flags:
-							flip_z = True
+		if hasattr(copy_of_flipped.data.shape_keys.animation_data, "drivers"):
+			for old_D in copy_of_flipped.data.shape_keys.animation_data.drivers:
+				for sk in combined_object.data.shape_keys.key_blocks:
+					if(sk.name in old_D.data_path):
+						# Create the driver...
+						new_D = combined_object.data.shape_keys.driver_add('key_blocks["' + sk.name + '"].value')
+						new_d = new_D.driver
+						old_d = old_D.driver
+						
+						expression = old_d.expression
+						# The beginning of shape key names will indicate which axes should be flipped... What an awful solution! :)
+						flip_x = False
+						flip_y = False
+						flip_z = False
+						flip_flags = sk.name.split("_")[0]
+						if(flip_flags in ['XYZ', 'XZ', 'XY', 'YZ', 'Z']):	# This code is just getting better :)
+							if('X') in flip_flags:
+								flip_x = True
+							if('Y') in flip_flags:
+								flip_y = True
+							if('Z') in flip_flags:
+								flip_z = True
 
-					for v in old_d.variables:
-						new_v = new_d.variables.new()
-						new_v.name = v.name
-						new_v.type = v.type
-						for i in range(len(v.targets)):
-							if(new_v.type == 'SINGLE_PROP'):
-								new_v.targets[i].id_type			= v.targets[i].id_type
-							new_v.targets[i].id 				= v.targets[i].id
-							new_v.targets[i].bone_target 		= v.targets[i].bone_target
-							new_v.targets[i].data_path 			= v.targets[i].data_path
-							new_v.targets[i].transform_type 	= v.targets[i].transform_type
-							new_v.targets[i].transform_space 	= v.targets[i].transform_space
-					
-						if( new_v.targets[0].bone_target and
-							"SCALE" not in v.targets[0].transform_type and
-							(v.targets[0].transform_type.endswith("_X") and flip_x) or
-							(v.targets[0].transform_type.endswith("_Y") and flip_y) or
-							(v.targets[0].transform_type.endswith("_Z") and flip_z)
-							):
-							# Flipping sign - this is awful, I know.
-							if("-"+new_v.name in expression):
-								expression = expression.replace("-"+new_v.name, "+"+new_v.name)
-							elif("+ "+new_v.name in expression):
-								expression = expression.replace("+ "+new_v.name, "- "+new_v.name)
-							else:
-								expression = expression.replace(new_v.name, "-"+new_v.name)
-					
-					new_d.expression = expression
+						for v in old_d.variables:
+							new_v = new_d.variables.new()
+							new_v.name = v.name
+							new_v.type = v.type
+							for i in range(len(v.targets)):
+								if(new_v.type == 'SINGLE_PROP'):
+									new_v.targets[i].id_type			= v.targets[i].id_type
+								new_v.targets[i].id 				= v.targets[i].id
+								new_v.targets[i].bone_target 		= v.targets[i].bone_target
+								new_v.targets[i].data_path 			= v.targets[i].data_path
+								new_v.targets[i].transform_type 	= v.targets[i].transform_type
+								new_v.targets[i].transform_space 	= v.targets[i].transform_space
+						
+							if( new_v.targets[0].bone_target and
+								"SCALE" not in v.targets[0].transform_type and
+								(v.targets[0].transform_type.endswith("_X") and flip_x) or
+								(v.targets[0].transform_type.endswith("_Y") and flip_y) or
+								(v.targets[0].transform_type.endswith("_Z") and flip_z)
+								):
+								# Flipping sign - this is awful, I know.
+								if("-"+new_v.name in expression):
+									expression = expression.replace("-"+new_v.name, "+"+new_v.name)
+								elif("+ "+new_v.name in expression):
+									expression = expression.replace("+ "+new_v.name, "- "+new_v.name)
+								else:
+									expression = expression.replace(new_v.name, "-"+new_v.name)
+						
+						new_d.expression = expression
 			
 		# Delete the copy
 		copy_of_flipped.select_set(True)

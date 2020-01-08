@@ -43,9 +43,6 @@ Body/Limbs
 				The reason for this is because DEF- bones don't inherit scale, they get their scale from BBone scale, which can only be inherited by Armature Constraint, which works poorly in this case for some reason.
 					This does mean that we cannot parent anything to DEF- bones, which is not ideal.
 
-		
-	NEXT RIG Re-add the Auto-Clavicle functionality.
-
 Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
 
@@ -54,22 +51,13 @@ Face
 		Keep in mind when re-generating face controls: Eyelids shouldn't affect eyerings, and eyebrows shouldn't affect themselves, that is to say, automatic bbone handle should be disabled on these areas. Same for lips.
 		With that said, a lot of the bones from those areas should be able to be deleted.
 	
-	Eye
-		Bring back eye dot (Add a bone for it)
-		Add Eye render/dummy switch
-		Add dilate controls
-		Merge body and head
-
-	Some more detailed controls for the ears.
-
-	Forehead deform bones shouldn't be affected by eyebrow controls (disable aim constraints on TAN-AIM bones)
-
 	Maybe delete old action based eyering controls (and their relevant actions and constraints)?
 	Delete unused face deform bones
 	Delete unused auto+tangent helpers
 	
 	LONG TERM Maybe lip corner can be oriented to the curvature of the lip so when moved on local Z the mouth corner doesnt have to be manually pushed in by the animator, but can still be adjusted.
 
+	LOW Merge body and head
 	LOW Try weighting the gums to the face bones? Not sure about this... But I guess at least for the front area of the gums it could work and could be useful. Worth an experiment if we have the time.
 	LOW MSTR-Eyering_Upper is an exposed control with a translating Action constraint... Not ideal, but not worth fixing for now.
 
