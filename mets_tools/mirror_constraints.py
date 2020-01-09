@@ -15,86 +15,86 @@ def mirror_drivers(armature, from_bone, to_bone, from_constraint=None, to_constr
 	if(not armature.animation_data): return	# No drivers to mirror.
 
 	for d in armature.animation_data.drivers:					# Look through every driver on the armature
-		if('pose.bones["' + from_bone.name + '"]' in d.data_path):	# If the driver belongs to the active bone
-			if("constraints[" in d.data_path and from_constraint==None): continue
-			if(from_constraint!=None and from_constraint.name not in d.data_path): continue
-			
-			### Copying mirrored driver to target bone...
-			
-			# The way drivers on bones work is weird af. You have to create the driver relative to the bone, but you have to read the driver relative to the armature. So d.data_path might look like "pose.bones["bone_name"].bone_property" but when we create a driver we just need the "bone_property" part.
-			data_path_from_bone = d.data_path.split("].", 1)[1]
-			new_d = None
-			if("constraints[" in data_path_from_bone):
-				data_path_from_constraint = data_path_from_bone.split("].", 1)[1]
-				# Armature constraints need special special treatment...
-				if(from_constraint.type=='ARMATURE' and "targets[" in data_path_from_constraint):
-					target_idx = int(data_path_from_constraint.split("targets[")[1][0])
-					target = to_constraint.targets[target_idx]
-
-					target.driver_remove("weight")
-					new_d = target.driver_add("weight")	# Weight is the only property that can have a driver.
-				else:
-					to_constraint.driver_remove(data_path_from_constraint)
-					new_d = to_constraint.driver_add(data_path_from_constraint)
+		if not ('pose.bones["' + from_bone.name + '"]' in d.data_path): continue		# Driver doesn't belong to source bone, skip.
+		if("constraints[" in d.data_path and from_constraint==None): continue			# Driver is on a constraint, but no source constraint was given, skip.
+		if(from_constraint!=None and from_constraint.name not in d.data_path): continue	# Driver is on a constraint other than the given source constraint, skip.
+		
+		### Copying mirrored driver to target bone...
+		
+		# The way drivers on bones work is weird af. You have to create the driver relative to the bone, but you have to read the driver relative to the armature. So d.data_path might look like "pose.bones["bone_name"].bone_property" but when we create a driver we just need the "bone_property" part.
+		data_path_from_bone = d.data_path.split("].", 1)[1]
+		new_d = None
+		if("constraints[" in data_path_from_bone):
+			data_path_from_constraint = data_path_from_bone.split("].", 1)[1]
+			# Armature constraints need special special treatment...
+			if(from_constraint.type=='ARMATURE' and "targets[" in data_path_from_constraint):
+				target_idx = int(data_path_from_constraint.split("targets[")[1][0])
+				target = to_constraint.targets[target_idx]
+				# Weight is the only property that can have a driver on an Armature constraint's Target object.
+				target.driver_remove("weight")
+				new_d = target.driver_add("weight")
 			else:
-				to_bone.driver_remove(data_path_from_bone)
-				new_d = to_bone.driver_add(data_path_from_bone)
-				
-			expression = d.driver.expression
+				to_constraint.driver_remove(data_path_from_constraint)
+				new_d = to_constraint.driver_add(data_path_from_constraint)
+		else:
+			to_bone.driver_remove(data_path_from_bone)
+			new_d = to_bone.driver_add(data_path_from_bone)
 			
-			# Copy the variables
-			for from_var in d.driver.variables:
-				to_var = new_d.driver.variables.new()
-				to_var.type = from_var.type
-				to_var.name = from_var.name
-				
-				for i in range(len(from_var.targets)):
-					target_bone = from_var.targets[i].bone_target
-					new_target_bone = utils.flip_name(target_bone)
-					if(to_var.type == 'SINGLE_PROP'):
-						to_var.targets[i].id_type			= from_var.targets[i].id_type
-					to_var.targets[i].id 				= from_var.targets[i].id
-					to_var.targets[i].bone_target 		= new_target_bone
-					data_path = from_var.targets[i].data_path
-					if "pose.bones" in data_path:
-						bone_name = data_path.split('pose.bones["')[1].split('"')[0]
-						flipped_name = utils.flip_name(bone_name, only=False)
-						data_path = data_path.replace(bone_name, flipped_name)
-					# HACK
-					if "left" in data_path:
-						data_path = data_path.replace("left", "right")
-					elif "right" in data_path:
-						data_path = data_path.replace("right", "left")
-					to_var.targets[i].data_path 		= data_path
-					to_var.targets[i].transform_type 	= from_var.targets[i].transform_type
-					to_var.targets[i].transform_space 	= from_var.targets[i].transform_space
-					# TODO: If transform is X Rotation, have a "mirror" option, to invert it in the expression. Better yet, detect if the new_target_bone is the opposite of the original.
-				
-				# Below is some old terrible code to add or remove a "-" sign before the variable's name in the expression... 
-				# It's technically needed to mirror a driver correctly in some cases, but I'm not sure how to 
-				# figure out whether a variable needs to be flipped or not.
-				"""
-				print(from_var.targets[0].transform_type)
-				if( to_var.targets[0].bone_target and
-					"SCALE" not in from_var.targets[0].transform_type and
-					(from_var.targets[0].transform_type.endswith("_X") and flip_x) or
-					(from_var.targets[0].transform_type.endswith("_Y") and flip_y) or
-					(from_var.targets[0].transform_type.endswith("_Z") and flip_z)
-					):
-					# Flipping sign - this is awful, I know.
-					if("-"+to_var.name in expression):
-						expression = expression.replace("-"+to_var.name, "+"+to_var.name)
-						print(1)
-					elif("+ "+to_var.name in expression):
-						expression = expression.replace("+ "+to_var.name, "- "+to_var.name)
-						print(2)
-					else:
-						expression = expression.replace(to_var.name, "-"+to_var.name)
-						print("3")"""
+		expression = d.driver.expression
+		
+		# Copy the variables
+		for from_var in d.driver.variables:
+			to_var = new_d.driver.variables.new()
+			to_var.type = from_var.type
+			to_var.name = from_var.name
 			
-			# Copy the expression
+			for i in range(len(from_var.targets)):
+				target_bone = from_var.targets[i].bone_target
+				new_target_bone = utils.flip_name(target_bone)
+				if(to_var.type == 'SINGLE_PROP'):
+					to_var.targets[i].id_type			= from_var.targets[i].id_type
+				to_var.targets[i].id 				= from_var.targets[i].id
+				to_var.targets[i].bone_target 		= new_target_bone
+				data_path = from_var.targets[i].data_path
+				if "pose.bones" in data_path:
+					bone_name = data_path.split('pose.bones["')[1].split('"')[0]
+					flipped_name = utils.flip_name(bone_name, only=False)
+					data_path = data_path.replace(bone_name, flipped_name)
+				# HACK
+				if "left" in data_path:
+					data_path = data_path.replace("left", "right")
+				elif "right" in data_path:
+					data_path = data_path.replace("right", "left")
+				to_var.targets[i].data_path 		= data_path
+				to_var.targets[i].transform_type 	= from_var.targets[i].transform_type
+				to_var.targets[i].transform_space 	= from_var.targets[i].transform_space
+				# TODO: If transform is X Rotation, have a "mirror" option, to invert it in the expression. Better yet, detect if the new_target_bone is the opposite of the original.
+			
+			# Below is some old terrible code to add or remove a "-" sign before the variable's name in the expression... 
+			# It's technically needed to mirror a driver correctly in some cases, but I'm not sure how to 
+			# figure out whether a variable needs to be flipped or not.
+			"""
+			print(from_var.targets[0].transform_type)
+			if( to_var.targets[0].bone_target and
+				"SCALE" not in from_var.targets[0].transform_type and
+				(from_var.targets[0].transform_type.endswith("_X") and flip_x) or
+				(from_var.targets[0].transform_type.endswith("_Y") and flip_y) or
+				(from_var.targets[0].transform_type.endswith("_Z") and flip_z)
+				):
+				# Flipping sign - this is awful, I know.
+				if("-"+to_var.name in expression):
+					expression = expression.replace("-"+to_var.name, "+"+to_var.name)
+					print(1)
+				elif("+ "+to_var.name in expression):
+					expression = expression.replace("+ "+to_var.name, "- "+to_var.name)
+					print(2)
+				else:
+					expression = expression.replace(to_var.name, "-"+to_var.name)
+					print("3")"""
+		
+		# Copy the expression
 
-			new_d.driver.expression = expression
+		new_d.driver.expression = expression
 
 def mirror_constraint(armature, bone, constraint, allow_split=True):
 	b = bone
