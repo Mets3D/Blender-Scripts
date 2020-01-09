@@ -1,8 +1,10 @@
-"Version: 1.0"
-"18/11/19"
+"Version: 1.1"
+"2020-01-09"
 
 import bpy
 from bpy.props import *
+from mathutils import Vector, Matrix
+from math import *
 
 def get_rigs():
 	""" Find all cloudrig armatures in the file."""
@@ -18,6 +20,244 @@ def get_char_bone(rig):
 	for b in rig.pose.bones:
 		if b.name.startswith("Properties_Character"):
 			return b
+
+class Snap_FK2IK(bpy.types.Operator):
+	"""Snap FK to IK chain"""
+	bl_idname = "armature.snap_fk_to_ik"
+	bl_label = "Snap FK to IK"
+	bl_options = {'REGISTER', 'UNDO'}
+
+	fk_bones: StringProperty()
+	ik_bones: StringProperty()
+
+	def execute(self, context):
+		armature = context.object
+		fk_bones = list(map(armature.pose.bones.get, self.fk_bones.split(", ")))
+		ik_bones = list(map(armature.pose.bones.get, self.ik_bones.split(", ")))
+
+		for i, fkb in enumerate(fk_bones):
+			fk_bones[i].matrix = ik_bones[i].matrix
+			context.evaluated_depsgraph_get().update()
+
+		# Deselect all bones
+		for b in context.selected_pose_bones:
+			b.bone.select=False
+			
+		# Select affected bones
+		for b in fk_bones:
+			b.bone.select=True
+
+		return {'FINISHED'}
+
+def perpendicular_vector(v):
+	""" Returns a vector that is perpendicular to the one given.
+		The returned vector is _not_ guaranteed to be normalized.
+	"""
+	# Create a vector that is not aligned with v.
+	# It doesn't matter what vector.  Just any vector
+	# that's guaranteed to not be pointing in the same
+	# direction.
+	if abs(v[0]) < abs(v[1]):
+		tv = Vector((1,0,0))
+	else:
+		tv = Vector((0,1,0))
+
+	# Use cross prouct to generate a vector perpendicular to
+	# both tv and (more importantly) v.
+	return v.cross(tv)
+
+def set_pose_translation(pose_bone, mat):
+	""" Sets the pose bone's translation to the same translation as the given matrix.
+		Matrix should be given in bone's local space.
+	"""
+	if pose_bone.bone.use_local_location == True:
+		pose_bone.location = mat.to_translation()
+	else:
+		loc = mat.to_translation()
+
+		rest = pose_bone.bone.matrix_local.copy()
+		if pose_bone.bone.parent:
+			par_rest = pose_bone.bone.parent.matrix_local.copy()
+		else:
+			par_rest = Matrix()
+
+		q = (par_rest.inverted() @ rest).to_quaternion()
+		pose_bone.location = q @ loc
+
+def get_pose_matrix_in_other_space(mat, pose_bone):
+	""" Returns the transform matrix relative to pose_bone's current
+		transform space.  In other words, presuming that mat is in
+		armature space, slapping the returned matrix onto pose_bone
+		should give it the armature-space transforms of mat.
+		TODO: try to handle cases with axis-scaled parents better.
+	"""
+	rest = pose_bone.bone.matrix_local.copy()
+	rest_inv = rest.inverted()
+	if pose_bone.parent:
+		par_mat = pose_bone.parent.matrix.copy()
+		par_inv = par_mat.inverted()
+		par_rest = pose_bone.parent.bone.matrix_local.copy()
+	else:
+		par_mat = Matrix()
+		par_inv = Matrix()
+		par_rest = Matrix()
+
+	# Get matrix in bone's current transform space
+	smat = rest_inv @ (par_rest @ (par_inv @ mat))
+
+	# Compensate for non-local location
+	#if not pose_bone.bone.use_local_location:
+	#	loc = smat.to_translation() @ (par_rest.inverted() @ rest).to_quaternion()
+	#	smat.translation = loc
+
+	return smat
+
+def rotation_difference(mat1, mat2):
+	""" Returns the shortest-path rotational difference between two
+		matrices.
+	"""
+	q1 = mat1.to_quaternion()
+	q2 = mat2.to_quaternion()
+	angle = acos(min(1,max(-1,q1.dot(q2)))) * 2
+	if angle > pi:
+		angle = -angle + (2*pi)
+	return angle
+
+def match_pole_target(ik_first, ik_last, pole, match_bone, length):
+	""" Places an IK chain's pole target to match ik_first's
+		transforms to match_bone.  All bones should be given as pose bones.
+		You need to be in pose mode on the relevant armature object.
+		ik_first: first bone in the IK chain
+		ik_last:  last bone in the IK chain
+		pole:  pole target bone for the IK chain
+		match_bone:  bone to match ik_first to (probably first bone in a matching FK chain)
+		length:  distance pole target should be placed from the chain center
+	"""
+	a = ik_first.matrix.to_translation()
+	b = ik_last.matrix.to_translation() + ik_last.vector
+
+	# Vector from the head of ik_first to the
+	# tip of ik_last
+	ikv = b - a
+
+	# Get a vector perpendicular to ikv
+	pv = perpendicular_vector(ikv).normalized() * length
+
+	def set_pole(pvi):
+		""" Set pole target's position based on a vector
+			from the arm center line.
+		"""
+		# Translate pvi into armature space
+		ploc = a + (ikv/2) + pvi
+
+		# Set pole target to location
+		mat = get_pose_matrix_in_other_space(Matrix.Translation(ploc), pole)
+		set_pose_translation(pole, mat)
+
+		bpy.ops.object.mode_set(mode='OBJECT')
+		bpy.ops.object.mode_set(mode='POSE')
+
+	set_pole(pv)
+
+	# Get the rotation difference between ik_first and match_bone
+	angle = rotation_difference(ik_first.matrix, match_bone.matrix)
+
+	# Try compensating for the rotation difference in both directions
+	pv1 = Matrix.Rotation(angle, 4, ikv) @ pv
+	set_pole(pv1)
+	ang1 = rotation_difference(ik_first.matrix, match_bone.matrix)
+
+	pv2 = Matrix.Rotation(-angle, 4, ikv) @ pv
+	set_pole(pv2)
+	ang2 = rotation_difference(ik_first.matrix, match_bone.matrix)
+
+	# Do the one with the smaller angle
+	if ang1 < ang2:
+		set_pole(pv1)
+
+class Snap_IK2FK(bpy.types.Operator):
+	"""Snap IK to FK chain"""
+	"""Credit for most code (for figuring out the pole target matrix) to Rigify."""	# TODO: Actually, the resulting pole target location appears to be imprecise.
+	bl_idname = "armature.snap_ik_to_fk"
+	bl_label = "Snap IK to FK"
+	bl_options = {'REGISTER', 'UNDO'}
+
+	fk_bones: StringProperty()
+	ik_bones: StringProperty()
+	ik_pole: StringProperty()
+	ik_parent: BoolProperty(default=True)
+	
+	@classmethod
+	def poll(cls, context):
+		if context.object and context.object.type=='ARMATURE': 
+			return True
+
+	def execute(self, context):
+		armature = context.object
+
+		fk_bones = list(map(armature.pose.bones.get, self.fk_bones.split(", ")))
+		ik_bones = list(map(armature.pose.bones.get, self.ik_bones.split(", ")))
+		ik_pole = armature.pose.bones.get(self.ik_pole)
+
+		# Snap the last IK control to the last FK control.
+		last_fk_bone = fk_bones[-1]
+		last_ik_bone = ik_bones[-1]
+		select_bones = [last_ik_bone, ik_pole]
+		if self.ik_parent:
+			ik_parent_bone = last_ik_bone.parent
+			ik_parent_bone.matrix = last_fk_bone.matrix
+			select_bones.append(ik_parent_bone)
+			context.evaluated_depsgraph_get().update()
+		last_ik_bone.matrix = last_fk_bone.matrix
+		context.evaluated_depsgraph_get().update()
+		
+		first_ik_bone = fk_bones[0]
+		first_fk_bone = ik_bones[0]
+		match_pole_target(first_ik_bone, last_ik_bone, ik_pole, first_fk_bone, 0.5)
+		context.evaluated_depsgraph_get().update()
+
+		# Deselect all bones
+		for b in context.selected_pose_bones:
+			b.bone.select=False
+
+		# Select affected bones
+		for b in select_bones:
+			b.bone.select=True
+
+		return {'FINISHED'}
+
+class IKFK_Toggle(bpy.types.Operator):
+	"Toggle between IK and FK, and snap the controls accordingly. This will NOT place any keyframes, but it will select the affected bones"
+	bl_idname = "armature.ikfk_toggle"
+	bl_label = "Toggle IK/FK"
+	bl_options = {'REGISTER', 'UNDO'}
+	
+	prop_bone: StringProperty()
+	prop_name: StringProperty()
+
+	fk_bones: StringProperty()
+	ik_bones: StringProperty()
+	ik_pole: StringProperty()
+	ik_parent: BoolProperty(default=True)
+
+	@classmethod
+	def poll(cls, context):
+		if context.object and context.object.type=='ARMATURE' and context.mode=='POSE': 
+			return True
+
+	def execute(self, context):
+		if self.prop_bone != "":
+			armature = context.object
+
+			prop_bone = armature.pose.bones.get(self.prop_bone)
+			if prop_bone[self.prop_name] < 1:
+				bpy.ops.armature.snap_ik_to_fk(fk_bones=self.fk_bones, ik_bones=self.ik_bones, ik_pole=self.ik_pole, ik_parent=self.ik_parent)
+				prop_bone[self.prop_name] = 1.0
+			else:
+				bpy.ops.armature.snap_fk_to_ik(fk_bones=self.fk_bones, ik_bones=self.ik_bones)
+				prop_bone[self.prop_name] = 0.0
+
+		return {'FINISHED'}
 
 class Reset_Rig_Colors(bpy.types.Operator):
 	"""Reset rig color properties to their stored default."""
@@ -301,15 +541,49 @@ class RigUI_Settings_FKIK_Switch(RigUI):
 	def draw(self, context):
 		layout = self.layout
 		rig = context.object
+
+		fk_arm_left = ", ".join(["FK-Upperarm_Parent.L", "FK-Upperarm.L", "FK-Forearm.L", "FK-Hand.L"])
+		ik_arm_left = ", ".join(["IK-Upperarm.L", "IK-Upperarm.L", "IK-Forearm.L", "IK-Hand.L"])
+		pole_arm_left = "IK-Pole-Forearm.L"
+
+		fk_arm_right = ", ".join(["FK-Upperarm_Parent.R", "FK-Upperarm.R", "FK-Forearm.R", "FK-Hand.R"])
+		ik_arm_right = ", ".join(["IK-Upperarm.R", "IK-Upperarm.R", "IK-Forearm.R", "IK-Hand.R"])
+		pole_arm_right = "IK-Pole-Forearm.R"
+
+		fk_leg_left  = ", ".join(["FK-Thigh_Parent.L", "FK-Thigh.L", "FK-Shin.L", "FK-Foot.L"])
+		ik_leg_left  = ", ".join(["IK-Thigh.L", "IK-Thigh.L", "IK-Shin.L", "MSTR-Foot.L"])
+		pole_leg_left = "IK-Pole-Shin.L"
+
+		fk_leg_right = ", ".join(["FK-Thigh_Parent.R", "FK-Thigh.R", "FK-Shin.R", "FK-Foot.R"])
+		ik_leg_right  = ", ".join(["IK-Thigh.R", "IK-Thigh.R", "IK-Shin.R", "MSTR-Foot.R"])
+		pole_leg_right = "IK-Pole-Shin.R"
+
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 
 		layout.row().prop(ikfk_props, '["ik_spine"]', slider=True, text='Spine')
-		arms_row = layout.row()
-		arms_row.prop(ikfk_props, '["ik_arm_left"]', slider=True, text='Left Arm')
-		arms_row.prop(ikfk_props, '["ik_arm_right"]', slider=True, text='Right Arm')
-		legs_row = layout.row()
-		legs_row.prop(ikfk_props, '["ik_leg_left"]', slider=True, text='Left Leg')
-		legs_row.prop(ikfk_props, '["ik_leg_right"]', slider=True, text='Right Leg')
+		
+		arms = [
+			("ik_arm_left", "Left Arm", fk_arm_left, ik_arm_left, pole_arm_left), 
+			("ik_arm_right", "Right Arm", fk_arm_right, ik_arm_right, pole_arm_right)
+		]
+		legs = [
+			("ik_leg_left", "Left Leg", fk_leg_left, ik_leg_left, pole_leg_left),
+			("ik_leg_right", "Right Leg", fk_leg_right, ik_leg_right, pole_leg_right)
+		]
+		limbses = [arms, legs]
+
+		for limbs in limbses:
+			limb_row = layout.row()
+			for limb in limbs:
+				limb_col = limb_row.column()
+				limb_sub = limb_col.row(align=True)
+				limb_sub.prop(ikfk_props, '["'+limb[0]+'"]', slider=True, text=limb[1])
+				switch = limb_sub.operator(IKFK_Toggle.bl_idname, text="", icon='FILE_REFRESH')
+				switch.fk_bones = limb[2]
+				switch.ik_bones = limb[3]
+				switch.ik_pole = limb[4]
+				switch.prop_bone = ikfk_props.name
+				switch.prop_name = limb[0]
 
 class RigUI_Settings_IK(RigUI):
 	bl_idname = "OBJECT_PT_rig_ui_ik"
@@ -438,6 +712,10 @@ classes = (
 	Rig_Properties,
 	RigUI_Outfits,
 	RigUI_Layers,
+	Snap_IK2FK,
+	Snap_FK2IK,
+	IKFK_Toggle,
+	Reset_Rig_Colors,
 	RigUI_Settings_FKIK,
 	RigUI_Settings_FKIK_Switch,
 	RigUI_Settings_IK,
@@ -445,7 +723,6 @@ classes = (
 	RigUI_Settings_Face,
 	RigUI_Settings_Misc,
 	RigUI_Viewport_Display,
-	Reset_Rig_Colors
 )
 
 from bpy.utils import register_class
