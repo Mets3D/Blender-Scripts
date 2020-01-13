@@ -23,6 +23,7 @@ CLOUDRIGIFY
 		Neck and Head (Hinge, aim target)
 		Hunt down TODO's
 		UI
+		Parent Switching
 		Stretchy Spine
 		Extra spine(hip) deform bone?
 		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
