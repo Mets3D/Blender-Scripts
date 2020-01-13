@@ -4,9 +4,6 @@ I should make an addon to help the editing of shape keys and weights in any orde
 	Figure out how to make it so that, in order to achieve a desired shape, the weights are re-distributed such that the least amount of work possible has to be done by shape keys, while everything else is done by bones.
 		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
-Write a document about some of the challenges and improvements made over the past few weeks, include the videos.
-To make a rig generator, I need to learn how to use the new Rigify.
-
 HIGH Write a document on what could be done on blender development side to make my workflow better, and what things I will need to learn and do in order to rig new characters.
 HIGH Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
 
@@ -23,14 +20,17 @@ CLOUDRIGIFY
 		I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
 
 	Next up:
-		Spine
-		Neck and head? Is this separate from the spine?
-		Face... Q_Q
+		Neck and Head (Hinge, aim target)
+		Hunt down TODO's
+		UI
+		Stretchy Spine
+		Extra spine(hip) deform bone?
 		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
+		Face... Q_Q
 
-		Complicate the hand a bit more.
+		Small rig elements like thumb correctives.
 	
-	Could eventually refactor all of the code to be a bit more compliant with Rigify's coding style - Maybe even abandon our abstractions.
+		Could eventually refactor all of the code to be a bit more compliant with Rigify's coding style - Maybe even abandon our abstractions.
 
 Body/Limbs
 	HIGH Pablico found a pose in which the spine starts twisting out like crazy for a small amount of degrees. I couldn't reproduce, and he said it wasn't important, but it would still be nice to know what causes it.
@@ -47,6 +47,8 @@ Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
 
 Face
+	HIGH Hjalti found a bug where, if the armature has a Copy Transforms object constraint, and the FK-Head is scaled, the nose explodes.
+
 	HIGH Action Constraint fix is now in master, so delete CTR-P- or whatever-they-are-now bones, and rename action curves with script while trying not to break anything.
 		Keep in mind when re-generating face controls: Eyelids shouldn't affect eyerings, and eyebrows shouldn't affect themselves, that is to say, automatic bbone handle should be disabled on these areas. Same for lips.
 		With that said, a lot of the bones from those areas should be able to be deleted.

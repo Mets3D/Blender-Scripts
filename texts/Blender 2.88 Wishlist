@@ -12,7 +12,6 @@ FEATURES
 - Let Alt+(Right)Click selection work in pose mode, to easily select a specific bone out of a lot of overlapping bones.
 
 Medium things:
-- LOW Thicker/brighter edge drawing for bone shapes (Or edges in general)
 - MED Mask for Surface Deform modifier
 
 - LOW Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
