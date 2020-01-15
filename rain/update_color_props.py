@@ -1,11 +1,21 @@
 import bpy
 from mets_tools.armature_nodes.driver import Driver
 
+# This script is meant for maintaining Rain's Viewport Display rig UI
+# Which lets us change viewport colors when the character is linked and proxied.
+# as requested by the animation department.
+
+# It updates the color properties that are stored in the rig properties
+# And then updates the drivers that drive the viewport colors, so that they copy said rig properties.
+# The rig color properties can then be displayed in the UI via cloudrig.py, and the colors can be changed even on a linked character.
+# (This is just for viewport colors, not render)
+
 rig = bpy.context.object
 prop_dict = {}
 for i, cp in enumerate(rig.rig_colorproperties):
 	prop_dict[cp.name] = i
 
+# Populate color properties
 rig.rig_colorproperties.clear()
 mats_done = []
 for o in rig.children:
@@ -21,7 +31,6 @@ for o in rig.children:
 	for ms in o.material_slots:
 		m = ms.material
 		
-		# If this errors, ensure the properties are up date with populate_color_properties.py
 		cpi = prop_dict[m.name]
 		
 		# Add drivers to the first 3 values of the material color

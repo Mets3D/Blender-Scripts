@@ -1,5 +1,5 @@
-"Version: 1.1"
-"2020-01-09"
+"Version: 1.2"
+"2020-01-15"
 
 import bpy
 from bpy.props import *
@@ -20,6 +20,55 @@ def get_char_bone(rig):
 	for b in rig.pose.bones:
 		if b.name.startswith("Properties_Character"):
 			return b
+
+def pre_depsgraph_update(scene, depsgraph=None):
+	""" Runs before every depsgraph update. Is used to handle user input by detecting changes in the rig properties. """
+	for rig in get_rigs():
+		# Grabbing relevant data (Hardcoded for Rain - general solutions eat too much performance)
+		outfit_props = rig.pose.bones.get("Properties_Outfit_Default")
+		if not outfit_props: return
+		if "Skin" not in outfit_props: return
+
+		skin = outfit_props["Skin"]		
+		
+		# Init flags
+		if('update_skin' not in rig):
+			rig['update_skin'] = 0
+		if('prev_skin' not in rig):
+			rig['prev_skin'] = skin
+		
+		if skin != rig['prev_skin']:
+			# Changing the scene should be done in post_depsgraph_update, otherwise we can easily cause an infinite loop of depsgraph updates.
+			# So we just set a flag and read it from there.
+			#rig['update_skin'] = 1
+			rig['prev_skin'] = skin
+			# An exception to this is material changes. If those are done in post_depsgraph_update, they don't show up in the viewport.
+			update_viewport_colors(rig, skin)
+
+viewport_color_definitions = {
+	"Rain" : {
+		"MAT-rain.hair" : [0.048172, 0.031896, 0.020289],
+		"MAT-rain.hairband" : [0.092253, 0.322308, 0.428690],
+		"MAT-rain.eyebrows" : [0.048172, 0.031896, 0.020289],
+		"MAT-rain.top" : [0.800000, 0.800000, 0.800000],
+	},
+	"Hail" : {
+		"MAT-rain.hair" : [0.018500, 0.293081, 0.313989],
+		"MAT-rain.hairband" : [0.013702, 0.036004, 0.054995],
+		"MAT-rain.eyebrows" : [0.005661, 0.035762, 0.038372],
+		"MAT-rain.top" : [0.012983, 0.035601, 0.054480],
+	}
+}
+
+def update_viewport_colors(rig, skin):
+	skin_name = "Rain" if skin == 1 else "Hail"
+	skin_colors = viewport_color_definitions[skin_name]
+
+	for mat_name in skin_colors.keys():
+		col_prop = rig.rig_colorproperties.get(mat_name)
+		if col_prop:
+			col_prop.color = skin_colors[mat_name]
+			col_prop.default = skin_colors[mat_name]
 
 class Snap_FK2IK(bpy.types.Operator):
 	"""Snap FK to IK chain"""
@@ -49,132 +98,6 @@ class Snap_FK2IK(bpy.types.Operator):
 
 		return {'FINISHED'}
 
-def perpendicular_vector(v):
-	""" Returns a vector that is perpendicular to the one given.
-		The returned vector is _not_ guaranteed to be normalized.
-	"""
-	# Create a vector that is not aligned with v.
-	# It doesn't matter what vector.  Just any vector
-	# that's guaranteed to not be pointing in the same
-	# direction.
-	if abs(v[0]) < abs(v[1]):
-		tv = Vector((1,0,0))
-	else:
-		tv = Vector((0,1,0))
-
-	# Use cross prouct to generate a vector perpendicular to
-	# both tv and (more importantly) v.
-	return v.cross(tv)
-
-def set_pose_translation(pose_bone, mat):
-	""" Sets the pose bone's translation to the same translation as the given matrix.
-		Matrix should be given in bone's local space.
-	"""
-	if pose_bone.bone.use_local_location == True:
-		pose_bone.location = mat.to_translation()
-	else:
-		loc = mat.to_translation()
-
-		rest = pose_bone.bone.matrix_local.copy()
-		if pose_bone.bone.parent:
-			par_rest = pose_bone.bone.parent.matrix_local.copy()
-		else:
-			par_rest = Matrix()
-
-		q = (par_rest.inverted() @ rest).to_quaternion()
-		pose_bone.location = q @ loc
-
-def get_pose_matrix_in_other_space(mat, pose_bone):
-	""" Returns the transform matrix relative to pose_bone's current
-		transform space.  In other words, presuming that mat is in
-		armature space, slapping the returned matrix onto pose_bone
-		should give it the armature-space transforms of mat.
-		TODO: try to handle cases with axis-scaled parents better.
-	"""
-	rest = pose_bone.bone.matrix_local.copy()
-	rest_inv = rest.inverted()
-	if pose_bone.parent:
-		par_mat = pose_bone.parent.matrix.copy()
-		par_inv = par_mat.inverted()
-		par_rest = pose_bone.parent.bone.matrix_local.copy()
-	else:
-		par_mat = Matrix()
-		par_inv = Matrix()
-		par_rest = Matrix()
-
-	# Get matrix in bone's current transform space
-	smat = rest_inv @ (par_rest @ (par_inv @ mat))
-
-	# Compensate for non-local location
-	#if not pose_bone.bone.use_local_location:
-	#	loc = smat.to_translation() @ (par_rest.inverted() @ rest).to_quaternion()
-	#	smat.translation = loc
-
-	return smat
-
-def rotation_difference(mat1, mat2):
-	""" Returns the shortest-path rotational difference between two
-		matrices.
-	"""
-	q1 = mat1.to_quaternion()
-	q2 = mat2.to_quaternion()
-	angle = acos(min(1,max(-1,q1.dot(q2)))) * 2
-	if angle > pi:
-		angle = -angle + (2*pi)
-	return angle
-
-def match_pole_target(ik_first, ik_last, pole, match_bone, length):
-	""" Places an IK chain's pole target to match ik_first's
-		transforms to match_bone.  All bones should be given as pose bones.
-		You need to be in pose mode on the relevant armature object.
-		ik_first: first bone in the IK chain
-		ik_last:  last bone in the IK chain
-		pole:  pole target bone for the IK chain
-		match_bone:  bone to match ik_first to (probably first bone in a matching FK chain)
-		length:  distance pole target should be placed from the chain center
-	"""
-	a = ik_first.matrix.to_translation()
-	b = ik_last.matrix.to_translation() + ik_last.vector
-
-	# Vector from the head of ik_first to the
-	# tip of ik_last
-	ikv = b - a
-
-	# Get a vector perpendicular to ikv
-	pv = perpendicular_vector(ikv).normalized() * length
-
-	def set_pole(pvi):
-		""" Set pole target's position based on a vector
-			from the arm center line.
-		"""
-		# Translate pvi into armature space
-		ploc = a + (ikv/2) + pvi
-
-		# Set pole target to location
-		mat = get_pose_matrix_in_other_space(Matrix.Translation(ploc), pole)
-		set_pose_translation(pole, mat)
-
-		bpy.ops.object.mode_set(mode='OBJECT')
-		bpy.ops.object.mode_set(mode='POSE')
-
-	set_pole(pv)
-
-	# Get the rotation difference between ik_first and match_bone
-	angle = rotation_difference(ik_first.matrix, match_bone.matrix)
-
-	# Try compensating for the rotation difference in both directions
-	pv1 = Matrix.Rotation(angle, 4, ikv) @ pv
-	set_pole(pv1)
-	ang1 = rotation_difference(ik_first.matrix, match_bone.matrix)
-
-	pv2 = Matrix.Rotation(-angle, 4, ikv) @ pv
-	set_pole(pv2)
-	ang2 = rotation_difference(ik_first.matrix, match_bone.matrix)
-
-	# Do the one with the smaller angle
-	if ang1 < ang2:
-		set_pole(pv1)
-
 class Snap_IK2FK(bpy.types.Operator):
 	"""Snap IK to FK chain"""
 	"""Credit for most code (for figuring out the pole target matrix) to Rigify."""	# TODO: Actually, the resulting pole target location appears to be imprecise.
@@ -187,6 +110,132 @@ class Snap_IK2FK(bpy.types.Operator):
 	ik_pole: StringProperty()
 	ik_parent: BoolProperty(default=True)
 	
+	def perpendicular_vector(self, v):
+		""" Returns a vector that is perpendicular to the one given.
+			The returned vector is _not_ guaranteed to be normalized.
+		"""
+		# Create a vector that is not aligned with v.
+		# It doesn't matter what vector.  Just any vector
+		# that's guaranteed to not be pointing in the same
+		# direction.
+		if abs(v[0]) < abs(v[1]):
+			tv = Vector((1,0,0))
+		else:
+			tv = Vector((0,1,0))
+
+		# Use cross prouct to generate a vector perpendicular to
+		# both tv and (more importantly) v.
+		return v.cross(tv)
+
+	def set_pose_translation(self, pose_bone, mat):
+		""" Sets the pose bone's translation to the same translation as the given matrix.
+			Matrix should be given in bone's local space.
+		"""
+		if pose_bone.bone.use_local_location == True:
+			pose_bone.location = mat.to_translation()
+		else:
+			loc = mat.to_translation()
+
+			rest = pose_bone.bone.matrix_local.copy()
+			if pose_bone.bone.parent:
+				par_rest = pose_bone.bone.parent.matrix_local.copy()
+			else:
+				par_rest = Matrix()
+
+			q = (par_rest.inverted() @ rest).to_quaternion()
+			pose_bone.location = q @ loc
+
+	def get_pose_matrix_in_other_space(self, mat, pose_bone):
+		""" Returns the transform matrix relative to pose_bone's current
+			transform space.  In other words, presuming that mat is in
+			armature space, slapping the returned matrix onto pose_bone
+			should give it the armature-space transforms of mat.
+			TODO: try to handle cases with axis-scaled parents better.
+		"""
+		rest = pose_bone.bone.matrix_local.copy()
+		rest_inv = rest.inverted()
+		if pose_bone.parent:
+			par_mat = pose_bone.parent.matrix.copy()
+			par_inv = par_mat.inverted()
+			par_rest = pose_bone.parent.bone.matrix_local.copy()
+		else:
+			par_mat = Matrix()
+			par_inv = Matrix()
+			par_rest = Matrix()
+
+		# Get matrix in bone's current transform space
+		smat = rest_inv @ (par_rest @ (par_inv @ mat))
+
+		# Compensate for non-local location
+		#if not pose_bone.bone.use_local_location:
+		#	loc = smat.to_translation() @ (par_rest.inverted() @ rest).to_quaternion()
+		#	smat.translation = loc
+
+		return smat
+
+	def rotation_difference(self, mat1, mat2):
+		""" Returns the shortest-path rotational difference between two
+			matrices.
+		"""
+		q1 = mat1.to_quaternion()
+		q2 = mat2.to_quaternion()
+		angle = acos(min(1,max(-1,q1.dot(q2)))) * 2
+		if angle > pi:
+			angle = -angle + (2*pi)
+		return angle
+
+	def match_pole_target(self, ik_first, ik_last, pole, match_bone, length):
+		""" Places an IK chain's pole target to match ik_first's
+			transforms to match_bone.  All bones should be given as pose bones.
+			You need to be in pose mode on the relevant armature object.
+			ik_first: first bone in the IK chain
+			ik_last:  last bone in the IK chain
+			pole:  pole target bone for the IK chain
+			match_bone:  bone to match ik_first to (probably first bone in a matching FK chain)
+			length:  distance pole target should be placed from the chain center
+		"""
+		a = ik_first.matrix.to_translation()
+		b = ik_last.matrix.to_translation() + ik_last.vector
+
+		# Vector from the head of ik_first to the
+		# tip of ik_last
+		ikv = b - a
+
+		# Get a vector perpendicular to ikv
+		pv = self.perpendicular_vector(ikv).normalized() * length
+
+		def set_pole(pvi):
+			""" Set pole target's position based on a vector
+				from the arm center line.
+			"""
+			# Translate pvi into armature space
+			ploc = a + (ikv/2) + pvi
+
+			# Set pole target to location
+			mat = self.get_pose_matrix_in_other_space(Matrix.Translation(ploc), pole)
+			self.set_pose_translation(pole, mat)
+
+			bpy.ops.object.mode_set(mode='OBJECT')
+			bpy.ops.object.mode_set(mode='POSE')
+
+		set_pole(pv)
+
+		# Get the rotation difference between ik_first and match_bone
+		angle = self.rotation_difference(ik_first.matrix, match_bone.matrix)
+
+		# Try compensating for the rotation difference in both directions
+		pv1 = Matrix.Rotation(angle, 4, ikv) @ pv
+		set_pole(pv1)
+		ang1 = self.rotation_difference(ik_first.matrix, match_bone.matrix)
+
+		pv2 = Matrix.Rotation(-angle, 4, ikv) @ pv
+		set_pole(pv2)
+		ang2 = self.rotation_difference(ik_first.matrix, match_bone.matrix)
+
+		# Do the one with the smaller angle
+		if ang1 < ang2:
+			set_pole(pv1)
+			
 	@classmethod
 	def poll(cls, context):
 		if context.object and context.object.type=='ARMATURE': 
@@ -213,7 +262,7 @@ class Snap_IK2FK(bpy.types.Operator):
 		
 		first_ik_bone = fk_bones[0]
 		first_fk_bone = ik_bones[0]
-		match_pole_target(first_ik_bone, last_ik_bone, ik_pole, first_fk_bone, 0.5)
+		self.match_pole_target(first_ik_bone, last_ik_bone, ik_pole, first_fk_bone, 0.5)
 		context.evaluated_depsgraph_get().update()
 
 		# Deselect all bones
@@ -522,7 +571,7 @@ class RigUI_Layers(RigUI):
 			death_row.prop(data, 'layers', index=30, toggle=True, text='Properties')
 			death_row.prop(data, 'layers', index=31, toggle=True, text='Black Box')
 
-class RigUI_Settings_FKIK(RigUI):
+class RigUI_Settings(RigUI):
 	bl_idname = "OBJECT_PT_rig_ui_settings"
 	bl_label = "Settings"
 	
@@ -533,8 +582,8 @@ class RigUI_Settings_FKIK(RigUI):
 		rig_props = rig.rig_properties
 		layout.row().prop(rig_props, 'render_modifiers', text='Enable Modifiers', toggle=True)
 
-class RigUI_Settings_FKIK_Switch(RigUI):
-	bl_idname = "OBJECT_PT_rig_ui_ikfk_switch"
+class RigUI_Settings_FKIK(RigUI):
+	bl_idname = "OBJECT_PT_rig_ui_ikfk"
 	bl_label = "FK/IK Switch"
 	bl_parent_id = "OBJECT_PT_rig_ui_settings"
 
@@ -716,8 +765,8 @@ classes = (
 	Snap_FK2IK,
 	IKFK_Toggle,
 	Reset_Rig_Colors,
+	RigUI_Settings,
 	RigUI_Settings_FKIK,
-	RigUI_Settings_FKIK_Switch,
 	RigUI_Settings_IK,
 	RigUI_Settings_FK,
 	RigUI_Settings_Face,
@@ -733,6 +782,9 @@ bpy.types.Object.rig_properties = bpy.props.PointerProperty(type=Rig_Properties)
 bpy.types.Object.rig_boolproperties = bpy.props.CollectionProperty(type=Rig_BoolProperties)
 bpy.types.Object.rig_colorproperties = bpy.props.CollectionProperty(type=Rig_ColorProperties)
 
-# Certain render settings must be enabled for this character!
+# bpy.app.handlers.depsgraph_update_post.append(post_depsgraph_update)
+bpy.app.handlers.depsgraph_update_pre.append(pre_depsgraph_update)
+
+# Certain render settings must be enabled for Rain!
 bpy.context.scene.eevee.use_ssr = True
 bpy.context.scene.eevee.use_ssr_refraction = True
