@@ -108,7 +108,7 @@ class Snap_IK2FK(bpy.types.Operator):
 	fk_bones: StringProperty()
 	ik_bones: StringProperty()
 	ik_pole: StringProperty()
-	double_ik_control: BoolProperty(default=True, description="Set to True if there is a double IK control.")
+	ik_parent: BoolProperty(default=True)
 	
 	def perpendicular_vector(self, v):
 		""" Returns a vector that is perpendicular to the one given.
@@ -252,7 +252,7 @@ class Snap_IK2FK(bpy.types.Operator):
 		last_fk_bone = fk_bones[-1]
 		last_ik_bone = ik_bones[-1]
 		select_bones = [last_ik_bone, ik_pole]
-		if self.double_ik_control:
+		if self.ik_parent:
 			ik_parent_bone = last_ik_bone.parent
 			ik_parent_bone.matrix = last_fk_bone.matrix
 			select_bones.append(ik_parent_bone)
@@ -287,7 +287,7 @@ class IKFK_Toggle(bpy.types.Operator):
 	fk_bones: StringProperty()
 	ik_bones: StringProperty()
 	ik_pole: StringProperty()
-	double_ik_control: BoolProperty(default=True)
+	ik_parent: BoolProperty(default=True)
 
 	@classmethod
 	def poll(cls, context):
@@ -300,7 +300,7 @@ class IKFK_Toggle(bpy.types.Operator):
 
 			prop_bone = armature.pose.bones.get(self.prop_bone)
 			if prop_bone[self.prop_name] < 1:
-				bpy.ops.armature.snap_ik_to_fk(fk_bones=self.fk_bones, ik_bones=self.ik_bones, ik_pole=self.ik_pole, double_ik_control=self.double_ik_control)
+				bpy.ops.armature.snap_ik_to_fk(fk_bones=self.fk_bones, ik_bones=self.ik_bones, ik_pole=self.ik_pole, ik_parent=self.ik_parent)
 				prop_bone[self.prop_name] = 1.0
 			else:
 				bpy.ops.armature.snap_fk_to_ik(fk_bones=self.fk_bones, ik_bones=self.ik_bones)
@@ -590,26 +590,49 @@ class RigUI_Settings_FKIK(RigUI):
 	def draw(self, context):
 		layout = self.layout
 		rig = context.object
+
+		fk_arm_left = ", ".join(["FK-Upperarm_Parent.L", "FK-Upperarm.L", "FK-Forearm.L", "FK-Hand.L"])
+		ik_arm_left = ", ".join(["IK-Upperarm.L", "IK-Upperarm.L", "IK-Forearm.L", "IK-Hand.L"])
+		pole_arm_left = "IK-Pole-Forearm.L"
+
+		fk_arm_right = ", ".join(["FK-Upperarm_Parent.R", "FK-Upperarm.R", "FK-Forearm.R", "FK-Hand.R"])
+		ik_arm_right = ", ".join(["IK-Upperarm.R", "IK-Upperarm.R", "IK-Forearm.R", "IK-Hand.R"])
+		pole_arm_right = "IK-Pole-Forearm.R"
+
+		fk_leg_left  = ", ".join(["FK-Thigh_Parent.L", "FK-Thigh.L", "FK-Shin.L", "FK-Foot.L"])
+		ik_leg_left  = ", ".join(["IK-Thigh.L", "IK-Thigh.L", "IK-Shin.L", "MSTR-Foot.L"])
+		pole_leg_left = "IK-Pole-Shin.L"
+
+		fk_leg_right = ", ".join(["FK-Thigh_Parent.R", "FK-Thigh.R", "FK-Shin.R", "FK-Foot.R"])
+		ik_leg_right  = ", ".join(["IK-Thigh.R", "IK-Thigh.R", "IK-Shin.R", "MSTR-Foot.R"])
+		pole_leg_right = "IK-Pole-Shin.R"
+
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 
-		ik_chains = rig["ik_chains"].to_dict()
+		layout.row().prop(ikfk_props, '["ik_spine"]', slider=True, text='Spine')
+		
+		arms = [
+			("ik_arm_left", "Left Arm", fk_arm_left, ik_arm_left, pole_arm_left), 
+			("ik_arm_right", "Right Arm", fk_arm_right, ik_arm_right, pole_arm_right)
+		]
+		legs = [
+			("ik_leg_left", "Left Leg", fk_leg_left, ik_leg_left, pole_leg_left),
+			("ik_leg_right", "Right Leg", fk_leg_right, ik_leg_right, pole_leg_right)
+		]
+		limbses = [arms, legs]
 
-		for limbs_name in ik_chains.keys():
-			limbs = ik_chains[limbs_name]
-			row = layout.row()
-			for limb_name in limbs.keys():
-				limb = limbs[limb_name]
-
-				col = row.column()
-				sub_row = col.row(align=True)
-				sub_row.prop(ikfk_props, '["' + limb["prop_name"] + '"]', slider=True, text=limb_name)
-				switch = sub_row.operator(IKFK_Toggle.bl_idname, text="", icon='FILE_REFRESH')
-				switch.fk_bones = ", ".join(limb["fk_names"])
-				switch.ik_bones = ", ".join(limb["ik_names"])
-				switch.ik_pole = limb["ik_pole_name"]
-				switch.double_ik_control = limb["double_ik_control"]
+		for limbs in limbses:
+			limb_row = layout.row()
+			for limb in limbs:
+				limb_col = limb_row.column()
+				limb_sub = limb_col.row(align=True)
+				limb_sub.prop(ikfk_props, '["'+limb[0]+'"]', slider=True, text=limb[1])
+				switch = limb_sub.operator(IKFK_Toggle.bl_idname, text="", icon='FILE_REFRESH')
+				switch.fk_bones = limb[2]
+				switch.ik_bones = limb[3]
+				switch.ik_pole = limb[4]
 				switch.prop_bone = ikfk_props.name
-				switch.prop_name = limb["prop_name"]
+				switch.prop_name = limb[0]
 
 class RigUI_Settings_IK(RigUI):
 	bl_idname = "OBJECT_PT_rig_ui_ik"

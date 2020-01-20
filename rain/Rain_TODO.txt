@@ -20,12 +20,11 @@ CLOUDRIGIFY
 		I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
 
 	Next up:
-		Neck and Head (Hinge, aim target)
 		UI
 		Parent Switching
-		Stretchy Spine
 		Extra spine(hip) deform bone?
 		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
+		Neck and Head (Hinge, aim target) - Bumped this down in priority, I don't think it's often used.
 		Add option to make mechanic bones unselectable
 		Face... Q_Q
 
