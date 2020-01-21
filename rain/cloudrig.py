@@ -6,10 +6,7 @@ from bpy.props import *
 from mathutils import Vector, Matrix
 from math import *
 
-
-
 ### CODE FROM RIGIFY ###
-
 import math
 import json
 import traceback
@@ -168,7 +165,6 @@ def set_transform_from_matrix(obj, bone_name, matrix, *, space='POSE', ignore_lo
 ## Switchable Parent operator ##
 ################################
 
-
 class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 	bl_idname = "pose.rigify_switch_parent"
 	bl_label = "Switch Parent (Keep Transform)"
@@ -209,6 +205,7 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 
 	def apply_frame_state(self, context, obj, old_matrix):
 		# Change the parent
+		# TODO: Instead of relying on scene settings(auto-keying, keyingset, etc) maybe it would be better to have a custom boolean to decide whether to insert keyframes or not. Ask animators.
 		set_custom_property_value(
 			obj, self.prop_bone, self.prop_id, int(self.selected),
 			keyflags=self.keyflags_switch
@@ -247,7 +244,6 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 			return context.window_manager.invoke_props_popup(self, event)
 		else:
 			return self.execute(context)
-
 ### end CODE FROM RIGIFY ###
 
 
@@ -922,14 +918,17 @@ class RigUI_Settings_FKIK(RigUI):
 		rig = context.object
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 
+		row = layout.row()
 
-
-		props = layout.operator('pose.rigify_switch_parent', text='IK Parent', icon='DOWNARROW_HLT')
+		props = row.operator('pose.rigify_switch_parent', text='IK Parent', icon='DOWNARROW_HLT')
 		props.bone = 'IK-Hand_Parent.L'
 		props.prop_bone = 'Properties_IKFK'
 		props.prop_id = 'ik_parents_arm_left'
 		props.parent_names = '["Root", "Pelvis", "Chest", "Clavicle"]'
 		props.locks = (False, False, False)
+
+		row.prop(ikfk_props, '["' + 'ik_parents_arm_left' + '"]')
+
 
 
 
