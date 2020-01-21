@@ -8,7 +8,6 @@ from math import *
 
 ### CODE FROM RIGIFY ###
 import math
-import json
 import traceback
 from mathutils import Euler, Quaternion
 from rna_prop_ui import rna_idprop_quote_path
@@ -82,7 +81,7 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 			self.report({'ERROR'}, "Invalid parameters")
 			return {'CANCELLED'}
 
-		parents = json.loads(self.parent_names)
+		parents = self.parent_names.split(", ")
 		pitems = [(str(i), name, name) for i, name in enumerate(parents)]
 
 		POSE_OT_rigify_switch_parent.parent_items = pitems
@@ -318,8 +317,8 @@ class Snap_FK2IK(bpy.types.Operator):
 
 	def execute(self, context):
 		armature = context.object
-		fk_bones = list(map(armature.pose.bones.get, json.loads(self.fk_bones)))
-		ik_bones = list(map(armature.pose.bones.get, json.loads(self.ik_bones)))
+		fk_bones = list(map(armature.pose.bones.get, self.fk_bones.split(", ")))
+		ik_bones = list(map(armature.pose.bones.get, self.ik_bones.split(", ")))
 
 		for i, fkb in enumerate(fk_bones):
 			fk_bones[i].matrix = ik_bones[i].matrix
@@ -836,7 +835,7 @@ class RigUI_Settings_FKIK(RigUI):
 		props.bone = 'IK-Hand_Parent.L'
 		props.prop_bone = 'Properties_IKFK'
 		props.prop_id = 'ik_parents_arm_left'
-		props.parent_names = '["Root", "Pelvis", "Chest", "Clavicle"]'
+		props.parent_names = ", ".join(["Root", "Pelvis", "Chest", "Clavicle"])
 		props.locks = (False, False, False)
 
 		row.prop(ikfk_props, '["' + 'ik_parents_arm_left' + '"]')
@@ -854,11 +853,11 @@ class RigUI_Settings_FKIK(RigUI):
 				sub_row = col.row(align=True)
 				sub_row.prop(ikfk_props, '["' + limb["prop_name"] + '"]', slider=True, text=limb_name)
 				switch = sub_row.operator(IKFK_Toggle.bl_idname, text="", icon='FILE_REFRESH')
-				switch.fk_bones = str(limb["fk_names"])
-				switch.ik_bones = str(limb["ik_names"])
+				switch.fk_bones = ", ".join(limb["fk_names"])
+				switch.ik_bones = ", ".join(limb["ik_names"])
 				switch.ik_pole = limb["ik_pole_name"]
 				switch.double_ik_control = limb["double_ik_control"]
-				switch.prop_bone = ikfk_props.name
+				switch.prop_bone = limb["prop_bone"]
 				switch.prop_name = limb["prop_name"]
 
 class RigUI_Settings_IK(RigUI):
