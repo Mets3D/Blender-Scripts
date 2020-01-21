@@ -831,14 +831,14 @@ class RigUI_Settings_FKIK(RigUI):
 
 		row = layout.row()
 
-		props = row.operator('pose.rigify_switch_parent', text='IK Parent', icon='DOWNARROW_HLT')
-		props.bone = 'IK-Hand_Parent.L'
-		props.prop_bone = 'Properties_IKFK'
-		props.prop_id = 'ik_parents_arm_left'
-		props.parent_names = ", ".join(["Root", "Pelvis", "Chest", "Clavicle"])
-		props.locks = (False, False, False)
+		# props = row.operator('pose.rigify_switch_parent', text='IK Parent', icon='DOWNARROW_HLT')
+		# props.bone = 'IK-Hand_Parent.L'
+		# props.prop_bone = 'Properties_IKFK'
+		# props.prop_id = 'ik_parents_arm_left'
+		# props.parent_names = ", ".join(["Root", "Pelvis", "Chest", "Clavicle"])
+		# props.locks = (False, False, False)
 
-		row.prop(ikfk_props, '["' + 'ik_parents_arm_left' + '"]')
+		# row.prop(ikfk_props, '["' + 'ik_parents_arm_left' + '"]')
 
 
 		ik_chains = rig["ik_chains"].to_dict()
@@ -987,19 +987,19 @@ classes = (
 	Rig_ColorProperties,
 	Rig_BoolProperties,
 	Rig_Properties,
-	RigUI_Outfits,
-	RigUI_Layers,
+	# RigUI_Outfits,
+	# RigUI_Layers,
 	Snap_IK2FK,
 	Snap_FK2IK,
 	IKFK_Toggle,
-	Reset_Rig_Colors,
+	# Reset_Rig_Colors,
 	RigUI_Settings,
 	RigUI_Settings_FKIK,
-	RigUI_Settings_IK,
-	RigUI_Settings_FK,
-	RigUI_Settings_Face,
-	RigUI_Settings_Misc,
-	RigUI_Viewport_Display,
+	# RigUI_Settings_IK,
+	# RigUI_Settings_FK,
+	# RigUI_Settings_Face,
+	# RigUI_Settings_Misc,
+	# RigUI_Viewport_Display,
 )
 
 from bpy.utils import register_class
