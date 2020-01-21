@@ -13,159 +13,8 @@ import traceback
 from mathutils import Euler, Quaternion
 from rna_prop_ui import rna_idprop_quote_path
 
-######################
-## Keyframing tools ##
-######################
-
-def get_keying_flags(context):
-	"Retrieve the general keyframing flags from user preferences."
-	prefs = context.preferences
-	ts = context.scene.tool_settings
-	flags = set()
-	# Not adding INSERTKEY_VISUAL
-	if prefs.edit.use_keyframe_insert_needed:
-		flags.add('INSERTKEY_NEEDED')
-	if prefs.edit.use_insertkey_xyz_to_rgb:
-		flags.add('INSERTKEY_XYZ_TO_RGB')
-	if ts.use_keyframe_cycle_aware:
-		flags.add('INSERTKEY_CYCLE_AWARE')
-	return flags
-
-def get_autokey_flags(context, ignore_keyset=False):
-	"Retrieve the Auto Keyframe flags, or None if disabled."
-	ts = context.scene.tool_settings
-	if ts.use_keyframe_insert_auto and (ignore_keyset or not ts.use_keyframe_insert_keyingset):
-		flags = get_keying_flags(context)
-		if context.preferences.edit.use_keyframe_insert_available:
-			flags.add('INSERTKEY_AVAILABLE')
-		if ts.auto_keying_mode == 'REPLACE_KEYS':
-			flags.add('INSERTKEY_REPLACE')
-		return flags
-	else:
-		return None
-
-def add_flags_if_set(base, new_flags):
-	"Add more flags if base is not None."
-	if base is None:
-		return None
-	else:
-		return base | new_flags
-
-def get_4d_rotlock(bone):
-	"Retrieve the lock status for 4D rotation."
-	if bone.lock_rotations_4d:
-		return [bone.lock_rotation_w, *bone.lock_rotation]
-	else:
-		return [all(bone.lock_rotation)] * 4
-
-def keyframe_transform_properties(obj, bone_name, keyflags, *, ignore_locks=False, no_loc=False, no_rot=False, no_scale=False):
-	"Keyframe transformation properties, taking flags and mode into account, and avoiding keying locked channels."
-	bone = obj.pose.bones[bone_name]
-
-	def keyframe_channels(prop, locks):
-		if ignore_locks or not all(locks):
-			if ignore_locks or not any(locks):
-				bone.keyframe_insert(prop, group=bone_name, options=keyflags)
-			else:
-				for i, lock in enumerate(locks):
-					if not lock:
-						bone.keyframe_insert(prop, index=i, group=bone_name, options=keyflags)
-
-	if not (no_loc or bone.bone.use_connect):
-		keyframe_channels('location', bone.lock_location)
-
-	if not no_rot:
-		if bone.rotation_mode == 'QUATERNION':
-			keyframe_channels('rotation_quaternion', get_4d_rotlock(bone))
-		elif bone.rotation_mode == 'AXIS_ANGLE':
-			keyframe_channels('rotation_axis_angle', get_4d_rotlock(bone))
-		else:
-			keyframe_channels('rotation_euler', bone.lock_rotation)
-
-	if not no_scale:
-		keyframe_channels('scale', bone.lock_scale)
-
-###############################
-## Assign and keyframe tools ##
-###############################
-
-def set_custom_property_value(obj, bone_name, prop, value, *, keyflags=None):
-	"Assign the value of a custom property, and optionally keyframe it."
-	from rna_prop_ui import rna_idprop_ui_prop_update
-	bone = obj.pose.bones[bone_name]
-	bone[prop] = value
-	rna_idprop_ui_prop_update(bone, prop)
-	if keyflags is not None:
-		bone.keyframe_insert(rna_idprop_quote_path(prop), group=bone.name, options=keyflags)
-
-def get_transform_matrix(obj, bone_name, *, space='POSE', with_constraints=True):
-	"Retrieve the matrix of the bone before or after constraints in the given space."
-	bone = obj.pose.bones[bone_name]
-	if with_constraints:
-		return obj.convert_space(pose_bone=bone, matrix=bone.matrix, from_space='POSE', to_space=space)
-	else:
-		return obj.convert_space(pose_bone=bone, matrix=bone.matrix_basis, from_space='LOCAL', to_space=space)
-
-def set_transform_from_matrix(obj, bone_name, matrix, *, space='POSE', ignore_locks=False, no_loc=False, no_rot=False, no_scale=False, keyflags=None):
-	"Apply the matrix to the transformation of the bone, taking locked channels, mode and certain constraints into account, and optionally keyframe it."
-	bone = obj.pose.bones[bone_name]
-
-	def restore_channels(prop, old_vec, locks, extra_lock):
-		if extra_lock or (not ignore_locks and all(locks)):
-			setattr(bone, prop, old_vec)
-		else:
-			if not ignore_locks and any(locks):
-				new_vec = Vector(getattr(bone, prop))
-
-				for i, lock in enumerate(locks):
-					if lock:
-						new_vec[i] = old_vec[i]
-
-				setattr(bone, prop, new_vec)
-
-	# Save the old values of the properties
-	old_loc = Vector(bone.location)
-	old_rot_euler = Vector(bone.rotation_euler)
-	old_rot_quat = Vector(bone.rotation_quaternion)
-	old_rot_axis = Vector(bone.rotation_axis_angle)
-	old_scale = Vector(bone.scale)
-
-	# Compute and assign the local matrix
-	if space != 'LOCAL':
-		matrix = obj.convert_space(pose_bone=bone, matrix=matrix, from_space=space, to_space='LOCAL')
-
-	bone.matrix_basis = matrix
-
-	# Restore locked properties
-	restore_channels('location', old_loc, bone.lock_location, no_loc or bone.bone.use_connect)
-
-	if bone.rotation_mode == 'QUATERNION':
-		restore_channels('rotation_quaternion', old_rot_quat, get_4d_rotlock(bone), no_rot)
-		bone.rotation_axis_angle = old_rot_axis
-		bone.rotation_euler = old_rot_euler
-	elif bone.rotation_mode == 'AXIS_ANGLE':
-		bone.rotation_quaternion = old_rot_quat
-		restore_channels('rotation_axis_angle', old_rot_axis, get_4d_rotlock(bone), no_rot)
-		bone.rotation_euler = old_rot_euler
-	else:
-		bone.rotation_quaternion = old_rot_quat
-		bone.rotation_axis_angle = old_rot_axis
-		restore_channels('rotation_euler', old_rot_euler, bone.lock_rotation, no_rot)
-
-	restore_channels('scale', old_scale, bone.lock_scale, no_scale)
-
-	# Keyframe properties
-	if keyflags is not None:
-		keyframe_transform_properties(
-			obj, bone_name, keyflags, ignore_locks=ignore_locks,
-			no_loc=no_loc, no_rot=no_rot, no_scale=no_scale
-		)
-
-################################
-## Switchable Parent operator ##
-################################
-
 class POSE_OT_rigify_switch_parent(bpy.types.Operator):
+	# Credit for all code in this class to Rigify.
 	bl_idname = "pose.rigify_switch_parent"
 	bl_label = "Switch Parent (Keep Transform)"
 	bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
@@ -186,8 +35,8 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 	
 	def execute(self, context):
 		obj = context.active_object
-		self.keyflags = get_autokey_flags(context, ignore_keyset=True)
-		self.keyflags_switch = add_flags_if_set(self.keyflags, {'INSERTKEY_AVAILABLE'})
+		self.keyflags = self.get_autokey_flags(context, ignore_keyset=True)
+		self.keyflags_switch = self.add_flags_if_set(self.keyflags, {'INSERTKEY_AVAILABLE'})
 
 		try:
 			state = self.save_frame_state(context, obj)
@@ -201,12 +50,12 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 		return {'FINISHED'}
 
 	def save_frame_state(self, context, obj):
-		return get_transform_matrix(obj, self.bone, with_constraints=False)
+		return self.get_transform_matrix(obj, self.bone, with_constraints=False)
 
 	def apply_frame_state(self, context, obj, old_matrix):
 		# Change the parent
 		# TODO: Instead of relying on scene settings(auto-keying, keyingset, etc) maybe it would be better to have a custom boolean to decide whether to insert keyframes or not. Ask animators.
-		set_custom_property_value(
+		self.set_custom_property_value(
 			obj, self.prop_bone, self.prop_id, int(self.selected),
 			keyflags=self.keyflags_switch
 		)
@@ -214,7 +63,7 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 		context.view_layer.update()
 
 		# Set the transforms to restore position
-		set_transform_from_matrix(
+		self.set_transform_from_matrix(
 			obj, self.bone, old_matrix, keyflags=self.keyflags,
 			no_loc=self.locks[0], no_rot=self.locks[1], no_scale=self.locks[2]
 		)
@@ -244,8 +93,154 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 			return context.window_manager.invoke_props_popup(self, event)
 		else:
 			return self.execute(context)
-### end CODE FROM RIGIFY ###
+	
+	######################
+	## Keyframing tools ##
+	######################
 
+	def get_keying_flags(self, context):
+		"Retrieve the general keyframing flags from user preferences."
+		prefs = context.preferences
+		ts = context.scene.tool_settings
+		flags = set()
+		# Not adding INSERTKEY_VISUAL
+		if prefs.edit.use_keyframe_insert_needed:
+			flags.add('INSERTKEY_NEEDED')
+		if prefs.edit.use_insertkey_xyz_to_rgb:
+			flags.add('INSERTKEY_XYZ_TO_RGB')
+		if ts.use_keyframe_cycle_aware:
+			flags.add('INSERTKEY_CYCLE_AWARE')
+		return flags
+
+	def get_autokey_flags(self, context, ignore_keyset=False):
+		"Retrieve the Auto Keyframe flags, or None if disabled."
+		ts = context.scene.tool_settings
+		if ts.use_keyframe_insert_auto and (ignore_keyset or not ts.use_keyframe_insert_keyingset):
+			flags = self.get_keying_flags(context)
+			if context.preferences.edit.use_keyframe_insert_available:
+				flags.add('INSERTKEY_AVAILABLE')
+			if ts.auto_keying_mode == 'REPLACE_KEYS':
+				flags.add('INSERTKEY_REPLACE')
+			return flags
+		else:
+			return None
+
+	def add_flags_if_set(self, base, new_flags):
+		"Add more flags if base is not None."
+		if base is None:
+			return None
+		else:
+			return base | new_flags
+
+	def get_4d_rotlock(self, bone):
+		"Retrieve the lock status for 4D rotation."
+		if bone.lock_rotations_4d:
+			return [bone.lock_rotation_w, *bone.lock_rotation]
+		else:
+			return [all(bone.lock_rotation)] * 4
+
+	def keyframe_transform_properties(self, obj, bone_name, keyflags, *, ignore_locks=False, no_loc=False, no_rot=False, no_scale=False):
+		"Keyframe transformation properties, taking flags and mode into account, and avoiding keying locked channels."
+		bone = obj.pose.bones[bone_name]
+
+		def keyframe_channels(prop, locks):
+			if ignore_locks or not all(locks):
+				if ignore_locks or not any(locks):
+					bone.keyframe_insert(prop, group=bone_name, options=keyflags)
+				else:
+					for i, lock in enumerate(locks):
+						if not lock:
+							bone.keyframe_insert(prop, index=i, group=bone_name, options=keyflags)
+
+		if not (no_loc or bone.bone.use_connect):
+			keyframe_channels('location', bone.lock_location)
+
+		if not no_rot:
+			if bone.rotation_mode == 'QUATERNION':
+				keyframe_channels('rotation_quaternion', self.get_4d_rotlock(bone))
+			elif bone.rotation_mode == 'AXIS_ANGLE':
+				keyframe_channels('rotation_axis_angle', self.get_4d_rotlock(bone))
+			else:
+				keyframe_channels('rotation_euler', bone.lock_rotation)
+
+		if not no_scale:
+			keyframe_channels('scale', bone.lock_scale)
+
+	###############################
+	## Assign and keyframe tools ##
+	###############################
+
+	def set_custom_property_value(self, obj, bone_name, prop, value, *, keyflags=None):
+		"Assign the value of a custom property, and optionally keyframe it."
+		from rna_prop_ui import rna_idprop_ui_prop_update
+		bone = obj.pose.bones[bone_name]
+		bone[prop] = value
+		rna_idprop_ui_prop_update(bone, prop)
+		if keyflags is not None:
+			bone.keyframe_insert(rna_idprop_quote_path(prop), group=bone.name, options=keyflags)
+
+	def get_transform_matrix(self, obj, bone_name, *, space='POSE', with_constraints=True):
+		"Retrieve the matrix of the bone before or after constraints in the given space."
+		bone = obj.pose.bones[bone_name]
+		if with_constraints:
+			return obj.convert_space(pose_bone=bone, matrix=bone.matrix, from_space='POSE', to_space=space)
+		else:
+			return obj.convert_space(pose_bone=bone, matrix=bone.matrix_basis, from_space='LOCAL', to_space=space)
+
+	def set_transform_from_matrix(self, obj, bone_name, matrix, *, space='POSE', ignore_locks=False, no_loc=False, no_rot=False, no_scale=False, keyflags=None):
+		"Apply the matrix to the transformation of the bone, taking locked channels, mode and certain constraints into account, and optionally keyframe it."
+		bone = obj.pose.bones[bone_name]
+
+		def restore_channels(prop, old_vec, locks, extra_lock):
+			if extra_lock or (not ignore_locks and all(locks)):
+				setattr(bone, prop, old_vec)
+			else:
+				if not ignore_locks and any(locks):
+					new_vec = Vector(getattr(bone, prop))
+
+					for i, lock in enumerate(locks):
+						if lock:
+							new_vec[i] = old_vec[i]
+
+					setattr(bone, prop, new_vec)
+
+		# Save the old values of the properties
+		old_loc = Vector(bone.location)
+		old_rot_euler = Vector(bone.rotation_euler)
+		old_rot_quat = Vector(bone.rotation_quaternion)
+		old_rot_axis = Vector(bone.rotation_axis_angle)
+		old_scale = Vector(bone.scale)
+
+		# Compute and assign the local matrix
+		if space != 'LOCAL':
+			matrix = obj.convert_space(pose_bone=bone, matrix=matrix, from_space=space, to_space='LOCAL')
+
+		bone.matrix_basis = matrix
+
+		# Restore locked properties
+		restore_channels('location', old_loc, bone.lock_location, no_loc or bone.bone.use_connect)
+
+		if bone.rotation_mode == 'QUATERNION':
+			restore_channels('rotation_quaternion', old_rot_quat, self.get_4d_rotlock(bone), no_rot)
+			bone.rotation_axis_angle = old_rot_axis
+			bone.rotation_euler = old_rot_euler
+		elif bone.rotation_mode == 'AXIS_ANGLE':
+			bone.rotation_quaternion = old_rot_quat
+			restore_channels('rotation_axis_angle', old_rot_axis, self.get_4d_rotlock(bone), no_rot)
+			bone.rotation_euler = old_rot_euler
+		else:
+			bone.rotation_quaternion = old_rot_quat
+			bone.rotation_axis_angle = old_rot_axis
+			restore_channels('rotation_euler', old_rot_euler, bone.lock_rotation, no_rot)
+
+		restore_channels('scale', old_scale, bone.lock_scale, no_scale)
+
+		# Keyframe properties
+		if keyflags is not None:
+			self.keyframe_transform_properties(
+				obj, bone_name, keyflags, ignore_locks=ignore_locks,
+				no_loc=no_loc, no_rot=no_rot, no_scale=no_scale
+			)
 
 def get_rigs():
 	""" Find all cloudrig armatures in the file."""
@@ -311,90 +306,6 @@ def update_viewport_colors(rig, skin):
 			col_prop.color = skin_colors[mat_name]
 			col_prop.default = skin_colors[mat_name]
 
-class Switch_Parent(bpy.types.Operator):
-	"""Switches a custom property then puts a bone back where it was before that."""
-	
-	"""
-	The actual parent switching must be done by the rig via drivers(probably on an Armature constraint), based on the custom property.
-	Also note: This will NOT insert necessary keyframes!
-	"""
-
-	bl_idname = "armature.cloudrig_parent_switch"
-	bl_label = "Switch Parent"
-	bl_options = {'REGISTER', 'UNDO'}
-
-	bone: StringProperty()
-	prop_bone: StringProperty()
-	prop_name: StringProperty()
-	prop_value: IntProperty()
-
-	def execute(self, context):
-		armature = context.object
-		bone = armature.pose.bones.get(self.bone)
-		prop_bone = armature.pose.bones.get(self.prop_bone)
-
-		# Save the old bone matrix.
-		old_matrix = bone.matrix.copy()
-		print(bone.name)
-		
-		print("old:")
-		print(old_matrix)
-
-		# Change the custom property
-		prop_bone[self.prop_name] = self.prop_value
-
-		# Update depsgraph
-		context.view_layer.update()
-
-		# Replace new matrix with the old one
-		bone.matrix = old_matrix.copy()
-		print("old:")
-		print(old_matrix)
-		print("new:")
-		print(bone.matrix)
-
-		return {'FINISHED'}
-
-class Select_Switch_Parent(bpy.types.Operator):
-	"""Select which parent to switch to."""
-
-	bl_idname = "armature.cloudrig_select_parent_switch"
-	bl_label = "Select Parent"
-	bl_options = {'REGISTER', 'UNDO'}
-
-	bone: StringProperty()
-	prop_bone: StringProperty()
-	prop_name: StringProperty()
-	parent_names: StringProperty()
-
-	def execute(self, context):
-		return {'FINISHED'}
-
-	def draw(self, context):
-		layout = self.layout
-		armature = context.object
-		parent_bones = self.parent_names.split(", ")
-		prop_bone = armature.pose.bones.get(self.prop_bone)
-
-		# TODO: Can add more options here, like "Correct Matrix" (On by default), "Place Keyframe"(Off by default, don't want to implement :P)
-		# "Select Bones" to select the affected bones (On by default)
-		# TODO allow passing more than 1 bone whose matrix should be corrected.
-
-		for i, pb in enumerate(parent_bones):
-			text = pb
-			if prop_bone[self.prop_name] == i:
-				text += " (Current)"
-
-			op = layout.operator(Switch_Parent.bl_idname, text=text)
-			op.bone = self.bone
-			op.prop_bone = self.prop_bone
-			op.prop_name = self.prop_name
-			op.prop_value = i
-
-	def invoke(self, context, event):
-		wm = context.window_manager
-		return wm.invoke_props_dialog(self)
-
 class Snap_FK2IK(bpy.types.Operator):
 	"""Snap FK to IK chain"""
 	bl_idname = "armature.snap_fk_to_ik"
@@ -407,8 +318,8 @@ class Snap_FK2IK(bpy.types.Operator):
 
 	def execute(self, context):
 		armature = context.object
-		fk_bones = list(map(armature.pose.bones.get, self.fk_bones.split(", ")))
-		ik_bones = list(map(armature.pose.bones.get, self.ik_bones.split(", ")))
+		fk_bones = list(map(armature.pose.bones.get, json.loads(self.fk_bones)))
+		ik_bones = list(map(armature.pose.bones.get, json.loads(self.ik_bones)))
 
 		for i, fkb in enumerate(fk_bones):
 			fk_bones[i].matrix = ik_bones[i].matrix
@@ -426,7 +337,7 @@ class Snap_FK2IK(bpy.types.Operator):
 
 class Snap_IK2FK(bpy.types.Operator):
 	"""Snap IK to FK chain"""
-	"""Credit for most code (for figuring out the pole target matrix) to Rigify."""	# TODO: Actually, the resulting pole target location appears to be imprecise.
+	"""Credit for most code (for figuring out the pole target matrix) to Rigify."""	# TODO: The resulting pole target location appears to be a tiny bit imprecise.
 	bl_idname = "armature.snap_ik_to_fk"
 	bl_label = "Snap IK to FK"
 	bl_options = {'REGISTER', 'UNDO'}
@@ -572,6 +483,7 @@ class Snap_IK2FK(bpy.types.Operator):
 
 		fk_bones = list(map(armature.pose.bones.get, self.fk_bones.split(", ")))
 		ik_bones = list(map(armature.pose.bones.get, self.ik_bones.split(", ")))
+
 		ik_pole = armature.pose.bones.get(self.ik_pole)
 
 		# Snap the last IK control to the last FK control.
@@ -930,9 +842,6 @@ class RigUI_Settings_FKIK(RigUI):
 		row.prop(ikfk_props, '["' + 'ik_parents_arm_left' + '"]')
 
 
-
-
-
 		ik_chains = rig["ik_chains"].to_dict()
 
 		for limbs_name in ik_chains.keys():
@@ -945,19 +854,12 @@ class RigUI_Settings_FKIK(RigUI):
 				sub_row = col.row(align=True)
 				sub_row.prop(ikfk_props, '["' + limb["prop_name"] + '"]', slider=True, text=limb_name)
 				switch = sub_row.operator(IKFK_Toggle.bl_idname, text="", icon='FILE_REFRESH')
-				switch.fk_bones = ", ".join(limb["fk_names"])
-				switch.ik_bones = ", ".join(limb["ik_names"])
+				switch.fk_bones = str(limb["fk_names"])
+				switch.ik_bones = str(limb["ik_names"])
 				switch.ik_pole = limb["ik_pole_name"]
 				switch.double_ik_control = limb["double_ik_control"]
 				switch.prop_bone = ikfk_props.name
 				switch.prop_name = limb["prop_name"]
-		
-		# TODO Delet this
-		testop = layout.operator(Select_Switch_Parent.bl_idname, text="Test")
-		testop.bone = "IK-Hand_Parent.L"
-		testop.prop_bone = ikfk_props.name
-		testop.prop_name = "ik_parents_arm_left"
-		testop.parent_names = ", ".join(["Root", "Pelvis", "Chest", "Clavicle"])
 
 class RigUI_Settings_IK(RigUI):
 	bl_idname = "OBJECT_PT_rig_ui_ik"
@@ -1088,8 +990,6 @@ classes = (
 	Rig_Properties,
 	RigUI_Outfits,
 	RigUI_Layers,
-	Select_Switch_Parent,
-	Switch_Parent,
 	Snap_IK2FK,
 	Snap_FK2IK,
 	IKFK_Toggle,
