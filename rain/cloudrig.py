@@ -1,5 +1,5 @@
-"Version: 1.2"
-"2020-01-15"
+"Version: 1.3"
+"2020-01-??TODO"
 
 import bpy
 from bpy.props import *
@@ -38,9 +38,12 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 		self.keyflags_switch = self.add_flags_if_set(self.keyflags, {'INSERTKEY_AVAILABLE'})
 
 		try:
-			for bone in self.bones.split(", "):
-				state = self.save_frame_state(context, obj, bone)
-				self.apply_frame_state(context, obj, state, bone)
+			matrices = []
+			bones = self.bones.split(", ")
+			for bone in bones:
+				matrices.append( self.save_frame_state(context, obj, bone) )
+			
+			self.apply_frame_state(context, obj, matrices, bones)
 
 		except Exception as e:
 			traceback.print_exc()
@@ -51,7 +54,7 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 	def save_frame_state(self, context, obj, bone):
 		return self.get_transform_matrix(obj, bone, with_constraints=False)
 
-	def apply_frame_state(self, context, obj, old_matrix, bone):
+	def apply_frame_state(self, context, obj, old_matrices, bones):
 		# Change the parent
 		# TODO: Instead of relying on scene settings(auto-keying, keyingset, etc) maybe it would be better to have a custom boolean to decide whether to insert keyframes or not. Ask animators.
 		self.set_custom_property_value(
@@ -62,10 +65,12 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 		context.view_layer.update()
 
 		# Set the transforms to restore position
-		self.set_transform_from_matrix(
-			obj, bone, old_matrix, keyflags=self.keyflags,
-			no_loc=self.locks[0], no_rot=self.locks[1], no_scale=self.locks[2]
-		)
+		for i, bone in enumerate(bones):
+			old_matrix = old_matrices[i]
+			self.set_transform_from_matrix(
+				obj, bone, old_matrix, keyflags=self.keyflags,
+				no_loc=self.locks[0], no_rot=self.locks[1], no_scale=self.locks[2]
+			)
 
 	def draw(self, _context):
 		col = self.layout.column()
@@ -905,7 +910,7 @@ class RigUI_Settings_IK(RigUI):
 					sub_row.prop(prop_bone, '["%s"]'%prop_name, slider=True, text=limb_name + ": " + current_parent)
 
 					op = sub_row.operator('pose.rigify_switch_parent', text="", icon='COLLAPSEMENU')
-					op.bones = ", ".join([limb['bone_names']])
+					op.bones = ", ".join(limb['child_names'])
 					op.prop_bone = prop_bone.name
 					op.prop_id = prop_name
 					op.parent_names = ", ".join(parent_names)
