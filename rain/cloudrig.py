@@ -829,25 +829,17 @@ class RigUI_Settings_FKIK(RigUI):
 		rig = context.object
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 
-		row = layout.row()
-
-		# props = row.operator('pose.rigify_switch_parent', text='IK Parent', icon='DOWNARROW_HLT')
-		# props.bone = 'IK-Hand_Parent.L'
-		# props.prop_bone = 'Properties_IKFK'
-		# props.prop_id = 'ik_parents_arm_left'
-		# props.parent_names = ", ".join(["Root", "Pelvis", "Chest", "Clavicle"])
-		# props.locks = (False, False, False)
-
-		# row.prop(ikfk_props, '["' + 'ik_parents_arm_left' + '"]')
-
-
 		ik_chains = rig["ik_chains"].to_dict()
 
-		for limbs_name in ik_chains.keys():
-			limbs = ik_chains[limbs_name]
+		for cat_name in ik_chains.keys():
+			category = ik_chains[cat_name]
 			row = layout.row()
-			for limb_name in limbs.keys():
-				limb = limbs[limb_name]
+			for limb_name in category.keys():
+				limb = category[limb_name]
+
+				prop_bone = rig.pose.bones.get(limb['prop_bone'])
+				if not prop_bone:
+					print("WARNING: Limb definition has no prop_bone: %s, %s", cat_name, limb)
 
 				col = row.column()
 				sub_row = col.row(align=True)
@@ -871,36 +863,60 @@ class RigUI_Settings_IK(RigUI):
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 
 		# IK Stretch
-		layout.label(text="IK Stretch")
-		layout.prop(ikfk_props, '["ik_stretch_spine"]', slider=True, text='Stretchy Spine')
-		layout.prop(ikfk_props, '["ik_stretch_arms"]',  slider=True, text='Stretchy Arms' )
-		layout.prop(ikfk_props, '["ik_stretch_legs"]',  slider=True, text='Stretchy Legs' )
+		if 'ik_stretches' in rig:
+			layout.label(text="IK Stretch")
+			layout.prop(ikfk_props, '["ik_stretch_spine"]', slider=True, text='Stretchy Spine')
+			layout.prop(ikfk_props, '["ik_stretch_arms"]',  slider=True, text='Stretchy Arms' )
+			layout.prop(ikfk_props, '["ik_stretch_legs"]',  slider=True, text='Stretchy Legs' )
 
 		# IK Hinge
-		layout.label(text="IK Hinge")
-		hand_row = layout.row()
-		hand_row.prop(ikfk_props, '["ik_hinge_hand_left"]',  slider=True, text='Left Hand' )
-		hand_row.prop(ikfk_props, '["ik_hinge_hand_right"]', slider=True, text='Right Hand')
-		foot_row = layout.row()
-		foot_row.prop(ikfk_props, '["ik_hinge_foot_left"]',  slider=True, text='Left Foot' )
-		foot_row.prop(ikfk_props, '["ik_hinge_foot_right"]', slider=True, text='Right Foot')
+		if 'ik_hinges' in rig:
+			layout.label(text="IK Hinge")
+			hand_row = layout.row()
+			hand_row.prop(ikfk_props, '["ik_hinge_hand_left"]',  slider=True, text='Left Hand' )
+			hand_row.prop(ikfk_props, '["ik_hinge_hand_right"]', slider=True, text='Right Hand')
+			foot_row = layout.row()
+			foot_row.prop(ikfk_props, '["ik_hinge_foot_left"]',  slider=True, text='Left Foot' )
+			foot_row.prop(ikfk_props, '["ik_hinge_foot_right"]', slider=True, text='Right Foot')
 
 		# IK Parents
-		layout.label(text='IK Parents')
-		arm_parent_row = layout.row()
-		arm_parents = ['Root', 'Pelvis', 'Chest', 'Arm']
-		arm_parent_row.prop(ikfk_props, '["ik_parents_arm_left"]',  slider=True, text = "Left Hand ["  + arm_parents[ikfk_props["ik_parents_arm_left"]]  + "]")
-		arm_parent_row.prop(ikfk_props, '["ik_parents_arm_right"]', slider=True, text = "Right Hand [" + arm_parents[ikfk_props["ik_parents_arm_right"]] + "]")
-		leg_parent_row = layout.row()
-		leg_parents = ['Root', 'Pelvis', 'Hips', 'Leg']
-		leg_parent_row.prop(ikfk_props, '["ik_parents_leg_left"]',  slider=True, text = "Left Foot ["  + leg_parents[ikfk_props["ik_parents_leg_left"]]  + "]")
-		leg_parent_row.prop(ikfk_props, '["ik_parents_leg_right"]', slider=True, text = "Right Foot [" + leg_parents[ikfk_props["ik_parents_leg_right"]] + "]")
+		if 'parents' in rig:
+			layout.label(text='Parents')
+			ik_parents = rig['parents'].to_dict()
+			for cat_name in ik_parents.keys():
+				print("cat name: "+cat_name)
+				category = ik_parents[cat_name]
+				row = layout.row()
+				for limb_name in category.keys():
+					limb = category[limb_name]
+					prop_bone_name = limb['prop_bone']
+					prop_bone = rig.pose.bones.get(prop_bone_name)
+					if not prop_bone:
+						print("WARNING: Limb definition has no prop_bone: %s, %s", cat_name, limb)
+					
+					col = row.column()
+					sub_row = col.row(align=True)
+					
+					parent_names = limb['parent_names']
+					prop_name = limb['prop_name']
+					prop_value = prop_bone[prop_name]
+
+					current_parent = parent_names[int(prop_value)]
+					sub_row.prop(prop_bone, '["%s"]'%prop_name, slider=True, text=current_parent)
+
+					op = sub_row.operator('pose.rigify_switch_parent', text="", icon='COLLAPSEMENU')
+					op.bone = limb['bone_names']
+					op.prop_bone = prop_bone.name
+					op.prop_id = prop_name
+					op.parent_names = ", ".join(parent_names)
+					op.locks = (False, False, False)
 
 		# IK Pole Follow
-		layout.label(text='IK Pole Follow')
-		pole_row = layout.row()
-		pole_row.prop(ikfk_props, '["ik_pole_follow_hands"]', slider=True, text='Arms')
-		pole_row.prop(ikfk_props, '["ik_pole_follow_feet"]',  slider=True, text='Legs')
+		if 'ik_pole_follows' in rig:
+			layout.label(text='IK Pole Follow')
+			pole_row = layout.row()
+			pole_row.prop(ikfk_props, '["ik_pole_follow_hands"]', slider=True, text='Arms')
+			pole_row.prop(ikfk_props, '["ik_pole_follow_feet"]',  slider=True, text='Legs')
 
 class RigUI_Settings_FK(RigUI):
 	bl_idname = "OBJECT_PT_rig_ui_fk"
@@ -915,18 +931,19 @@ class RigUI_Settings_FK(RigUI):
 		face_props = rig.pose.bones.get('Properties_Face')
 
 		# FK Hinge
-		layout.label(text='FK Hinge')
-		hand_row = layout.row()
-		hand_row.prop(ikfk_props, '["fk_hinge_arm_left"]',  slider=True, text='Left Arm' )
-		hand_row.prop(ikfk_props, '["fk_hinge_arm_right"]', slider=True, text='Right Arm')
-		foot_row = layout.row()
-		foot_row.prop(ikfk_props, '["fk_hinge_leg_left"]',  slider=True, text='Left Leg' )
-		foot_row.prop(ikfk_props, '["fk_hinge_leg_right"]', slider=True, text='Right Leg')
+		if 'fk_hinges' in rig:
+			layout.label(text='FK Hinge')
+			hand_row = layout.row()
+			hand_row.prop(ikfk_props, '["fk_hinge_arm_left"]',  slider=True, text='Left Arm' )
+			hand_row.prop(ikfk_props, '["fk_hinge_arm_right"]', slider=True, text='Right Arm')
+			foot_row = layout.row()
+			foot_row.prop(ikfk_props, '["fk_hinge_leg_left"]',  slider=True, text='Left Leg' )
+			foot_row.prop(ikfk_props, '["fk_hinge_leg_right"]', slider=True, text='Right Leg')
 
-		# Head settings
-		layout.separator()
-		layout.prop(face_props, '["neck_hinge"]', slider=True, text='Neck Hinge')
-		layout.prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
+			# Head settings
+			layout.separator()
+			layout.prop(face_props, '["neck_hinge"]', slider=True, text='Neck Hinge')
+			layout.prop(face_props, '["head_hinge"]', slider=True, text='Head Hinge')
 
 class RigUI_Settings_Face(RigUI):
 	bl_idname = "OBJECT_PT_rig_ui_face"
@@ -938,13 +955,19 @@ class RigUI_Settings_Face(RigUI):
 		rig = context.object
 		face_props = rig.pose.bones.get('Properties_Face')
 
-		# Eyelid settings
-		layout.prop(face_props, '["sticky_eyelids"]',	text='Sticky Eyelids',  slider=True)
-		layout.prop(face_props, '["sticky_eyesockets"]', text='Sticky Eyerings', slider=True)
+		if 'face_settings' in rig:
+			# Eyelid settings
+			layout.prop(face_props, '["sticky_eyelids"]',	text='Sticky Eyelids',  slider=True)
+			layout.prop(face_props, '["sticky_eyesockets"]', text='Sticky Eyerings', slider=True)
 
-		layout.separator()
-		# Mouth settings
-		layout.prop(face_props, '["teeth_follow_mouth"]', text='Teeth Follow Mouth', slider=True)
+			layout.separator()
+			# Mouth settings
+			layout.prop(face_props, '["teeth_follow_mouth"]', text='Teeth Follow Mouth', slider=True)
+
+			layout.label(text="Eye Target Parent")
+			row = layout.row()
+			eye_parents = ['Root', 'Torso', 'Torso_Loc', 'Head']
+			row.prop(ikfk_props, '["eye_target_parent"]',  text=eye_parents[ikfk_props["eye_target_parent"]], slider=True)
 
 class RigUI_Settings_Misc(RigUI):
 	bl_idname = "OBJECT_PT_rig_ui_misc"
@@ -958,16 +981,12 @@ class RigUI_Settings_Misc(RigUI):
 		ikfk_props = rig.pose.bones.get('Properties_IKFK')
 		face_props = rig.pose.bones.get('Properties_Face')
 
-		layout.label(text="Grab Parents")
-		row = layout.row()
-		grab_parents = ['Root', 'Hand']
-		row.prop(ikfk_props, '["grab_parent_left"]',  text="Left Hand [" + grab_parents[ikfk_props["grab_parent_left"]] + "]", slider=True)
-		row.prop(ikfk_props, '["grab_parent_right"]',  text="Right Hand [" + grab_parents[ikfk_props["grab_parent_right"]] + "]", slider=True)
-
-		layout.label(text="Eye Target Parent")
-		row = layout.row()
-		eye_parents = ['Root', 'Torso', 'Torso_Loc', 'Head']
-		row.prop(ikfk_props, '["eye_target_parent"]',  text=eye_parents[ikfk_props["eye_target_parent"]], slider=True)
+		if 'misc_settings' in rig:
+			layout.label(text="Grab Parents")
+			row = layout.row()
+			grab_parents = ['Root', 'Hand']
+			row.prop(ikfk_props, '["grab_parent_left"]',  text="Left Hand [" + grab_parents[ikfk_props["grab_parent_left"]] + "]", slider=True)
+			row.prop(ikfk_props, '["grab_parent_right"]',  text="Right Hand [" + grab_parents[ikfk_props["grab_parent_right"]] + "]", slider=True)
 
 class RigUI_Viewport_Display(RigUI):
 	bl_idname = "OBJECT_PT_rig_ui_viewport_display"
@@ -995,7 +1014,7 @@ classes = (
 	# Reset_Rig_Colors,
 	RigUI_Settings,
 	RigUI_Settings_FKIK,
-	# RigUI_Settings_IK,
+	RigUI_Settings_IK,
 	# RigUI_Settings_FK,
 	# RigUI_Settings_Face,
 	# RigUI_Settings_Misc,
