@@ -10,6 +10,15 @@ bone_dict = {
 	"DEF-Scarf1" : "FK-Scarf1",
 	"DEF-Scarf2" : "FK-Scarf2",
 	"DEF-Scarf3" : "FK-Scarf3",
+	"P-STR-Leg.L" : "Root_Leg.L",
+	"P-STR-Leg.R" : "Root_Leg.R",
+	"STR-Forearm1.R" : "STR-Upperarm3.L",
+	"STR-Forearm1.R" : "STR-Upperarm3.L",
+	"STR-IK-Upperarm.L" : "Root_Upperarm.L",
+	"STR-IK-Upperarm.R" : "Root_Upperarm.R",
+	"STR-Shin1.L" : "STR-Thigh3.L",
+	"STR-Shin1.L" : "STR-Thigh3.L",
+	"STR-Spine4" : "STR-Spine5",
 }
 
 for a in bpy.data.actions:

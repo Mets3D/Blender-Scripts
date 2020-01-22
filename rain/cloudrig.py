@@ -19,7 +19,7 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 	bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 	bl_description = "Switch parent, preserving the bone position and orientation"
 
-	bone:		 StringProperty(name="Control Bone")
+	bones:		 StringProperty(name="Control Bone")
 	prop_bone:	StringProperty(name="Property Bone")
 	prop_id:	  StringProperty(name="Property")
 	parent_names: StringProperty(name="Parent Names")
@@ -38,9 +38,9 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 		self.keyflags_switch = self.add_flags_if_set(self.keyflags, {'INSERTKEY_AVAILABLE'})
 
 		try:
-			state = self.save_frame_state(context, obj)
-
-			self.apply_frame_state(context, obj, state)
+			for bone in self.bones.split(", "):
+				state = self.save_frame_state(context, obj, bone)
+				self.apply_frame_state(context, obj, state, bone)
 
 		except Exception as e:
 			traceback.print_exc()
@@ -48,10 +48,10 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 
 		return {'FINISHED'}
 
-	def save_frame_state(self, context, obj):
-		return self.get_transform_matrix(obj, self.bone, with_constraints=False)
+	def save_frame_state(self, context, obj, bone):
+		return self.get_transform_matrix(obj, bone, with_constraints=False)
 
-	def apply_frame_state(self, context, obj, old_matrix):
+	def apply_frame_state(self, context, obj, old_matrix, bone):
 		# Change the parent
 		# TODO: Instead of relying on scene settings(auto-keying, keyingset, etc) maybe it would be better to have a custom boolean to decide whether to insert keyframes or not. Ask animators.
 		self.set_custom_property_value(
@@ -63,7 +63,7 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 
 		# Set the transforms to restore position
 		self.set_transform_from_matrix(
-			obj, self.bone, old_matrix, keyflags=self.keyflags,
+			obj, bone, old_matrix, keyflags=self.keyflags,
 			no_loc=self.locks[0], no_rot=self.locks[1], no_scale=self.locks[2]
 		)
 
@@ -75,7 +75,7 @@ class POSE_OT_rigify_switch_parent(bpy.types.Operator):
 		pose = context.active_object.pose
 
 		if (not pose or not self.parent_names
-			or self.bone not in pose.bones
+			#or self.bone not in pose.bones
 			or self.prop_bone not in pose.bones
 			or self.prop_id not in pose.bones[self.prop_bone]):
 			self.report({'ERROR'}, "Invalid parameters")
@@ -902,10 +902,10 @@ class RigUI_Settings_IK(RigUI):
 					prop_value = prop_bone[prop_name]
 
 					current_parent = parent_names[int(prop_value)]
-					sub_row.prop(prop_bone, '["%s"]'%prop_name, slider=True, text=current_parent)
+					sub_row.prop(prop_bone, '["%s"]'%prop_name, slider=True, text=limb_name + ": " + current_parent)
 
 					op = sub_row.operator('pose.rigify_switch_parent', text="", icon='COLLAPSEMENU')
-					op.bone = limb['bone_names']
+					op.bones = ", ".join([limb['bone_names']])
 					op.prop_bone = prop_bone.name
 					op.prop_id = prop_name
 					op.parent_names = ", ".join(parent_names)
