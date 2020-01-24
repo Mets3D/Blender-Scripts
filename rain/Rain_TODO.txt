@@ -20,8 +20,19 @@ CLOUDRIGIFY
 		I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
 
 	Next up:
-		UI
-		Parent Switching
+		Outfit switching for Hailey:
+			We have Properties bones in the metarig that should get raw-copied to the final rig.
+			Properties_Character_Hailey
+				Hair
+				$Hair
+			$ sign indicates that that property stores a list of names for the property with the same name without the $.
+			(Low prio, we could also have an enum selector for these things - just give nothing for the bone_names in the operator, or make another operator that doesn't do bones.)
+
+			Properties_Outfit_Hailey
+				_Hair
+			_ sign indicates that instead of displaying this property and using it in drivers, it should be used to set a default value for the property named the same without the _. This property is expected to be found on the active character's properties, I guess.
+			We had roughly this system on the Witcher rig, but I should remind myself how that worked exactly.
+
 		Extra spine(hip) deform bone?
 		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
 		Neck and Head (Hinge, aim target) - Bumped this down in priority, I don't think it's often used.

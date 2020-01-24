@@ -678,6 +678,13 @@ class Rig_Properties(bpy.types.PropertyGroup):
 		
 		outfit_bone = rig.pose.bones.get("Properties_Outfit_"+self.outfit)
 		
+		if outfit_bone:
+			# For outfit properties starting with "_", update the corresponding character property.
+			char_bone = get_char_bone(rig)
+			for key in outfit_bone.keys():
+				if key.startswith("_") and key[1:] in char_bone:
+					char_bone[key[1:]] = outfit_bone[key]
+
 		self.update_bool_properties(context)
 
 	outfit: EnumProperty(
@@ -732,29 +739,40 @@ class RigUI_Outfits(RigUI):
 		rig_props = rig.rig_properties
 		bool_props = rig.rig_boolproperties
 		
-		char_bone = get_char_bone(rig)
-		outfit_properties_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
-		
 		def add_props(prop_owner):
 			props_done = []
+
+			def get_text(prop_name, value):
+				""" If there is a property on prop_owner named $prop_name, expect it to be a list of strings and return the valueth element."""
+				text = prop_name.replace("_", " ")
+				if "$"+prop_name in prop_owner and type(value)==int:
+					return text + ": " + prop_owner["$"+prop_name][value-1]	# Since these values are animator-facing, they are 1-indexed.
+				else:
+					return text
 
 			for prop_name in prop_owner.keys():
 				if( prop_name in props_done or prop_name.startswith("_") ): continue
 				# Int Props
 				if(prop_name not in bool_props and type(prop_owner[prop_name]) in [int, float] ):
-					layout.prop(prop_owner, '["'+prop_name+'"]', slider=True, text=prop_name.replace("_", " "))
+					layout.prop(prop_owner, '["'+prop_name+'"]', slider=True, 
+						text = get_text(prop_name, prop_owner[prop_name])
+					)
 					props_done.append(prop_name)
 			# Bool Props
 			for bp in bool_props:
 				if(bp.name in prop_owner.keys() and bp.name not in props_done):
-					layout.prop(bp, 'value', toggle=True, text=bp.name.replace("_", " "))
+					layout.prop(bp, 'value', toggle=True, 
+						text = get_text(bp.name, prop_owner[bp.name])
+					)
 
 		# Add character properties to the UI, if any.
+		char_bone = get_char_bone(rig)
 		if( char_bone ):
 			add_props(char_bone)
 			layout.separator()
 
 		# Add outfit properties to the UI, if any. Always add outfit selector.
+		outfit_properties_bone = rig.pose.bones.get("Properties_Outfit_"+rig_props.outfit)
 		layout.prop(rig_props, 'outfit')
 		if( outfit_properties_bone != None ):
 			add_props(outfit_properties_bone)
@@ -889,7 +907,6 @@ class RigUI_Settings_IK(RigUI):
 			layout.label(text='Parents')
 			ik_parents = rig['parents'].to_dict()
 			for cat_name in ik_parents.keys():
-				print("cat name: "+cat_name)
 				category = ik_parents[cat_name]
 				row = layout.row()
 				for limb_name in category.keys():
@@ -1011,7 +1028,7 @@ classes = (
 	Rig_ColorProperties,
 	Rig_BoolProperties,
 	Rig_Properties,
-	# RigUI_Outfits,
+	RigUI_Outfits,
 	# RigUI_Layers,
 	Snap_IK2FK,
 	Snap_FK2IK,
