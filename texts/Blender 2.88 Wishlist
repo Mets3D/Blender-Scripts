@@ -1,8 +1,7 @@
 Potential workflow improvements
 BUGS
-    https://developer.blender.org/T60689#811774
-    https://developer.blender.org/T70805
-    https://developer.blender.org/T71213
+    https://developer.blender.org/T73434 
+    https://developer.blender.org/T71213#859283
     https://docs.google.com/document/d/1dOnT5-oQjtsShhsMQSXHwy5mH0vZooXU1hj-dzKyRqs/edit
 FEATURES
 - HIGH Let me access armature data from weight paint mode. (can be done with addon, but it should be in Blender)

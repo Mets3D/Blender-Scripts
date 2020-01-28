@@ -1,5 +1,5 @@
-"Version: 1.3"
-"2020-01-??TODO"
+"Version: 1.4"
+"2020-01-24"
 
 import bpy
 from bpy.props import *
@@ -746,7 +746,7 @@ class RigUI_Outfits(RigUI):
 				""" If there is a property on prop_owner named $prop_name, expect it to be a list of strings and return the valueth element."""
 				text = prop_name.replace("_", " ")
 				if "$"+prop_name in prop_owner and type(value)==int:
-					return text + ": " + prop_owner["$"+prop_name][value-1]	# Since these values are animator-facing, they are 1-indexed.
+					return text + ": " + prop_owner["$"+prop_name][value]
 				else:
 					return text
 

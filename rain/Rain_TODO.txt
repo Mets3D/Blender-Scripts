@@ -4,8 +4,7 @@ I should make an addon to help the editing of shape keys and weights in any orde
 	Figure out how to make it so that, in order to achieve a desired shape, the weights are re-distributed such that the least amount of work possible has to be done by shape keys, while everything else is done by bones.
 		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
-HIGH Write a document on what could be done on blender development side to make my workflow better, and what things I will need to learn and do in order to rig new characters.
-HIGH Write a document about how the rig could be replicated on a new character. What scripts need to be written, etc.
+HIGH Write a document on what could be done on blender development side to make my workflow better.
 
 CLOUDRIGIFY
 	Differences from usual Rigify:
@@ -19,35 +18,30 @@ CLOUDRIGIFY
 		BoneInfo and other ID classes could perhaps live without all their values pre-assigned in __init__. The only ones that need to be pre-assigned are the ones that other things rely on, like how the length property relies on head and tail existing.
 		I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
 
-	Next up:
-		Outfit switching for Hailey:
-			We have Properties bones in the metarig that should get raw-copied to the final rig.
-			Properties_Character_Hailey
-				Hair
-				$Hair
-			$ sign indicates that that property stores a list of names for the property with the same name without the $.
-			(Low prio, we could also have an enum selector for these things - just give nothing for the bone_names in the operator, or make another operator that doesn't do bones.)
+	Code quality:
+		IK/FK snapping and parent switching transform restoration should share code.
+		Instead of declaring every function to the preparation stage, there should be only one prepare_bones function that calls the other functions and passes the neccessary information between them.
+			Functions should only rely on calling `self` when referring to things that were created before prepare_bones stage, such as in initialize or in add_params.
+			Functions should be split up into bone creating functions, and the functions for the loop that calls those bone creating functions. There shouldn't be two of these loops in one function. This is to make it easy to customize a rig by subclassing it, if needed.
 
-			Properties_Outfit_Hailey
-				_Hair
-			_ sign indicates that instead of displaying this property and using it in drivers, it should be used to set a default value for the property named the same without the _. This property is expected to be found on the active character's properties, I guess.
-			We had roughly this system on the Witcher rig, but I should remind myself how that worked exactly.
-
+	Improvements:
+		After IK/FK snapping, the old bones should become hidden as the new bones become selected. Better ask animators first?
 		Extra spine(hip) deform bone?
+
+	Requirements:
+		Parent switching setup should be done after prepare_bones stage, because the order things run in gets a bit funky, and the parent rig's bones don't exist yet.
+		Bug: (It looks like)Final IK spine bone's Damped Track constraint should have head_tail=0 instead of 1!
 		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
 		Neck and Head (Hinge, aim target) - Bumped this down in priority, I don't think it's often used.
+		Shape key driving bones.
 		Add option to make mechanic bones unselectable
 		Face... Q_Q
 
 		Small rig elements like thumb correctives.
-	
-		Could eventually refactor all of the code to be a bit more compliant with Rigify's coding style - Maybe even abandon our abstractions.
 
 Body/Limbs
 	HIGH Pablico found a pose in which the spine starts twisting out like crazy for a small amount of degrees. I couldn't reproduce, and he said it wasn't important, but it would still be nice to know what causes it.
 
-	LOW FK-Thumb2.R rotation should affect palm bulge (This might be fixed, I reckon it was that .rength mirroring issue)
-	
 	Scale propagation
 		Knee, butt and shoulder deform correctives need to be replaced by shape keys.
 			They are also currently parented to STR- bones, which is not necessarily bad but probably worth noting?
@@ -58,6 +52,9 @@ Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
 
 Face
+	Eye dots should rotate around center of the eye (without clipping when rotated a decent amount) - Could move the eye dot outside the cornea if needed.
+	Hide Cornea when dummy eyes are enabled.
+
 	HIGH Hjalti found a bug where, if the armature has a Copy Transforms object constraint, and the FK-Head is scaled, the nose explodes.
 
 	HIGH Action Constraint fix is now in master, so delete CTR-P- or whatever-they-are-now bones, and rename action curves with script while trying not to break anything.
