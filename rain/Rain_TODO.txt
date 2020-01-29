@@ -23,14 +23,17 @@ CLOUDRIGIFY
 		Instead of declaring every function to the preparation stage, there should be only one prepare_bones function that calls the other functions and passes the neccessary information between them.
 			Functions should only rely on calling `self` when referring to things that were created before prepare_bones stage, such as in initialize or in add_params.
 			Functions should be split up into bone creating functions, and the functions for the loop that calls those bone creating functions. There shouldn't be two of these loops in one function. This is to make it easy to customize a rig by subclassing it, if needed.
+		We could use Rigify's neat constraint and driver adding logic, on top of what we already have. After all, we currently define constraints as just an arbitrary dictionary. Nothing is stopping us from passing that dictionary to the Rigify constraint maker function in rig_bones stage. Same idea with drivers?
 
 	Improvements:
 		After IK/FK snapping, the old bones should become hidden as the new bones become selected. Better ask animators first?
 		Extra spine(hip) deform bone?
 
 	Requirements:
-		Parent switching setup should be done after prepare_bones stage, because the order things run in gets a bit funky, and the parent rig's bones don't exist yet.
+		Write a script that saves eight numbered copies of hailey.
+		Write a script to re-generate every instance of the rig in a file.
 		Bug: (It looks like)Final IK spine bone's Damped Track constraint should have head_tail=0 instead of 1!
+		Bug: FK-Chest has no IK copy transforms constraint??
 		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
 		Neck and Head (Hinge, aim target) - Bumped this down in priority, I don't think it's often used.
 		Shape key driving bones.
@@ -40,6 +43,8 @@ CLOUDRIGIFY
 		Small rig elements like thumb correctives.
 
 Body/Limbs
+	HIGH Add and improve snapping operators for the various rig settings.
+
 	HIGH Pablico found a pose in which the spine starts twisting out like crazy for a small amount of degrees. I couldn't reproduce, and he said it wasn't important, but it would still be nice to know what causes it.
 
 	Scale propagation
@@ -52,10 +57,8 @@ Clothes
 	MEDIUM Come up with something to make the shirt not look glued to her skin.
 
 Face
-	Eye dots should rotate around center of the eye (without clipping when rotated a decent amount) - Could move the eye dot outside the cornea if needed.
+	HIGH Eye dots should rotate around center of the eye (without clipping when rotated a decent amount) - Could move the eye dot outside the cornea if needed.
 	Hide Cornea when dummy eyes are enabled.
-
-	HIGH Hjalti found a bug where, if the armature has a Copy Transforms object constraint, and the FK-Head is scaled, the nose explodes.
 
 	HIGH Action Constraint fix is now in master, so delete CTR-P- or whatever-they-are-now bones, and rename action curves with script while trying not to break anything.
 		Keep in mind when re-generating face controls: Eyelids shouldn't affect eyerings, and eyebrows shouldn't affect themselves, that is to say, automatic bbone handle should be disabled on these areas. Same for lips.
@@ -65,7 +68,7 @@ Face
 	Delete unused face deform bones
 	Delete unused auto+tangent helpers
 	
-	LONG TERM Maybe lip corner can be oriented to the curvature of the lip so when moved on local Z the mouth corner doesnt have to be manually pushed in by the animator, but can still be adjusted.
+	NEXT RIG Maybe lip corner can be oriented to the curvature of the lip so when moved on local Z the mouth corner doesnt have to be manually pushed in by the animator, but can still be adjusted.
 
 	LOW Merge body and head
 	LOW Try weighting the gums to the face bones? Not sure about this... But I guess at least for the front area of the gums it could work and could be useful. Worth an experiment if we have the time.
