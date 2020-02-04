@@ -1,3 +1,46 @@
+Generic Snapping Solution PLAN:
+	There are a number of cases where we would want to snap bones from one transform to another while optionally keyframing them:
+		IK->FK Limb
+			This is the most complex part, since we need to calculate the position of the elbow pole vector.
+			But also, we may want to move the STR elbow control to the FK elbow. This is in case the FK elbow was arbitrarily translated.
+		FK->IK Limb
+			This should mostly be a generic snap, but not so if the IK is stretching. For that reason, we need to snap FK elbow to STR elbow rather than IK elbow.
+		
+		IK->FK Spine
+			Again, STR controls could be snapped to FK control locations to account for arbitrary translations.
+		FK->IK Spine
+			This can be a generic snap all the way.
+
+		Parent switching
+			We always snap to the old matrix of the same bones
+			Sometimes multiple bones can be affected (like wrist+pole target)
+
+		FK Hinge Toggle
+			Same as Parent Switching - snap to old matrix of same bones, but always multiple bones.
+
+		IK Hinge Toggle
+			Here we simply disable a Copy Rotation constraint, so the old matrix comes from the same bone. So, same thing again.
+	
+	Based on this, I think it is a good idea to store separate dictionaries for when the relevant property is toggled on and off.
+	So there is an "ON" dictionary, that is used when the property is turned ON, and there is an "OFF" dictinoary that is used when the property is being turned OFF.
+	Both dictionaries and the value can be passed, and then the unneeded dictionary can just be ignored.
+	Parenting has more values than just "ON" and "OFF", but, just like hinges, it doesn't require a dictionary, just a list of bones to reset after changing the value.
+	
+	Detect these as such: If snap_on is a list instead of a dictionary, use the generic snapping operator, otherwise use mapped snapping operator.
+
+	Okay, I think I'm trying to combine things that are not similar.
+	IK->FK should call a MappedSnapping() then do its elbow vector thing.
+	FK->IK is just a MappedSnapping()
+	Spine also mapped
+	Parent switching is a SimpleSnap() with some UI, that is kinda true.
+	and FK and IK hinge are just SimpleSnap()s...
+
+	Idea: The UI info dictionary could have an "operator" parameter. We only display a button next to the slider if this exists, and we know exactly what operator to use since the UI info tells us!
+
+
+
+
+
 I should make an addon to help the editing of shape keys and weights in any order.
 	Let me weight paint after saving the geometry of a mesh with a certain shape key, then have an option to re-adjust the shape key with the new weights to give the same shape.
 		It would be best if this could run on every brush stroke, but I guess that won't be possible.
@@ -11,12 +54,14 @@ CLOUDRIGIFY
 		All UI elements should be displayed at all times, just like Rain.
 	Differences from Rain:
 		Rigify's operator-based parent switching and IK/FK switching/snapping should be used.
-	
+
 	Ideas:
 		Should probably turn constraints into a class. At least it would let us more easily add drivers to them.
 		I should implement a CollectionProperty-like class, for ID collections, similar to BoneInfoContainer.
 		BoneInfo and other ID classes could perhaps live without all their values pre-assigned in __init__. The only ones that need to be pre-assigned are the ones that other things rely on, like how the length property relies on head and tail existing.
 		I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
+
+	Talk to Julien about where textures should be saved and referenced from.
 
 	Code quality:
 		IK/FK snapping and parent switching transform restoration should share code.
@@ -29,13 +74,20 @@ CLOUDRIGIFY
 		After IK/FK snapping, the old bones should become hidden as the new bones become selected. Better ask animators first?
 		Extra spine(hip) deform bone?
 
+		When snapping IK to FK when the limb is stretched, the result is incorrect for the elbow/knee bone. There's a few solutions to this, not a fan of any of them, but probably not important.
+
 	Requirements:
-		Write a script that saves eight numbered copies of hailey.
-		Write a script to re-generate every instance of the rig in a file.
-		Bug: (It looks like)Final IK spine bone's Damped Track constraint should have head_tail=0 instead of 1!
-		Bug: FK-Chest has no IK copy transforms constraint??
+		IK POLE FOLLOW OPTIONS.
+
+		Bug: Scale inheritance on head = bad.
+	
+		Make generic snapping operator out of IK snap operator
+		Add snapping buttons for FK hinge and whatnot.
+		Keep adding old options from Rain to the new rig. (IK hinge, etc, idk)
+		Make drawing code for all the options more generic as well - see just how generic can we make it?
+
+		Write a script to re-generate every instance of the rig in a file. (unhiding is tricky)
 		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
-		Neck and Head (Hinge, aim target) - Bumped this down in priority, I don't think it's often used.
 		Shape key driving bones.
 		Add option to make mechanic bones unselectable
 		Face... Q_Q
@@ -43,6 +95,9 @@ CLOUDRIGIFY
 		Small rig elements like thumb correctives.
 
 Body/Limbs
+	MEDIUM write a script to:
+		- disable auto smooth on all objects
+		- clear custom normals on all objects 
 	HIGH Add and improve snapping operators for the various rig settings.
 
 	HIGH Pablico found a pose in which the spine starts twisting out like crazy for a small amount of degrees. I couldn't reproduce, and he said it wasn't important, but it would still be nice to know what causes it.
