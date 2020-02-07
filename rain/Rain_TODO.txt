@@ -64,8 +64,10 @@ CLOUDRIGIFY
 	Talk to Julien about where textures should be saved and referenced from.
 
 	Code quality:
+		BoneInfoContainer should be an iterable so we can do self.bone_infos instead of self.bone_infos.bones.
+			.bone() function should be .ensure().
 		IK/FK snapping and parent switching transform restoration should share code.
-		Instead of declaring every function to the preparation stage, there should be only one prepare_bones function that calls the other functions and passes the neccessary information between them.
+		Instead of declaring every function to the preparation stage, there should be only one or a few prepare_bones function that calls the other functions and passes the neccessary information between them.
 			Functions should only rely on calling `self` when referring to things that were created before prepare_bones stage, such as in initialize or in add_params.
 			Functions should be split up into bone creating functions, and the functions for the loop that calls those bone creating functions. There shouldn't be two of these loops in one function. This is to make it easy to customize a rig by subclassing it, if needed.
 		We could use Rigify's neat constraint and driver adding logic, on top of what we already have. After all, we currently define constraints as just an arbitrary dictionary. Nothing is stopping us from passing that dictionary to the Rigify constraint maker function in rig_bones stage. Same idea with drivers?
@@ -75,26 +77,34 @@ CLOUDRIGIFY
 		Extra spine(hip) deform bone?
 
 		When snapping IK to FK when the limb is stretched, the result is incorrect for the elbow/knee bone. There's a few solutions to this, not a fan of any of them, but probably not important.
+		
+		"Enable Modifiers" property should be stored in rig data, and only displayed when it exists.
+			Would be nice to have rig-wide options, but not sure on how to implement. A rig on the root bone? Metarig doesn't even have a root bone right now.
+		Add more customizability by putting functionality under rig parameters. Allow the rig to be a lot simpler if it needs to be.
 
-	Requirements:
-		IK POLE FOLLOW OPTIONS.
+	TODOs:
+		Plan out what I will show in the Rain rig 2.0 showcase video thingie.
 
-		Bug: Scale inheritance on head = bad.
-	
-		Make generic snapping operator out of IK snap operator
-		Add snapping buttons for FK hinge and whatnot.
-		Keep adding old options from Rain to the new rig. (IK hinge, etc, idk)
-		Make drawing code for all the options more generic as well - see just how generic can we make it?
+		Rig all background characters
+		Weight paint Hailey (maybe add some bones to control the belly? def gonna need some shape keys.)
+		Weight paint Sunny so he can kneel down nicely.
+
 
 		Write a script to re-generate every instance of the rig in a file. (unhiding is tricky)
+			Although maybe there should be a separate collection that contains every rig and metarig, and then the script will just work on selected objects and be more optimizable.
 		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
+			Use this to allow customizing FK-C bones as well as the position of hip and torso controls.
 		Shape key driving bones.
-		Add option to make mechanic bones unselectable
-		Face... Q_Q
+		Add option to make mechanism bones unselectable
+		
+		Face!
 
 		Small rig elements like thumb correctives.
+		Drivers for bone rotation types?
 
+RAIN
 Body/Limbs
+	Remove all traces of IK Hinge functionality.
 	MEDIUM write a script to:
 		- disable auto smooth on all objects
 		- clear custom normals on all objects 
@@ -116,6 +126,7 @@ Face
 	Hide Cornea when dummy eyes are enabled.
 
 	HIGH Action Constraint fix is now in master, so delete CTR-P- or whatever-they-are-now bones, and rename action curves with script while trying not to break anything.
+		Tried doing this, it broke everything. For some reason the N- bones rely on these parent bones existing. Maybe they don't have to, I'm not sure. Feel like there might not be much point in figuring it out. Can just keep this mess on Rain, and probably use more shape-key based face rigs in the future.
 		Keep in mind when re-generating face controls: Eyelids shouldn't affect eyerings, and eyebrows shouldn't affect themselves, that is to say, automatic bbone handle should be disabled on these areas. Same for lips.
 		With that said, a lot of the bones from those areas should be able to be deleted.
 	

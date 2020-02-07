@@ -11,9 +11,6 @@ from mets_tools.armature_nodes.driver import Driver
 # (This is just for viewport colors, not render)
 
 rig = bpy.context.object
-prop_dict = {}
-for i, cp in enumerate(rig.rig_colorproperties):
-	prop_dict[cp.name] = i
 
 # Populate color properties
 rig.rig_colorproperties.clear()
@@ -26,6 +23,10 @@ for o in rig.children:
 		cp = rig.rig_colorproperties.add()
 		cp.name = m.name
 		cp.default = cp.color = m.diffuse_color[:-1]
+
+prop_dict = {}	# color property Name : Index map, which we will need for driver data paths, since we need to reference the color property by index then, but find it based on material name.
+for i, cp in enumerate(rig.rig_colorproperties):
+	prop_dict[cp.name] = i
 
 for o in rig.children:
 	for ms in o.material_slots:
