@@ -1,46 +1,3 @@
-Generic Snapping Solution PLAN:
-	There are a number of cases where we would want to snap bones from one transform to another while optionally keyframing them:
-		IK->FK Limb
-			This is the most complex part, since we need to calculate the position of the elbow pole vector.
-			But also, we may want to move the STR elbow control to the FK elbow. This is in case the FK elbow was arbitrarily translated.
-		FK->IK Limb
-			This should mostly be a generic snap, but not so if the IK is stretching. For that reason, we need to snap FK elbow to STR elbow rather than IK elbow.
-		
-		IK->FK Spine
-			Again, STR controls could be snapped to FK control locations to account for arbitrary translations.
-		FK->IK Spine
-			This can be a generic snap all the way.
-
-		Parent switching
-			We always snap to the old matrix of the same bones
-			Sometimes multiple bones can be affected (like wrist+pole target)
-
-		FK Hinge Toggle
-			Same as Parent Switching - snap to old matrix of same bones, but always multiple bones.
-
-		IK Hinge Toggle
-			Here we simply disable a Copy Rotation constraint, so the old matrix comes from the same bone. So, same thing again.
-	
-	Based on this, I think it is a good idea to store separate dictionaries for when the relevant property is toggled on and off.
-	So there is an "ON" dictionary, that is used when the property is turned ON, and there is an "OFF" dictinoary that is used when the property is being turned OFF.
-	Both dictionaries and the value can be passed, and then the unneeded dictionary can just be ignored.
-	Parenting has more values than just "ON" and "OFF", but, just like hinges, it doesn't require a dictionary, just a list of bones to reset after changing the value.
-	
-	Detect these as such: If snap_on is a list instead of a dictionary, use the generic snapping operator, otherwise use mapped snapping operator.
-
-	Okay, I think I'm trying to combine things that are not similar.
-	IK->FK should call a MappedSnapping() then do its elbow vector thing.
-	FK->IK is just a MappedSnapping()
-	Spine also mapped
-	Parent switching is a SimpleSnap() with some UI, that is kinda true.
-	and FK and IK hinge are just SimpleSnap()s...
-
-	Idea: The UI info dictionary could have an "operator" parameter. We only display a button next to the slider if this exists, and we know exactly what operator to use since the UI info tells us!
-
-
-
-
-
 I should make an addon to help the editing of shape keys and weights in any order.
 	Let me weight paint after saving the geometry of a mesh with a certain shape key, then have an option to re-adjust the shape key with the new weights to give the same shape.
 		It would be best if this could run on every brush stroke, but I guess that won't be possible.
@@ -48,83 +5,17 @@ I should make an addon to help the editing of shape keys and weights in any orde
 		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
 HIGH Write a document on what could be done on blender development side to make my workflow better.
-
-CLOUDRIGIFY
-	Differences from usual Rigify:
-		All UI elements should be displayed at all times, just like Rain.
-	Differences from Rain:
-		Rigify's operator-based parent switching and IK/FK switching/snapping should be used.
-
-	Ideas:
-		Should probably turn constraints into a class. At least it would let us more easily add drivers to them.
-		I should implement a CollectionProperty-like class, for ID collections, similar to BoneInfoContainer.
-		BoneInfo and other ID classes could perhaps live without all their values pre-assigned in __init__. The only ones that need to be pre-assigned are the ones that other things rely on, like how the length property relies on head and tail existing.
-		I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
-
-	Talk to Julien about where textures should be saved and referenced from.
-
-	Code quality:
-		BoneInfoContainer should be an iterable so we can do self.bone_infos instead of self.bone_infos.bones.
-			.bone() function should be .ensure().
-		IK/FK snapping and parent switching transform restoration should share code.
-		Instead of declaring every function to the preparation stage, there should be only one or a few prepare_bones function that calls the other functions and passes the neccessary information between them.
-			Functions should only rely on calling `self` when referring to things that were created before prepare_bones stage, such as in initialize or in add_params.
-			Functions should be split up into bone creating functions, and the functions for the loop that calls those bone creating functions. There shouldn't be two of these loops in one function. This is to make it easy to customize a rig by subclassing it, if needed.
-		We could use Rigify's neat constraint and driver adding logic, on top of what we already have. After all, we currently define constraints as just an arbitrary dictionary. Nothing is stopping us from passing that dictionary to the Rigify constraint maker function in rig_bones stage. Same idea with drivers?
-
-	Improvements:
-		After IK/FK snapping, the old bones should become hidden as the new bones become selected. Better ask animators first?
-		Extra spine(hip) deform bone?
-
-		When snapping IK to FK when the limb is stretched, the result is incorrect for the elbow/knee bone. There's a few solutions to this, not a fan of any of them, but probably not important.
-		
-		"Enable Modifiers" property should be stored in rig data, and only displayed when it exists.
-			Would be nice to have rig-wide options, but not sure on how to implement. A rig on the root bone? Metarig doesn't even have a root bone right now.
-		Add more customizability by putting functionality under rig parameters. Allow the rig to be a lot simpler if it needs to be.
-
-	TODOs:
-		Plan out what I will show in the Rain rig 2.0 showcase video thingie.
-
-		Rig all background characters
-		Weight paint Hailey (maybe add some bones to control the belly? def gonna need some shape keys.)
-		Weight paint Sunny so he can kneel down nicely.
-
-
-		Write a script to re-generate every instance of the rig in a file. (unhiding is tricky)
-			Although maybe there should be a separate collection that contains every rig and metarig, and then the script will just work on selected objects and be more optimizable.
-		Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
-			Use this to allow customizing FK-C bones as well as the position of hip and torso controls.
-		Shape key driving bones.
-		Add option to make mechanism bones unselectable
-		
-		Face!
-
-		Small rig elements like thumb correctives.
-		Drivers for bone rotation types?
+	Well I did, several, bug reports.
 
 RAIN
 Body/Limbs
-	Remove all traces of IK Hinge functionality.
-	MEDIUM write a script to:
-		- disable auto smooth on all objects
-		- clear custom normals on all objects 
-	HIGH Add and improve snapping operators for the various rig settings.
-
-	HIGH Pablico found a pose in which the spine starts twisting out like crazy for a small amount of degrees. I couldn't reproduce, and he said it wasn't important, but it would still be nice to know what causes it.
-
 	Scale propagation
 		Knee, butt and shoulder deform correctives need to be replaced by shape keys.
 			They are also currently parented to STR- bones, which is not necessarily bad but probably worth noting?
 				The reason for this is because DEF- bones don't inherit scale, they get their scale from BBone scale, which can only be inherited by Armature Constraint, which works poorly in this case for some reason.
 					This does mean that we cannot parent anything to DEF- bones, which is not ideal.
 
-Clothes
-	MEDIUM Come up with something to make the shirt not look glued to her skin.
-
 Face
-	HIGH Eye dots should rotate around center of the eye (without clipping when rotated a decent amount) - Could move the eye dot outside the cornea if needed.
-	Hide Cornea when dummy eyes are enabled.
-
 	HIGH Action Constraint fix is now in master, so delete CTR-P- or whatever-they-are-now bones, and rename action curves with script while trying not to break anything.
 		Tried doing this, it broke everything. For some reason the N- bones rely on these parent bones existing. Maybe they don't have to, I'm not sure. Feel like there might not be much point in figuring it out. Can just keep this mess on Rain, and probably use more shape-key based face rigs in the future.
 		Keep in mind when re-generating face controls: Eyelids shouldn't affect eyerings, and eyebrows shouldn't affect themselves, that is to say, automatic bbone handle should be disabled on these areas. Same for lips.
@@ -142,6 +33,9 @@ Face
 
 Final Cleanup
 	We used to have some bones next to the ROOT bone that were used to organize bones that used Armature Constraint for parenting. What happened with that setup? I want it back.
+
+	- disable auto smooth on all objects
+	- clear custom normals on all objects 
 
 	Find constraints that are disabled and remove them.
 	Make sure no invalid constraints or drivers exist (and driver is not showing any warnings of any kind)
