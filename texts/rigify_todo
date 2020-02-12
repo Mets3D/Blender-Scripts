@@ -1,24 +1,24 @@
-Differences from usual Rigify:
-    All UI elements should be displayed at all times, just like Rain.
-Differences from Rain:
-    Rigify's operator-based parent switching and IK/FK switching/snapping should be used.
+CoffeeRun TODO:
+    Set cat's tail rig to use 2 segments and not use sharp sections.
+    Add grab bones to Sunny.
+    Rig all background characters
+    Weight paint Hailey (maybe add some bones to control the belly? def gonna need some shape keys.)
+    Weight paint Sunny so he can kneel down nicely.
+    Write a script to re-generate every instance of the rig in a file. (unhiding is tricky)
+        Although maybe there should be a separate collection that contains every rig and metarig, and then the script will just work on selected objects and be more optimizable.
 
-Ideas:
-    Should probably turn constraints into a class. At least it would let us more easily add drivers to them.
-    I should implement a CollectionProperty-like class, for ID collections, similar to BoneInfoContainer.
-    BoneInfo and other ID classes could perhaps live without all their values pre-assigned in __init__. The only ones that need to be pre-assigned are the ones that other things rely on, like how the length property relies on head and tail existing.
-    I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
+    Talk to Julien about where textures should be saved and referenced from.
 
-Talk to Julien about where textures should be saved and referenced from.
+CloudRigify TODO:
+    Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
+        Use this to allow customizing FK-C bones as well as the position of hip and torso controls.
+    Shape key driving bones.
+    Add option to make mechanism bones unselectable
+    
+    Face!
 
-Code quality:
-    Custom Property creation should be done in store_ui_data()
-    BoneInfoContainer should be an iterable so we can do self.bone_infos instead of self.bone_infos.bones.
-        .bone() function should be .ensure().
-    Instead of declaring every function to the preparation stage, there should be only one or a few prepare_bones function that calls the other functions and passes the neccessary information between them.
-        Functions should only rely on calling `self` when referring to things that were created before prepare_bones stage, such as in initialize or in add_params.
-        Functions should be split up into bone creating functions, and the functions for the loop that calls those bone creating functions. There shouldn't be two of these loops in one function. This is to make it easy to customize a rig by subclassing it, if needed.
-    We could use Rigify's neat constraint and driver adding logic, on top of what we already have. After all, we currently define constraints as just an arbitrary dictionary. Nothing is stopping us from passing that dictionary to the Rigify constraint maker function in rig_bones stage. Same idea with drivers?
+    Small rig elements like thumb correctives.
+    Drivers for bone rotation types?
 
 Improvements:
     Extra spine(hip) deform bone?
@@ -29,28 +29,17 @@ Improvements:
         Would be nice to have rig-wide options, but not sure on how to implement. A rig on the root bone? Metarig doesn't even have a root bone right now.
     Add more customizability by putting functionality under rig parameters. Allow the rig to be a lot simpler if it needs to be.
 
-TODOs:
-    CANNOT GENERATE HAILEY UNTIL THIS IS IMPLEMENTED:
-        Make pole target names use only limb type if custom names aren't specified.
-        Custom names should not contain side(left/right).
-    BUG: using UI switches with auto-keyframing throws error, lul.
-    Plan out what I will show in the Rain rig 2.0 showcase video thingie.
-    Add grab bones to Sunny.
+Code quality:
+    Custom Property creation should be done in store_ui_data()
+    BoneInfoContainer should be an iterable so we can do self.bone_infos instead of self.bone_infos.bones.
+        .bone() function should be .ensure().
+    Instead of declaring every function to the preparation stage, there should be only one or a few prepare_bones function that calls the other functions and passes the neccessary information between them.
+        Functions should only rely on calling `self` when referring to things that were created before prepare_bones stage, such as in initialize or in add_params.
+        Functions should be split up into bone creating functions, and the functions for the loop that calls those bone creating functions. There shouldn't be two of these loops in one function. This is to make it easy to customize a rig by subclassing it, if needed.
+    We could use Rigify's neat constraint and driver adding logic, on top of what we already have. After all, we currently define constraints as just an arbitrary dictionary. Nothing is stopping us from passing that dictionary to the Rigify constraint maker function in rig_bones stage. Same idea with drivers?
 
-
-    Rig all background characters and props
-    Weight paint Hailey (maybe add some bones to control the belly? def gonna need some shape keys.)
-    Weight paint Sunny so he can kneel down nicely.
-
-
-    Write a script to re-generate every instance of the rig in a file. (unhiding is tricky)
-        Although maybe there should be a separate collection that contains every rig and metarig, and then the script will just work on selected objects and be more optimizable.
-    Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
-        Use this to allow customizing FK-C bones as well as the position of hip and torso controls.
-    Shape key driving bones.
-    Add option to make mechanism bones unselectable
-    
-    Face!
-
-    Small rig elements like thumb correctives.
-    Drivers for bone rotation types?
+Ideas:
+    Should probably turn constraints into a class. At least it would let us more easily add drivers to them.
+    I should implement a CollectionProperty-like class, for ID collections, similar to BoneInfoContainer.
+    BoneInfo and other ID classes could perhaps live without all their values pre-assigned in __init__. The only ones that need to be pre-assigned are the ones that other things rely on, like how the length property relies on head and tail existing.
+    I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
