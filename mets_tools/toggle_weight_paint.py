@@ -10,7 +10,7 @@ import bpy
 # You need to set up your own keybind for this operator.
 
 class ToggleWeightPaint(bpy.types.Operator):
-	""" Transfer weights from active to selected objects based on weighted vert distances """
+	""" Toggle weight paint mode properly with a single operator. """
 	bl_idname = "object.weight_paint_toggle"
 	bl_label = "Toggle Weight Paint Mode"
 	bl_options = {'REGISTER', 'UNDO'}
@@ -19,14 +19,18 @@ class ToggleWeightPaint(bpy.types.Operator):
 		obj = context.object
 
 		mode = obj.mode
-		enter_wp = not mode == 'WEIGHT_PAINT'
+		enter_wp = not (mode == 'WEIGHT_PAINT')
 
 		# Finding armature.
 		armature = None
 		for m in obj.modifiers:
 			if(m.type=='ARMATURE'):
 				armature = m.object
-		
+				if not armature.visible_get():
+					# Armature is hidden, ignore (for now).
+					armature = None
+
+
 		if(enter_wp):
 			### Entering weight paint mode. ###
 			# Set modes.

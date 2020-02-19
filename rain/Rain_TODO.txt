@@ -8,6 +8,7 @@ HIGH Write a document on what could be done on blender development side to make 
 	Well I did, several, bug reports.
 
 RAIN
+Nuke Hail!
 Body/Limbs
 	Scale propagation
 		Knee, butt and shoulder deform correctives need to be replaced by shape keys.

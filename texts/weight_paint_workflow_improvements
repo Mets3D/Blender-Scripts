@@ -1,0 +1,28 @@
+Weight Paint mode is still cancer. I need some scripts to make it less cancer.
+
+Issue 1: The main issue is random bones getting random weights on random vertices.
+Solution:On Depsgraph update, run Clean Weights operator with 0.001 limit. Probably causes infinite loop, not sure if possible, but it would be really nice.
+
+If that's not enough: Should look into my old "clean weight islands" script, see if it works, and if it does, hotkey it.
+
+Issue 2: My addon I already use for switching brushes with 1, 2, 3 is working nicely, but it would be cool to:
+    - make it set brush colors
+    - If the brushes don't exist in the file, create them.
+
+Issue 3: Switching to weight paint mode is still a pain in the ass.
+    - Revive old script that used to cause crashes, see if it still causes crashes.
+
+Issue 4: Projected/Sphere projection not being global is a pain in the ass. Make an operator that toggles it globally. (To the opposite of the current brush's setting)
+    Bind it to X.
+    Could even use brush color to indicate the state of this. I would set Value from 1.0 to 0.8 to indicate that it's set to Sphere.
+
+Idea: Make a custom context menu on W key. This would have:
+
+    - Front Faces Only (make global via callback? Is that possible?)
+    - Falloff mode (global)
+    - Auto-normalize
+
+    - X-mirror
+    - Bone Display mode
+    - In Front
+    
