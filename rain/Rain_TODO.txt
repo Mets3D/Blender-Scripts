@@ -4,11 +4,7 @@ I should make an addon to help the editing of shape keys and weights in any orde
 	Figure out how to make it so that, in order to achieve a desired shape, the weights are re-distributed such that the least amount of work possible has to be done by shape keys, while everything else is done by bones.
 		This seems super difficult, since bones can do a lot of things, like move, rotate, and scale, while shape keys can only move along a line.
 
-HIGH Write a document on what could be done on blender development side to make my workflow better.
-	Well I did, several, bug reports.
-
 RAIN
-Nuke Hail!
 Body/Limbs
 	Scale propagation
 		Knee, butt and shoulder deform correctives need to be replaced by shape keys.

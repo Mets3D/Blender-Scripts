@@ -1,16 +1,10 @@
 CoffeeRun TODO:
-    Cleanup crowd rigs
-    Write a script to re-generate every instance of the rig in a file. (unhiding is tricky)
-        Although maybe there should be a separate collection that contains every rig and metarig, and then the script will just work on selected objects and be more optimizable.
-
-    Weight paint Hailey (maybe add some bones to control the belly? def gonna need some shape keys.)
-    Weight paint Sunny so he can kneel down nicely.
+    Regular Man 3 needs to be able to sit down a bit better.
     Implement a quadruped limb rig, similar to Autumn's hind leg.
-    Talk to Julien about where textures should be saved and referenced from.
+    Check if any textures are referenced from weird places. Talk to Julien or Andy about where textures should be saved and referenced from.
 
 CloudRigify TODO:
-    Give a proper name to the rig data(derived from rig object name)
-    Add a parameter to the limb rig, to lock YZ rotation of the second FK bone (elbow/shin)
+    DONE Add a parameter to the limb rig, to lock YZ rotation of the second FK bone (elbow/shin)
         There is an extra problem with this where IK/FK snapping can introduce some rotation on those locked axes. Rigify's IK/FK snapping code might be able to avoid this, but I'd have to test.
     CANNOT REGENERATE THE CAT UNTIL WE FIX THE HACKY SHOULDER PARENTING.(Or well, we can, there's just a couple extra steps I don't want to take.)
     Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
