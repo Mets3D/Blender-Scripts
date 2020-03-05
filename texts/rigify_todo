@@ -1,16 +1,14 @@
 CoffeeRun TODO:
-    Regular Man 3 needs to be able to sit down a bit better.
-    Implement a quadruped limb rig, similar to Autumn's hind leg.
-    Check if any textures are referenced from weird places. Talk to Julien or Andy about where textures should be saved and referenced from.
+    Tombstone?
+    Tablecloth?
 
 CloudRigify TODO:
-    DONE Add a parameter to the limb rig, to lock YZ rotation of the second FK bone (elbow/shin)
-        There is an extra problem with this where IK/FK snapping can introduce some rotation on those locked axes. Rigify's IK/FK snapping code might be able to avoid this, but I'd have to test.
-    CANNOT REGENERATE THE CAT UNTIL WE FIX THE HACKY SHOULDER PARENTING.(Or well, we can, there's just a couple extra steps I don't want to take.)
-    Implement something very similar to Rigify's super_copy rig, which would allow adding constraints, changing the position and display properties of a generated bone. But it wouldn't create it from scratch, like Rigify's current super-copy.
-        Use this to allow customizing FK-C bones as well as the position of hip and torso controls.
-    Shape key driving bones.
+    Improve bone group system
+        group_defs shouldn't just exist in the ether. It should be initialized empty, and rig elements can add their bone groups to it as needed.
+        Similar thing with layers, but the issue with that is it should be rig-wide settings!!!
     Add option to make mechanism bones unselectable
+    Continue implementation of CloudBoneRig
+    Implement a quadruped limb rig, similar to Autumn's hind leg.
     
     Face!
 
@@ -20,10 +18,8 @@ CloudRigify TODO:
 Improvements:
     Extra spine(hip) deform bone?
 
-    When snapping IK to FK when the limb is stretched, the result is incorrect for the elbow/knee bone. There's a few solutions to this, not a fan of any of them, but probably not important.
-    
-    "Enable Modifiers" property should be stored in rig data, and only displayed when it exists.
-        Would be nice to have rig-wide options, but not sure on how to implement. A rig on the root bone? Metarig doesn't even have a root bone right now.
+    Would be nice to have rig-wide options, but not sure on how to implement. A rig on the root bone? Metarig doesn't even have a root bone right now.
+        Adding stuff to the Rigify Buttons panel would be elegant. Straight up forking Rigify is also something worth considering I think. Having the freedom to mess around with the generator engine would give some needed extra freedom.
     Add more customizability by putting functionality under rig parameters. Allow the rig to be a lot simpler if it needs to be.
 
 Code quality:
@@ -41,3 +37,12 @@ Ideas:
     I should implement a CollectionProperty-like class, for ID collections, similar to BoneInfoContainer.
     BoneInfo and other ID classes could perhaps live without all their values pre-assigned in __init__. The only ones that need to be pre-assigned are the ones that other things rely on, like how the length property relies on head and tail existing.
     I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
+
+Forking Rigify:
+    If I were to fork Rigify, what would I add or change?
+    - Scale system for all rigs (so add this to BaseRig)
+    - Ability to implement custom generators, and choose your generator type in the UI, which would then affect the rest of the UI (and allow for entire rig-wide settings).
+    - Split the current generator into a SimpleGenerator and a RigifyGenerator, expose some options on the latter.
+    - Do something with BoneInfo?
+    - Fix syntax error in new_bone()...
+    - A better system for bone groups.

@@ -1,7 +1,6 @@
 Potential workflow improvements
 BUGS
-    https://developer.blender.org/T73434 
-    https://developer.blender.org/T71213#859283
+    https://developer.blender.org/T73434
     https://docs.google.com/document/d/1dOnT5-oQjtsShhsMQSXHwy5mH0vZooXU1hj-dzKyRqs/edit
 FEATURES
 - HIGH Let me access armature data from weight paint mode. (can be done with addon, but it should be in Blender)
@@ -14,14 +13,14 @@ Medium things:
 - MED Mask for Surface Deform modifier
 
 - LOW Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
-- HIGH Weight paint: Changing brushes is an absolute pain and there's no way around it, even with a custom addon.
-- Let this behaviour be the default, just like in sculpt mode:
-    Left Mouse Button - paint Add
-    Ctrl + Left Mouse Button - paint Substract
-    Shift + Left Mouse Button - paint Blur
+- HIGH Weight paint: Changing brushes is an absolute pain.
+    Let this behaviour be the default, just like in sculpt mode:
+        Left Mouse Button - paint Add
+        Ctrl + Left Mouse Button - paint Substract
+        Shift + Left Mouse Button - paint Blur
 
-Small things: (All of these are small things)
-- ME? Let us assign area split/join operation to a keyboard shortcut.
+Small things:
+- Let us assign area split/join operation to a keyboard shortcut.
 - ME Better context menu in pose mode (An actual menu with UI, instead of just a list of useless operators)
     - BBone settings: Segments, Start/End Handle type and target.
     - Parent bone (read-only in pose mode, which is still useful.)

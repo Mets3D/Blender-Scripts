@@ -1,4 +1,4 @@
-I will try to describe how I would expect a node-based rigging system to work.
+I will try to describe how I would expect a node-based rigging system to work. This is not for generating rigs, but for replacing or complimenting the constraint system.
 Disclaimer: These are my initial thoughts, with no experience with any other node-based rigging system, and with a limited understanding of how transformations are calculated. I intend to learn more about these things and iterate on these thoughts in the future.
 
 Goals:
@@ -7,16 +7,15 @@ Goals:
 - Combine functionality of Drivers and Constraints.
 - Provide the low level power that usually comes with node systems.
 - Possibly improve rig performance, by being able to only store and calculate things that are necessary. For example in the helper bones mentioned above, there would be transforms that get calculated and then never get used.
-- Improve dependency graph granularity
+- Make depsgraph even more granular, where needed and if possible. (Simple example: Two bones with Damped Track towards each other)
 
 Todo: Elaborate on how each of these goals would be achieved.
 
 ## Who owns the nodegraph? ##
 Each bone has one nodegraph.
-This nodegraph has a singular output node, similar to material nodegraphs. This is the only node that actually affects the scene. Every other node is simply for gathering and processing information.
+Either a singular output node or many output nodes but only one of each type allowed. This is if we want to control any property of the bone, not just its transforms, which is why this system would be replacing drivers.
+This also means that those properties would no longer be directly modifiable by the user, since the node graph is overwriting it. Just like drivers.
 
-The output node would have pins for as many bone properties as we can support.
-The most important and most complex of these properties is the bone's transforms.
 There could also be pins for BBone transforms and properties, Envelope properties, custom properties, viewport display properties, etc.
 Of course we don't want the output node to be a monstrosity, so most of these things could be hidden by default behind [some UX wizardry].
 
@@ -43,6 +42,3 @@ How is it determined whether users still have control over a property or not? Mo
     There needs to be a separation between the RNA value of a property, and the version of the property which has the nodetree's output applied to it.
     For example, when a nodetree causes a bone to move, this would not be reflected by the numbers in the interface. Those, just like now, would only contain changes inputted directly by the user. The nodetree can then choose to use that user input or not, in any way.
     This is how constraints already work. Not Drivers, though. But this should work for floats and booleans. Sure, confusing behaviour can be created by a rig author, eg. toggle buttons that don't do anything, or toggle buttons that are hooked up to completely unrelated functionality. But that can already be done by Drivers. Just don't do it. :)
-
-
-Properties controlled by the nodegraph could be indicated by a color, like how drivers are indicated by purple.
