@@ -1,13 +1,34 @@
 CoffeeRun TODO:
-    Tombstone?
-    Tablecloth?
+    Regenerate hailey and sunny with parameter refactor (run fix_metarigs.py from crowd.blend then regenerate all rigs, done)
 
 CloudRigify TODO:
+    Plan for the rest of March:
+        Goal: Get CloudRigify to a publicly announcable and testable state, without a face.
+        
+        Write documentation about:
+            - What is CloudRigify?
+            - How to download and install it?
+            - How to get started using it?
+            - How does it differ from the default Rigify?
+            Where does this documentation go? The cloud? I don't know how to make posts on the cloud... ;_;
+
+        Poke Alexander to ask if he's open to the idea of adding feature-sets to master, ever, and if yes, is he willing to add this one?
+
+    Add rig samples?
+    Spine
+        Arbitrary number of spine and neck bones
+        Ability to not generate IK at all
+    On CloudChainRig, the Sharp Sections parameter would be nice if it defaulted to True for limb rigs, but False for the spine rig... but I think there's no way to achieve this.
+    Arbitrary length IK chain rig (Would also need ability to have the pole vector in an arbitrary direction around the chain... or rather, determine the direction by looking at the curvature of the chain.)
+    IK Fingers
+    Param to turn FK chain into an IK chain?
+    Spline IK like controls(the other two types) for bendy bones.
+    CloudBoneRig: Option to copy all children of the bone as well. This would let us be lazy for a while and attach entire manually rigged components to the generated rig, which would be a nice plan B if the face generation doesn't become a thing.
+    
+    AnklePivot should be renamed to HeelPivot in the script and the rigs...
     Improve bone group system
         group_defs shouldn't just exist in the ether. It should be initialized empty, and rig elements can add their bone groups to it as needed.
-        Similar thing with layers, but the issue with that is it should be rig-wide settings!!!
-    Add option to make mechanism bones unselectable
-    Continue implementation of CloudBoneRig
+        Similar thing with layers, but the issue with that is it should be rig-wide settings!!! Therefore built into the generator!
     Implement a quadruped limb rig, similar to Autumn's hind leg.
     
     Face!
@@ -39,10 +60,40 @@ Ideas:
     I really need to make sure I can justify abstracting the entire set of blender rigging related datastructures... it feels really silly.
 
 Forking Rigify:
-    If I were to fork Rigify, what would I add or change?
+    - Custom generators:
+        - The following properties should be moved into the generator:
+            bpy.types.Armature.rigify_advanced_generation
+            bpy.types.Armature.rigify_generate_mode
+            bpy.types.Armature.rigify_force_widget_update
+            bpy.types.Armature.rigify_target_rig
+            bpy.types.Armature.rigify_rig_ui
+            bpy.types.Armature.rigify_rig_basename
+            IDStore.rigify_transfer_only_selected - I don't even know what this is?
+        - We could add a generator_types to IDStore similar to IDStore.rigify_types.
+            - Actually, no. I want the generator type to be per-rig. This way we can have a regular rigify rig and a cloudrigify rig in the same scene and re-generate them conveniently, without having to change generator types in between.
+        - Most of DATA_PT_rigify_buttons should be moved into the Generator class, and then called from DATA_PT_rigify_buttons.
+
+        - How to actually make the Generate operator and Rigify itself use the selected generator type?
+            - Things start in generate.generate_rig() - This makes an instance of the Generate class, which is probably the earliest line of code we would want to change(in terms of execution order)
+            - Right now, a generator is initiated with a rig passed in... I guess simplest would be to keep that, but just use a different Generator class based on the enum selection we would be adding...
+            - And if that enum is generated in some smart way, then this is kind of reasonable... And we would still be splitting the (existing) Generator class into a SimpleGenerator and a RigifyGenerator, before going on and implementing our own.
+        - How to allow registering new generator types?
+
+        - If I were to move the generator code into cloudrig folder, how do I even access it?
+        - If the generator is owned by the actual armature object, does that mean the generator has to extend CollectionProperty? Are we okay with that?
+
+        I just understood why different rigs are not allowed to have identically named parameters. It's because all parameters from all rig types are registered at the same time. Of course they are, because Blender cannot create new properties within a CollectionProperty at runtime.
+        The same solution would therefore have to be applied to generators. Generators would have an add_parameters(), there would be a GeneratorParameters class with just a StringProperty in it, and there would be a rigify_generator_parameters collectionproperty(type=generatorproperties).
+
+
     - Scale system for all rigs (so add this to BaseRig)
     - Ability to implement custom generators, and choose your generator type in the UI, which would then affect the rest of the UI (and allow for entire rig-wide settings).
     - Split the current generator into a SimpleGenerator and a RigifyGenerator, expose some options on the latter.
     - Do something with BoneInfo?
     - Fix syntax error in new_bone()...
     - A better system for bone groups.
+
+    Things this would allow me to do in my rigs:
+    - Move load_widget() and load_script() functions into the generator.
+    - Not have to rely on hacks and custom operator to get rid of some Rigify stuff: root bone shape, driver on object ID pass, rig_ui.py.
+    - Arbitrary number of root bones...
