@@ -7,28 +7,39 @@ from mathutils import Vector
 import time
 import webbrowser
 
-# Witcher3 Hairs
-	# We'll probably want to rename hairs, eg. from "Ciri_Default" to "Hair_Long_03" or whatever, since hairs aren't unique to a single character.
+# New TODO
+	# Make outfit swapping work when linked...
+	# Step 1: Find out why it doesn't work when linked!
 
-# prop_hierarchy: allow for nested children
-# Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
-#	Except some objects get masked to make other versions of themselves, so some objects would have multiple masks to enable depending on rig properties.
+	# Consolidate code relating to certain things to the relevant class, eg. physics code to a PhysicsProperties.
+
+	# Add features from CloudRig. (IK/FK Snap, parent switch, etc, based on info stored in rig data)
+
+	# Remove BoolProperties. It's too much hassle to maintain, for little convenience.
+
+# Old TODO
+	# Witcher3 Hairs
+		# We'll probably want to rename hairs, eg. from "Ciri_Default" to "Hair_Long_03" or whatever, since hairs aren't unique to a single character.
+
+	# prop_hierarchy: allow for nested children
+	# Objects should be responsible for enabling mask vertex groups on the body(or everything), as opposed to the vertex groups being responsible for enabling themselves based on rig properties.
+	#	Except some objects get masked to make other versions of themselves, so some objects would have multiple masks to enable depending on rig properties.
 
 
-# Optimization
-	# Could try limiting update_meshes() and update_node_values() to only worry about changed properties.
-		# This would be done by finding a list of the changed properties in pre_depsgraph_update() and then passing those in as params.
-		# This would enable users to manually enable/disable things, then interact with the rig, and not lose their manual modifications.
-		# There would need to be a button to refresh the entire rig though (which would probably happen by not passing the optional param from pre_depsgraph_update() into update_meshes() ).
+	# Optimization
+		# Could try limiting update_meshes() and update_node_values() to only worry about changed properties.
+			# This would be done by finding a list of the changed properties in pre_depsgraph_update() and then passing those in as params.
+			# This would enable users to manually enable/disable things, then interact with the rig, and not lose their manual modifications.
+			# There would need to be a button to refresh the entire rig though (which would probably happen by not passing the optional param from pre_depsgraph_update() into update_meshes() ).
 
-# Animation
-	# Currently when values are animated, outfits don't update, since just because something is animated it doesn't call a depsgraph update when animation is played or timeline is scrubbed. We might need to run pre_depsgraph_uipdate() on frame change instead of depsgraph update, which would probably affect performance.
-	# I think even properties' update callbacks only run when the user changes them, not when animation changes them. Isn't that a bug?
-	# In any case, for cloth swapping to work with animation, we might need to check for changes on both ID and other properties on frame change. Yikes.
+	# Animation
+		# Currently when values are animated, outfits don't update, since just because something is animated it doesn't call a depsgraph update when animation is played or timeline is scrubbed. We might need to run pre_depsgraph_uipdate() on frame change instead of depsgraph update, which would probably affect performance.
+		# I think even properties' update callbacks only run when the user changes them, not when animation changes them. Isn't that a bug?
+		# In any case, for cloth swapping to work with animation, we might need to check for changes on both ID and other properties on frame change. Yikes.
 
-# Linking/Appending
-	# The rig should detect when itself is a proxy and be aware of what rig it is a proxy of. Use that rig's children instead of the proxy armature's(presumably non-existent) children.
-	# It should also detect when multiple copies of itself exist. Currently the only thing that needs to be done for two rigs to work without messing each other up is to change the 'material_controller' to the correct one.
+	# Linking/Appending
+		# The rig should detect when itself is a proxy and be aware of what rig it is a proxy of. Use that rig's children instead of the proxy armature's(presumably non-existent) children.
+		# It should also detect when multiple copies of itself exist. Currently the only thing that needs to be done for two rigs to work without messing each other up is to change the 'material_controller' to the correct one.
 
 def get_children_recursive(obj, ret=[]):
 	# Return all the children and children of children of obj in a flat list.
@@ -61,6 +72,7 @@ class MetsRig_BoolProperties(bpy.types.PropertyGroup):
 	value: BoolProperty(
 		name='Boolean Value',
 		description='',
+		options={'LIBRARY_EDITABLE'},
 		update=update_id_prop
 	)
 
@@ -78,10 +90,12 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				ret.append(o)
 		return ret
 	
-	def get_rig(self):
-		""" Find the rig that is using this instance. """
+	def get_rig(self, proxy=True):
+		""" Find the rig that is using this instance. If this is a proxy rig, return the original. """
 		for rig in self.get_rigs():
 			if(rig.data.metsrig_properties == self):
+				if rig.proxy and proxy:
+					return rig.proxy
 				return rig
 	
 	@classmethod
@@ -248,8 +262,12 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	def determine_visibility_by_name(self, m, obj=None):
 		""" Determine whether the passed vertex group or shape key should be enabled, based on its name and the properties of the currently active outfit.
 			Naming convention example: M:Ciri_Default:Corset==1*Top==1
-			m: The vertex group or shape key (or anything with a "name" property).
-			THIS CODE IS REALLY FUCKING BAD
+			Split in 3 parts by :(colon) characters.
+			The first part must be "M" to indicate that this shape key/vgroup is used by the outfit swapping system.
+			The second part is the outfit name.
+			The third part is an expression, which recognizes variable names that are custom properties on the given outfit, or the character.
+
+			param m: The vertex group or shape key (or anything with a "name" property).
 		"""
 		
 		if("M:" not in m.name):
@@ -760,6 +778,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	metsrig_chars: EnumProperty(
 		name="Character",
 		items=chars,
+		options={'LIBRARY_EDITABLE'},
 		update=change_characters)
 	
 	metsrig_sets: EnumProperty(
@@ -771,16 +790,19 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			('All', "All Outfits", "All outfits, including those of other characters", 3)
 		},
 		default='Character',
+		options={'LIBRARY_EDITABLE'},
 		update=change_outfit)
 	
 	metsrig_outfits: EnumProperty(
 		name="Outfit",
 		items=outfits,
+		options={'LIBRARY_EDITABLE'},
 		update=change_outfit)
 	
 	metsrig_hairs: EnumProperty(
 		name="Hairstyle",
 		items=hairs,
+		options={'LIBRARY_EDITABLE'},
 		update=change_hair)
 	
 	def update_physics(self, context):
@@ -795,14 +817,17 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				pass
 			self.physics_speed_multiplier = ""
 	
-		rig = self.get_rig()
-		
+		proxy_rig = self.get_rig()
+		rig = proxy_rig.proxy
+		if not rig:
+			rig = proxy_rig
+
 		colors = {
 			'CLOTH' : (0, 1, 0, 1),
 			'COLLISION' : (1, 0, 0, 1),
 		}
 		
-		for o in bpy.context.view_layer.objects:
+		for o in bpy.data.objects:
 			if(o.parent != rig): continue
 			
 			# Toggling all physics modifiers
@@ -845,39 +870,49 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 					m.point_cache.frame_end = self.physics_cache_end
 		
 		# Toggling Physics bone constraints
-		for b in rig.pose.bones:
+		for b in proxy_rig.pose.bones:
 			for c in b.constraints:
 				if("phys" in c.name.lower()):
 					c.mute = not self.physics_toggle
 
+		# TODO: Rework this. Rig should store information about what the physics toggle should do. I guess just a reference to the physics collection would be nice.
+		# But even then, since in the case of linking hiding the collection doesn't work, every object's visibility would have to be re-evaluated.
+		# And for that, the functionality of enable_all_meshes has to go into determine_object_visibility
 		# Toggling Physics collection(s)...
-		for collection in get_children_recursive(bpy.context.scene.collection):
-			if(type(collection) != bpy.types.Collection): continue
+		for collection in bpy.data.collections:
 			if(rig in collection.objects[:]):
 				for rig_collection in collection.children:
 					if( 'phys' in rig_collection.name.lower() ):
 						rig_collection.hide_viewport = not self.physics_toggle
 						rig_collection.hide_render = not self.physics_toggle
-						break
+						# Hiding collection doesn't seem to work in linked rig...
+						for o in rig_collection.objects:
+							o.hide_viewport = not self.physics_toggle
+							o.hide_render = not self.physics_toggle
+						# break
 				break
 
 	physics_toggle: BoolProperty(
 		name='Physics',
 		description='Toggle Physics systems (Enables Physics collection and Cloth, Mesh Deform, Surface Deform modifiers, etc)',
+		options={'LIBRARY_EDITABLE'},
 		update=update_physics)
 	physics_speed_multiplier: StringProperty(
 		name='Apply multiplier to physics speed',
 		description = 'Apply entered multiplier to physics speed. The default physics setups are made for 60FPS. If you are animating at 30FPS, enter 2 here once. If you entered 2, you have to enter 0.5 to get back to the original physics speed',
 		default="",
+		options={'LIBRARY_EDITABLE'},
 		update=update_physics)
 	physics_cache_start: IntProperty(
 		name='Physics Frame Start',
 		default=1,
+		options={'LIBRARY_EDITABLE'},
 		update=update_physics,
 		min=0, max=1048573)
 	physics_cache_end: IntProperty(
 		name='Physics Frame End',
 		default=1,
+		options={'LIBRARY_EDITABLE'},
 		update=update_physics,
 		min=1, max=1048574)
 
@@ -905,12 +940,14 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='Sticky Anus Target',
 		description = 'Select object to which the anus should stick to. Warning: Can cause serious hit to performance',
 		type=bpy.types.Object,
+		options={'LIBRARY_EDITABLE'},
 		update=update_shrinkwrap_targets)
 	
 	shrinkwrap_target_vagina: PointerProperty(
 		name='Sticky Vagina Target',
 		description = 'Select object to which the vagina should stick to. Warning: Can cause serious hit to performance',
 		type=bpy.types.Object,
+		options={'LIBRARY_EDITABLE'},
 		update=update_shrinkwrap_targets)
 	
 	def update_render_modifiers(self, context):
@@ -931,14 +968,17 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	render_modifiers: BoolProperty(
 		name='render_modifiers',
 		description='Enable SubSurf, Solidify, Bevel, etc. modifiers in the viewport',
+		options={'LIBRARY_EDITABLE'},
 		update=update_render_modifiers)
 	show_all_meshes: BoolProperty(
 		name='show_all_meshes',
 		description='Enable all child meshes of this armature',
+		options={'LIBRARY_EDITABLE'},
 		update=update_meshes)
 	use_proxy: BoolProperty(
 		name='use_proxy',
 		description='Use Proxy Meshes',
+		options={'LIBRARY_EDITABLE'},
 		update=update_meshes)
 	
 	def update_ik(self, context):
@@ -948,7 +988,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			Finger bones are expected to be named according to the 'finger_names' list.
 		"""
 		
-		rig = self.get_rig()
+		rig = self.get_rig(proxy=False)
 		
 		ik_prop_names = ["ik_spine", "ik_arm_left", "ik_arm_right", "ik_leg_left", "ik_leg_right", "ik_fingers_left", "ik_fingers_right"]
 		finger_names = ["thumb", "index", "middle", "ring", "pinky"]
@@ -971,45 +1011,53 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 	ik_spine: FloatProperty(
 		name='FK/IK Spine',
 		default=0,
+		options={'LIBRARY_EDITABLE'},
 		update=update_ik,
 		min=0, max=1 )
 	
 	ik_leg_left: FloatProperty(
 		name='FK/IK Left Leg',
 		default=0,
+		options={'LIBRARY_EDITABLE'},
 		update=update_ik,
 		min=0, max=1 )
 	ik_leg_right: FloatProperty(
 		name='FK/IK Right Leg',
 		default=0,
+		options={'LIBRARY_EDITABLE'},
 		update=update_ik,
 		min=0, max=1 )
 	
 	ik_arm_left: FloatProperty(
 		name='FK/IK Left Arm',
 		default=0,
+		options={'LIBRARY_EDITABLE'},
 		update=update_ik,
 		min=0, max=1 )
 	ik_arm_right: FloatProperty(
 		name='FK/IK Right Arm',
 		default=0,
+		options={'LIBRARY_EDITABLE'},
 		update=update_ik,
 		min=0, max=1 )
 	
 	ik_fingers_right: FloatProperty(
 		name='Right Fingers',
 		default=0,
+		options={'LIBRARY_EDITABLE'},
 		update=update_ik,
 		min=0, max=1 )
 	ik_fingers_left: FloatProperty(
 		name='Left Fingers',
 		default=0,
+		options={'LIBRARY_EDITABLE'},
 		update=update_ik,
 		min=0, max=1 )
 	
 	ik_per_finger: BoolProperty(
 		name='Per Finger',
 		description='Control Ik/FK on individual fingers',
+		options={'LIBRARY_EDITABLE'},
 		update=update_ik)
 
 class MetsRigUI(bpy.types.Panel):
