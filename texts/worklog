@@ -1,0 +1,287 @@
+
+
+Mar 16:
+    - Set up my Blender user preferences, VSC workspaces, git repos, CoffeeRun SVN at home. RapidSVN crashes on checkout, so I'm trying an SVN extension for VSC for now. (Which might be more convenient, if it turns out to be good)
+    - Building Blender from source was failing, so I fixed that... I forgot how god damn slow it is on Windows though, so I'm honestly better off downloading the nightlies.
+    - Campbell prompted me to write a giant wall of text for improving the hotkey editor. I made sure he will have regrets. developer.blender.org/T68884#892054
+    - Got access to Notion and looked through the pages that seemed important 🙂
+    - Started writing some documentation/tutorial/readme type thing for CloudRigify.
+
+Mar 17:
+    CoffeeRun:
+    - Re-generated crowd, hailey and sunny rigs after a refactor that caused all Rigify parameters to reset to their defaults. This time, without making everything explode.
+    - Fixed some deformation and clipping on Hailey's chest with the wedding dress.
+    - Fixed an issue on the Drape rig where the ribbon wasn't inheriting rotation from the root.
+    CloudRigify:
+    - cloud_bone: Implement create_deform_bone parameter. (Was needed for the drape)
+    - Human Metarig now saves bbone scale, object name and object data name correctly.
+    - Human Metarig no longer uses Rigify components, such as raw_copy, and uses cloud_bone instead.
+    - Human Metarig no longer contains an outfit properties bone, because that relied on custom properties to function, and Metarigs don't save custom properties atm.
+    - Figured out how to ensure that CloudRigify can simply be downloaded from github as a .zip, and that .zip can be installed in Rigify as a featureset package.
+    - Had to re-organize and clean up the repository a fair bit.
+    - Worked a bit on the README. Tried adding images but it was quite clunky, so I added some gifs where needed, which I think work pretty well. Good thing I'm working from home cause I'm not sure how I would've done this without ShareX...! Might still need some help with Markdown to make it a bit prettier, but from what I googled, it might not be possible.
+
+Mar 18:
+    CloudRigify:
+    - Added rig samples to some rigs, ensuring they can be generated on their own. Rig samples are examples that can be spawned in edit mode in the Rigify UI.
+    - Fixed a bug where limb rigs could not be generated without a spine rig.
+    - Improvements to parent switching setup so it doesn't rely on assumptions about available parents.
+    - Fixed a bug in cloud_bone where the ORG- bones weren't constrained to the control bones.
+    - Fixed a bug in cloud_bone where DEF- bones weren't created.
+    - Burned probably half the day hunting down this bs developer.blender.org/T74888
+    CoffeeRun:
+    - Rigged a book
+    - Updated Hail to latest cloudrig.py so Pablico can use IK snapping. 
+
+Mar 19:
+    CoffeeRun:
+    - Tiny hailey fix for Julien, some prop copies for Hjalti, another small tweak on the drape rig for Pablo.
+    - While testing some rig generation stuff I tweaked some deformations on Hailey's waist and pregnant belly.
+    CloudRigify:
+    - Fixed a bug in cloud_bone where targetless constraints would fail to be re-targetted, since, they don't have a target.
+    - Decided it's okay to add buttons to pre-existing Rigify UI, so I can now have custom generator settings.
+    - Added Regenerate All Rigify Rigs operator that gets registered when CloudRig is loaded... I can't get unregister() to be called when it gets deactivated though, which is an issue.
+    - CloudRig is no longer dependent on my MetsTools addon, so now is the first time it should really work straight off of github.
+    - Refactored some code responsible for adding things to the Rig UI.
+    - (Unrelated) Parameter UI is now organized in menus that can be closed. 
+
+Mar 20:
+    CoffeeRun:
+    - Fix crash for Pablico
+    - rename some directly linked stuff from coffee to crowd_coffee. (unrelated to crash)
+    CloudRig:
+    spline_ik:
+    - Found a workaround for the bug I reported the other day, so spline_ik rig works again.
+    - Fixed a bug that caused the first and last handles to have the wrong length.
+    - naming changes(deform bones, curve object)
+
+    - Finish adding new drop-down UI to remaining rigs (spline_ik, spine)
+    - Finish adding rig samples to remaining rigs (cloud_bone, spline_ik, chain, fk_chain). 
+
+Mar 23:
+    Rain: Some weight tweaks on Rain's scarf and waist.
+    CloudRig: Implemented support for arbitrary number of spine and neck bones into the spine rig.
+
+Mar 24:
+    Day off due to eye problems.
+
+Mar 25:
+    CoffeeRun: Rigged a tree.
+    CloudRig:
+    - Started splitting out code from cloud_limbs rig into a more generic cloud_ik_chain rig, which the limbs rig now inherits from.
+    - Started some refactoring on cloud_chain code to make it more extendable.
+
+Mar 26:
+    CloudRig:
+    - More splitting out code from cloud_limbs into cloud_ik_chain, but still more to do before it's fully independent from cloud_limbs.
+        - cloud_ik_chain can now be generated on its own for the first time(without relying on being inherited by cloud_limbs)
+        - cloud_ik_chain now owns code for generating stretching setup, without breaking footroll on limbs. Still only supports a chain of 3 bones.
+    - Add and implement various new parameters for IK chain:
+        - Arbitrary chain length (WIP)
+        - Pole target can be disabled, use first bone's rotation instead. This will assign a bone shape, group and layer to that bone.
+    - Implement ability to hide parameters of inherited rig elements. I gave this a go before but it was a lot uglier than this new solution.
+    Blender:
+    - Tested and gave some feedback on the new experimental Menu Search (T74157)
+
+Mar 27:
+    CloudRig:
+    - cloud_ik_chain now fully supports IK stretch with an arbitrary length IK chain.
+    - (TODO) Implement Custom IK Pole parameter  so the IK pole can be placed arbitrarily via the metarig.
+    - (TODO) IK/FK snapping works on arbitrary length IK chain.
+    Rain:
+    - Fixed some missing drivers on subsurf modifiers that caused FPS to be cut in half.
+    - Deleted new verts and replaced them with a masked Solidify modifier. Updated Rain v2.0.zip on Dropbox.
+    Settlers:
+    - Experimented with curves and stuff.
+
+Mar 30:
+    Settlers:
+    - More experimenting with curves and stuff, research
+    CloudRig:
+    - (For Settlers) Started planning and prepping code for a new kind of curve-based rig, but this time it would take a pre-existing curve.
+        I would like the existing Spline IK rig to share code with this, since that one is curve-based as well, but it's a tricky code surgery, like when I was separating the IK Chain rig code from the Limb rig code.
+    - Added short descriptions to all rig types to improve usability. They are displayed above their parameters.
+    CoffeeRun:
+    - Made pregnant Hailey's pants shorter.
+    - Re-proxied all Haileys and Sunnys again in Hjalti, Pablo & Assembly files. This was needed because apparently bone custom properties don't update on proxies.
+
+Mar 31:
+    CloudRig:
+    - Curve rig is done, and shares code with the SplineIK rig.
+
+Apr 1:
+    Settlers:
+    - Experimenting with body rigging, extended discussion on the deformation of arms and legs, with an actual conclusion!
+    CoffeeRun:
+    - Rig Hailey's hospital gown
+    - (make copies of Sunny with Julien's changes to the scrub)
+    CloudRig:
+    - Fix many small bugs that cropped up while testing things for Lunte.
+    - Fix some tooltip inconsistencies and poor wording.
+
+Apr 2:
+    Settlers:
+    - Experimenting a lot with https://developer.blender.org/D6894 because it opened up a new possibility to do character deformations.
+    I think it will be useful in the future, but for Settlers we pretty much want as many bones as there are vertices in the character, so abstracting the shape any further won't be of use
+    - Trying to add extra stretch controls for Pablo but the geometry is limiting.
+
+Apr 3:
+    Settlers:
+    - Finished implementing the face rig after much pain.
+    - Cleaned up the file
+    CloudRig:
+    - Added a generator parameter to run an arbitrary script file at the final stage of generation.
+    - Fixed various bugs relating to curve rigs
+    - Added a separate rig element specifically for Settler Mouth, which extends the basic Curve Rig. In the end this was only used to hook up a second curve to the hook bones, the same way the first curve is hooked up. Still, could be useful in the future.
+
+    Some extra work in mega-overtime(non-stop till 6 am)
+    - Fixed foot roll when stretching(Hailey & Lunte)
+    - Work on automatic universal IK pole placement and IK angle determination. Works in most cases, but not quite all.
+
+Apr 4 (Saturday):
+    CloudRig:
+    - Finish IK pole magic. This allows me to remove a couple of parameters, to make the rig generator easier to use.
+    - Move parent switch setup code from limb rig to ik_chain rig so any generic IK chain can have the feature. Made the code more general, and hacked around an issue.(in an okay way)
+    - Fix choosing "Chest" as the IK arm parent not working when spine is on FK.
+    - Fix error when IK/FK snapping when the IK rig doesn't use a pole target.
+    - Fix unneccessary object/collection hiding in Curve rig, although it's still screwing up things on Lunte right now for some reason, even though I haven't touched it since yesterday, and then it worked fine... HMMMMM.
+    Lunte:
+    - Add shoulder bones to all limbs on Pablo's request
+    - Experiment with a way to allow the hand to be rolled into a fist. Works okay but now need to code it.
+    - Clean up weight painting.
+    - Finalize surface deform usage on the arms. It's only used to a small extent, but it helps with deforming the ring.
+    - Also attempted the same thing on the legs but for no discernable reason, it deformed like total crap compared to the arm, so I just cleaned up the weights as much as I could.
+    - Hacked a fist roll thing and a backpack bone into the generated rig, just to test, I guess.
+
+Apr 6:
+    Lunte:
+    - Made face resistant to scaling (the curve objects now use a smarter setup and a few extra drivers to help adjust their width and length based on the head's world scale)
+    - Tried my damndest to add support for the bevel object that Julien made for the mouth, but it's just impossible. There is no way to control when Blender decides the curve should just flip out.
+    - Added some shading helper bones for Simon.
+    - Helped Pablo troubleshoot a weird thing which I think is a bug with linked curves. It might come up again.
+    - Added teeth to the rig, they are shrinkwrapped to the head and can be hidden individually with a custom property.
+
+    - Helped Jeroen test some (welcome!) Weight Paint Overlay changes
+    
+Apr 7:
+    Lunte:
+    - Came up with a solution to make the rings not stretch when the limbs are stretched, on Vivien's suggestion.
+    - Rigged the tongue.
+    - Rigged the hair.
+    - Made some "smear" meshes for Pablico to append, duplicate and sculpt for smearing effects.
+    - Added a parent for the top and bottom teeth.
+    CloudRig:
+    - Reworked how cloud_bone works, in that instead of cloning the ORG- bone, it just renames the ORG- bone... Not sure why I didn't do this before, it avoids many headaches.
+    - Started adding support for custom prefix/suffix separators (currently it's hardcoded that bone names prefixes must be separated by - and suffixes by .) - still WIP though.
+    - Started implementing a more robust way to manage Bone Groups and layers, but I'm not too confident on the design yet.
+    - Minor text fixes.
+
+Apr 8:
+    Lunte:
+    - Reworked the teeth on Pablo's suggestions.
+    - Made a couple of cloud posts
+    - He can now sort of make a fist(after generation, without fiddling with it)
+    - Made the belt deform more solidly.
+    CloudRig:
+    - Worked on new BoneGroup system. It's starting to come together, now just need to change the code everywhere where I create a bone, and it should be working at least as well as the old shitty system was. Then I can start getting crazy with it.
+
+Apr 9:
+    CoffeeRun:
+    - Douse a fire on hailey's knees.
+    Settlers:
+    - Set up an animation file for Pablo
+    - Rigged a cube for Pablo.
+    - Figuring out how to set up some empties for Simon to control the 2D tongue. It's probably not perfect.
+    - 150 FoV production quality livestream participation.
+    CloudRig:
+    - New bonegroup system is fully implemented, the old one still needs to be ripped out.
+
+Apr 10:
+    Settlers:
+    - Gabby shirt discussions and rig brainstorming
+    - Came up with a new idea for the tongue locators for Lunte, and after a few iterations it seems to work a lot better than the old one.
+    CloudRig:
+    - Nuked code relating to old bonegroup system.
+    - Started hijacking Rigify's bone group and layer UI, replacing it with my own, and implementing new features that use it.
+    - Generated rigs can now have unified select/active colors, just like in regular Rigify. (except there's a lot less clicking and redundant data involved!)
+
+Apr 14 (day after Easter):
+    Settlers:
+    - Prepared a metarig for Gabby, but waiting until tomorrow to start actual rigging since modeling still seems to be underway.
+    CloudRig:
+    - Been further looking into the ability to call register() and unregister() functions when the CloudRig featureset is installed or removed, so I could cleanly add or remove operators and change or un-change UI panels, etc.
+    - CloudRig now uses its own Generator(the class that governs the rig generation process). This is something I've wanted to do since the beginning but didn't know how.
+    - Improvements to Regenerate All Rigify Rigs operator. (use a more generalized way of ensuring objects are visible - moved that code to cloud_utils, might be useful for rigs that have to work with curve objects)
+    When I hijacked rigify's bone group UI, it made me realize I could also hijack the Rigify Buttons UI, which holds the generator operator. 
+    So now, if the rig is a cloudrig, I just have my own generator operator, which calls my own generator class! 
+    Shame I didn't think of this before. Keeping this compatible with regular Rigify elements is not top priority, but would be nice.
+    This will allow me to remove a lot of hacks, starting with moving object name management out of rig elements, and into the generator code.
+    More to come.
+
+Apr 15:
+    Settlers:
+    - Added performance and shrinkwrap settings to Lunte, made some performance optimizations, and we discovered the power of Simplify and its stupid defualt settings ;)
+    - Added some more teeth bones for Lunte.
+    - Basic rig for Gabby so Hjalti can start doing something with her.
+    - Worked on Gabby's body and sleeve deformation for the most of the day. It's now ready for some feedback.
+    CloudRig:
+    - Added Copy Rigify Parameters and Mirror Rigify Parameters operators to speed up and make more consistent the workflow of creating metarigs.
+    - Some small fixes
+
+Apr 16:
+    Settlers:
+    - Lunte: More teeth bones, put shrinkwrap constraints back, sub-controls for teeth on separate layer, face quality now affects mask subdivision, backpack can be detached.
+    - Gabby: Initial face rig, working better than I ever dared expect.
+
+Apr 17:
+    Settlers:
+    Gabby:
+    - Learned about and worked around T59106...
+    - This also removed the error spam from the console
+    - Tweaked curve rig code so it can name its bones better if it has a side(.L/.R)
+    Lunte:
+    - Troubleshooting an issue for Pablo. I fixed it, but for some reason it's not propagating to his file... :/ Never found out what the issue was, had to ask him to re-make his file.
+
+    More Menu Search shennanigans https://developer.blender.org/T74157
+
+Apr 20:
+    Spent the morning discussing developer communication(prompted by sudden commit of Menu Search) in #blender-coders, and then even more with William in DMs.
+    Settlers:
+    - Hair, ear and goggles rigged for Gabby.
+    - Started rigging Phileas - didn't test deformation yet, just setting up metarig (and hunting down some CloudRig issues)
+    CloudRig:
+    - The rig UI and the custom script execution code was moved from the rig elements to the generator, so it is only executed once per generation, instead of as many times as there are rig elements in the rig.
+    - Removed a bone transform locking functionality that was copied from the original Rigify generator, and removed the hack that I used to work around it. (Rigify would lock any bone whose name started with 3 capital letters...)
+    - Last FK bone on limb rigs(wrist/ankle) no longer displays in the middle of the bone like the rest of the chain.
+
+Apr 21:
+    CloudRig:
+    - A bugfix and some tweaks on SplineIK rig so it works with pre-existing curves, and works better with cyclic curves.
+    - Implemented a new feature in CloudRig on Hjalti's request, so curve rigs can have a separate radius control.
+    - Reset rig transforms during generation, so the Hook modifiers for curve rigs(and potentially other things) don't mess up if the target rig was moved.
+    Settlers:
+    - Fixed an pupil clipping mess on Gabby, and added some extra bones on her for Simon.
+    - Started weight painting the body of Phileas.
+
+Apr 22:
+    CloudRig:
+    - Fix curve rig failing to generate when using UI button instead of operator.
+    - Force cloud_bone bones to not be on Quaternion rotation.
+    - Properties bone is no longer created until it's called for.
+    - Tried to implement a generator parameter to disable creation of the Root bone, but it resulted in a bit of a mess, so I reverted it for now.
+    Settlers:
+    - Finished first pass on the body, hair and backpack for Phileas.
+    - Started on some experiments for the eyes... the squashed spheres are gonna be tricky.
+    - Fixed parent switching bug in CloudRig that was also present on Gabby.
+    - Fixed intersection issues on Gabby.
+
+Apr 23:
+    Settlers:
+    - Phileas eyes, mouth and backpack rigged. Still need to add more control over the eyelid.
+    - Addressed some issues and feedback from Pablo on Phileas.
+    - Added shrinkwrap on Lunte's face parts for Simon.
+    - Fix Gabby's freckles disappearing on some parts of her face.
+
+Apr 24:
+    Settlers:
+    - Tweaks on Gabby for Hjalti.

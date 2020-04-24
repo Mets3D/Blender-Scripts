@@ -3,14 +3,10 @@ BUGS
     https://developer.blender.org/T73434
     https://docs.google.com/document/d/1dOnT5-oQjtsShhsMQSXHwy5mH0vZooXU1hj-dzKyRqs/edit
 FEATURES
-- HIGH Let me access armature data from weight paint mode. (can be done with addon, but it should be in Blender)
+- LOW Let me access armature data from weight paint mode. (can be done with addon, but it should be in Blender)
 - MED Sculpting works poorly with mirror modifier, especially when sculpting shape keys, especially especially when sculpting shape keys on a mesh deformed by an armature.
-- HIGH Weight paint overlay shouldn't be affected by shading mode or matcaps or materials or textures, etc.
-- When in paint modes and 2D Falloff is disabled, the brush cursor shouldn't display when the mouse isn't over the mesh's surface, to indicate that in these cases, the brush stroke will not do anything. This would also be extremely helpful in communicating whether 2D Falloff is enabled or not, and would help avoid mistakes that happen regularly and can set me back hours, by accidently painting through the mesh.
-- Let Alt+(Right)Click selection work in pose mode, to easily select a specific bone out of a lot of overlapping bones.
-
-Medium things:
-- MED Mask for Surface Deform modifier
+- MED When in paint modes and 2D Falloff is disabled, the brush cursor shouldn't display when the mouse isn't over the mesh's surface, to indicate that in these cases, the brush stroke will not do anything. This would also be extremely helpful in communicating whether 2D Falloff is enabled or not, and would help avoid mistakes that happen regularly and can set me back hours, by accidently painting through the mesh.
+- LOW Let Alt+(Right)Click selection work in pose mode, to easily select a specific bone out of a lot of overlapping bones.
 
 - LOW Let me snap bones to other bones(not just the head or tail but anywhere in between) in both edit and pose mode - and don't forget about bbone splining!
 - HIGH Weight paint: Changing brushes is an absolute pain.
@@ -20,6 +16,9 @@ Medium things:
         Shift + Left Mouse Button - paint Blur
 
 Small things:
+- Bone axis display in pose/object mode should ignore Custom Shape Transform.
+- ME "Remove Unused Slots" operator should be renamed to "Remove Unused Material Slots" and get an X icon in the UI. In the UI, the text can stay as it is.
+    Also, it should work on all, selected, or active object, instead of only active object.
 - Let us assign area split/join operation to a keyboard shortcut.
 - ME Better context menu in pose mode (An actual menu with UI, instead of just a list of useless operators)
     - BBone settings: Segments, Start/End Handle type and target.
@@ -60,11 +59,7 @@ Small things:
 - ME Relative/Absolute shape key system should be an enum toggle, not a checkbox, because it's changing between two unrelated behaviors rather than turning a behavior on and off. Based on discussion with William about changing 2D Falloff brush option to an enum.
 
 - ME! Ctrl+G in pose mode to set bone groups should show a list with bone groups, instead of an int with the bone group index.
-    - I implemented this into MetsTools. I don't think it would get approved for master because:
-        - Armature bone groups and layers should be getting deprecated soon™ anyways.
-        - There are no armature operators currently implemented in python.
-        - We draw some properties that already exist(existing group colors), which goes against usual design.
-        - When creating new group, the color preset selector is not consistent with the existing group preset selector, since the existing preset selector cannot be appended, because the bone group doesnt exist yet.
+    - I implemented a proof of concept of this into MetsTools.
 
 - BBone improvements
     - When BBone handle type is set to Automatic, let us still choose a handle target, and have it behave such that the changes the target would apply when the handle type is set to Tangent, are applied on top of the changes that are done currently when the handle type is Automatic, effectively allowing us to combine the two behaviors.
