@@ -23,16 +23,22 @@ Addon idea:
 
 Settlers TODO:
 	Make cloud posts about phileas face and backpack
-	Gabby:
-		Hook up Face Quality property to stuff, like on lunte.
 	Phileas:
-		- Add more eyelid controls.
+		- Better symmetrical curve support, so mirror posing works.
+		- Hook up eye lattice with 3 controls per eye (top middle bottom)
+		
 	Lunte:
-		Why is the console spamming bullshit!?!?
+		- Add new masking tech to the teeth, rename bones.
+		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
 
 CloudRig TODO:
-	The arm pole control seems to land on the wrong side when snapping to IK. Probably should use the same pole finding logic that we use during generation. Could possibly even share code...!
+	Normal rigs don't seem to get parented to cloud_bone Create rigs. (Phileas backpack)
 	Spine fails to generate when IK is turned off? (while working on Phileas, with spine length 4)
+	Eye Track
+		A rig that sets up an eye tracking system for two eye bones? Not sure on how it is defined in the metarig - is the bone where the target should be? That location can be based on where the eyes are and what direction they look.
+		How to support arbitrary number of eyeballs with such setup on a character, but certain eyes looking at the same thing?
+		I guess the riglet would be on the eye bones, and there is an "Eye Group" parameter which defines the name of the master target control, and which target controls will get parented to it.
+		Procedural bone shape generation might be nice for the target master...
 	Chain
 		Recursive generation of STR layers as per Pablo's request, so we don't just have main and sub STR controls, but any number of nested layers(although we would probably never use more than 3, but then again, I thought we would never use more than 2, so)
 		Spline IK like controls(the other two types) for bendy bones' handles.
@@ -44,6 +50,7 @@ CloudRig TODO:
 		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
 		Finger controls should go on a finger layer, and their UI needs to be figured out, so they don't clutter too much.
 	IK/FK Snapping
+		The arm pole control seems to land on the wrong side when snapping to IK. Probably should use the same pole finding logic that we use during generation. Could possibly even share code...!
 		pole vector distance should be relative to the scale of the rig. I wonder how it works right now on very small or large rigs.
 	Spine
 		IMPORTANT: Should force chain segments to 1.
@@ -55,9 +62,11 @@ CloudRig TODO:
 		feet control shouldn't be forced onto the floor, maybe based on an option, or use anklepivot bone, or whatever.
 		ROLL-Foot.L shouldn't have its tail be offset in a flat forward direction. Instead, make it perpendicular to the knee, pointing towards the toe. (cross product of knee and toe bones' vectors?)
 		AnklePivot should be renamed to HeelPivot in the script and the rigs...
-        AnklePivot must be specified for footroll to work, but it has the old default.
-        IK pole controls should have their roll re-calculated on some useful axis - This should be done by assigning a roll type to the BoneInfo, then calling Recalculate Roll on the appropriate bones in edit mode after generation.
-        Some smartypants way of ensuring that the IK pole, when IK Pole Follow is enabled, follows the IK control on its roll axis, but not the other axes?
+		AnklePivot must be specified for footroll to work, but it has the old default.
+		IK pole controls should have their roll re-calculated on some useful axis - This should be done by assigning a roll type to the BoneInfo, then calling Recalculate Roll on the appropriate bones in edit mode after generation.
+		Some smartypants way of ensuring that the IK pole, when IK Pole Follow is enabled, follows the IK control on its roll axis, but not the other axes?
+	Curve
+		Would be nice to have the ability for symmetrical rigs(eg. Gabby's mouth) that not only names the bones symmetrically but also flips the handles on one side, so that X-Mirror posing works.
 	Scissor limb rig possible? (limb with an extra bone to help elbow/knee deformation) - Can it work in FK?
 
 	Bone
@@ -88,8 +97,8 @@ CloudRig TODO:
 		On first generation, if empty, these would get pre-filled with names of the bone groups that were created and used.
 		If not empty, use the bone group that was selected. The bone group first has to exist on the metarig.
 
-        Unified Selection Colors should have a factor, so the unified selection color can be blended with the original selection color... hehe.
-        Store the layer UI layout data in the generated rig and use it in cloudrig.py.
+		Unified Selection Colors should have a factor, so the unified selection color can be blended with the original selection color... hehe.
+		Store the layer UI layout data in the generated rig and use it in cloudrig.py.
 
 
 	Implement a quadruped limb rig, similar to Autumn's hind leg.

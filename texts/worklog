@@ -285,3 +285,50 @@ Apr 23:
 Apr 24:
     Settlers:
     - Tweaks on Gabby for Hjalti.
+    - Eyelids rigged for Phileas.
+    - Major clean-up on Lunte:
+        - Fix various types of console spam (all unreasonable, of course)
+        - Renamed face bones such that they are symmetrical, which is something Hjalti requested on Gabby.
+        - Scaling the face parts now scales the outer tube correctly.
+        - Stretching the head now stretches the face parts.
+    CloudRig:
+    - Reworked cloud_bone rig so it's a lot more hacky but a lot more functional. Need to hack it more later.
+
+Apr 25 (bored on Saturday):
+    Settlers:
+    - Continued and committed cleanup on Lunte. Earlier I saved over lunte.rig.blend with lunte.blend, which broke our "pipeline". Fixed that, and made it compatible with our new "pipeline".
+    - Also went over all existing files where he was posed or animated, and made them all link from lunte.blend instead of various other files that either didn't exist or didn't have up to date shaders.
+    - Finished and committed improvements to Phileas's eyelids, mouth and hair, brought to you by the cloud_bone rework from yesterday.
+
+Apr 27: King's day
+
+Apr 28:
+    Settlers:
+    - Re-made the mesh for the smear ring rig from Hjalti. Now it's a straight line, which lets us slide the mesh along a curve, to give it that sonic the hedgehog legs effect.
+    - Fixed an issue on Lunte that made the teeth shift away.
+    - Add teeth dummies for Gabby. I did not add a tongue dummy because I felt like the 2D representation didn't give really any sort of idea of how the tongue will actually look - it seemed more distracting than helpful.
+
+Apr 29:
+    Settlers:
+    - Some more troubleshooting on Lunte's teeth misalignment. Finally fixed it for reals.
+    - Worked on Phileas based on feedback from Pablo
+        - Bigger spine control
+        - Better eye control shape
+		- Add eye target controls
+        - Make eyelids hidable
+        - Mask out back parts of the eyelid meshes
+		- Made smear meshes
+		- Fix Knees bend a bit inwards by default with IK
+        - Remove teeth bones that are no longer needed, rename the rest so none of them end in .00x.
+    Blender:
+        - Submitted D7571 to fix the final piece of Lunte error spam.
+
+Apr 30:
+    Settlers:
+	- Hook up Face Quality property to stuff on Gabby, like on Lunte.
+    - Some cleanup on the release file
+    Phileas:
+    - More split up smear meshes
+    - Fix smear meshes depending on rig
+    - Added a middle head bone
+    - Added eye lattice controls

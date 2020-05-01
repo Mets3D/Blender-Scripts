@@ -1,24 +1,47 @@
 import bpy
 
 bone_dict = {
-	"DEF-Hair_Default_Ponytail1" : "FK-Hair_Ponytail1",
-	"DEF-Hair_Default_Ponytail2" : "FK-Hair_Ponytail2",
-	"DEF-Hair_Default_Ponytail3" : "FK-Hair_Ponytail3",
-	"DEF-Hair_Default_Ponytail4" : "FK-Hair_Ponytail4",
-	"DEF-Hair_Default_Strand1" : "FK-Hair_Strand1",
-	"DEF-Hair_Default_Strand2" : "FK-Hair_Strand2",
-	"DEF-Scarf1" : "FK-Scarf1",
-	"DEF-Scarf2" : "FK-Scarf2",
-	"DEF-Scarf3" : "FK-Scarf3",
-	"P-STR-Leg.L" : "Root_Leg.L",
-	"P-STR-Leg.R" : "Root_Leg.R",
-	"STR-Forearm1.R" : "STR-Upperarm3.L",
-	"STR-Forearm1.R" : "STR-Upperarm3.L",
-	"STR-IK-Upperarm.L" : "Root_Upperarm.L",
-	"STR-IK-Upperarm.R" : "Root_Upperarm.R",
-	"STR-Shin1.L" : "STR-Thigh3.L",
-	"STR-Shin1.L" : "STR-Thigh3.L",
-	"STR-Spine4" : "STR-Spine5",
+	"Hook_Mouth_00" : "Hook_Mouth.L",
+	"Hook_L_Mouth_00" : "Hook_L_Mouth.L",
+	"Hook_R_Mouth_00" : "Hook_R_Mouth.L",
+	
+	"Hook_Mouth_02" : "Hook_Mouth.R",
+	"Hook_L_Mouth_02" : "Hook_R_Mouth.R",
+	"Hook_R_Mouth_02" : "Hook_L_Mouth.R",
+	
+	"Hook_L_Mouth_01" : "Hook_Top_Mouth.L",
+	"Hook_R_Mouth_01" : "Hook_Top_Mouth.R",
+	
+	"Hook_L_Mouth_03" : "Hook_Bot_Mouth.R",
+	"Hook_R_Mouth_03" : "Hook_Bot_Mouth.L",
+	
+	"Hook_Eye.L_00" : "Hook_Eye_00.L",
+	"Hook_Eye.L_01" : "Hook_Eye_01.L",
+	"Hook_Eye.L_02" : "Hook_Eye_02.L",
+	"Hook_Eye.L_03" : "Hook_Eye_03.L",
+	
+	"Hook_Eye.R_00" : "Hook_Eye_00.R",
+	"Hook_Eye.R_01" : "Hook_Eye_01.R",
+	"Hook_Eye.R_02" : "Hook_Eye_02.R",
+	"Hook_Eye.R_03" : "Hook_Eye_03.R",
+	
+	"Hook_L_Eye.L_00" : "Hook_L_Eye_00.L",
+	"Hook_R_Eye.L_00" : "Hook_R_Eye_00.L",
+	"Hook_L_Eye.L_01" : "Hook_L_Eye_01.L",
+	"Hook_R_Eye.L_01" : "Hook_R_Eye_01.L",
+	"Hook_L_Eye.L_02" : "Hook_L_Eye_02.L",
+	"Hook_R_Eye.L_02" : "Hook_R_Eye_02.L",
+	"Hook_L_Eye.L_03" : "Hook_L_Eye_03.L",
+	"Hook_R_Eye.L_03" : "Hook_R_Eye_03.L",
+	
+	"Hook_L_Eye.R_00" : "Hook_L_Eye_00.R",
+	"Hook_R_Eye.R_00" : "Hook_R_Eye_00.R",
+	"Hook_L_Eye.R_01" : "Hook_L_Eye_01.R",
+	"Hook_R_Eye.R_01" : "Hook_R_Eye_01.R",
+	"Hook_L_Eye.R_02" : "Hook_L_Eye_02.R",
+	"Hook_R_Eye.R_02" : "Hook_R_Eye_02.R",
+	"Hook_L_Eye.R_03" : "Hook_L_Eye_03.R",
+	"Hook_R_Eye.R_03" : "Hook_R_Eye_03.R",
 }
 
 for a in bpy.data.actions:
