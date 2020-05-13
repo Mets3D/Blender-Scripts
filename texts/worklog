@@ -332,3 +332,50 @@ Apr 30:
     - Fix smear meshes depending on rig
     - Added a middle head bone
     - Added eye lattice controls
+
+May 1:
+    Moved back to the office, set up new blender user prefs, git repos and SVN.
+    Settlers:
+        - Some parenting fixes on Gabby
+        Phileas:
+            - Tweaked spine location and weights, in an attempt to reduce the amount of squishing happening on the backpack strap.
+            - Made eye lattice controls horizontal instead of vertical, and made them 4 rows instead of 3, where the middle 2 are owned by the middle bone.
+    		- Additional control for the mid-point of the backpack straps on the sides
+            - Fix a bug with the eyes
+    Cloudrig:
+        - Fixed bug where regular rigs would fail to get parented to cloud_bone rigs.
+        - Fixed a bug where Stretch To constraints would get "-nan m" for their rest length, breaking them.
+        - Fix an issue with spine rigs when there is no head bone, the last FK bone owns the STR- bone before it, which results in some funkyness. This should only be relevant for Phileas, since his head rig is a separate rig element.
+
+May 4:
+    - Set up metarig for Pip 
+    - Investigate Grease Pencil rigging... it's not very good. It's really bad actually, so I made a curve-based replica of the mouth. Not sure about the eyes yet, but will probably have a similar fate.
+    CloudRig:
+        - Fix the same bug on stretch constraints as yesterday, but better
+        - Fix a bug on curve rigs where they would miss some controls when cyclic==False.
+        - IK snapping now uses tail distance (simple maths) instead of rotation difference(complicated maths) to determine which way to put the IK pole. This fixes the snapping issues seen on Gabby and Lunte, but still isn't perfect.
+        - Fix IK pole control having weird rotation (visual issue only)
+
+May 5: Dutch Liberation Day
+
+May 6:
+    - Started implementing bone group and bone layer parameters, so they can be customized on each rig element. Not usable yet, but the UI is there and I think it will work out nicely.
+    - Cleaned up cloudrig.py before Sybren tears it apart on the livestream.
+    - Made short video on Gabby rigging process for the supercut video.
+
+May 7:
+    - Realizing that a lot of people are trying to learn from cloudrig.py, I added and clarified a ton more comments and renamed some variables to make it as easy to learn from as possible.
+    - Disabled IK setup from Phileas's spine because I don't think it's useful for this kind of character - same might go for Gabby and Lunte, but they were already released with IK spine as an option, so I'm a bit more reluctant there.
+    - Posted rig walkthrough video
+    - Made eye curves for Pip, still no weights though.
+    - Massive progress on the Bone Group system on CloudRig. Now each rig element can assign its set of bones to any arbitrary bone group and assign them to any arbitrary set of layers. It can still be improved by adding rig-wide overrides for certain bone sets, and implementing a customizable bone layer UI. But for now, I can finally move face/hair/finger/clothes related bones to the layers they belong, 100% of the time.
+    - Did some tweaks on Phileas that were requested by Pablo and Simon. Also applied the new bone layer tech to his metarig, so all his bones are now nicely organized.
+
+May 8:
+    - Fix some curve rig bugs in CloudRig
+    - Finish rigging Pip, including a new mouth shape, all the weight painting, modifiers and drivers. Still some discussion to be had on how to handle the eyes, but I want to wait until he gets some testing.
+
+May 11:
+    - Lots of troubleshooting on Phileas.
+    - Trying to hunt down why the boolean modifier on Phileas's mouth is behaving erratically. Managed to get it to break a lot less often with Simon's help.
+    - Some changes for Pip requested by Hjalti.

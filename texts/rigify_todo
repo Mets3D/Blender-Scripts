@@ -1,12 +1,29 @@
+Tutorial ideas
+	Advanced Weight Painting course
+		No rigging, just explaining my weight painting workflow in detail, including my addons.
+		Most important aspect would be explaining auto-normalize.
+		Might need to strip out the weight painting toolset from MetsTools as a separate addon for cleanliness.
+		Could also explain some features which I don't use
+	Developing your own Rigify feature set
+		How to set up file structure, how to name classes, etc.
+		Explain generation stages
+
+Rigify patch ideas
+	Fix error in new_bone()
+	Metarigs encoding should store envelope properties and custom properties(idk if latter is possible due to pyapi limitations)
+		Alternatively, try the appending metarigs from resource file idea.
+	Rename ORG bones before joining duplicated metarig into generated rig. Justification is that drivers that were targetting non-ORG bones don't get mis-targeted this way.
+		Rigify already worked around this by messing up such drivers' targets, and then un-messing them up later, but to me that seems unneccessarily convoluted.
+	Use BoolVectorProperty subtype='LAYER' instead of hard-coded layer UI drawing
+	Call register() and unregister() on feature sets before removing them. (there was an issue with this but I don't quite remember)
+		Add this to the documentation.
+	Ask Alexander what's on his TODO list that I could take
+	Add more GeneratorParameters to disable currently hardcoded functionality.
+	As a long term goal, rework the bone group system to be like mine.
+	As an even longer term goal, make it so that I don't have to implement my own Generator class, because the rigify generator should be able to do everything I need it to do.
+
 Bone Group System
-	First off, we ignore how Rigify does it for now.
-
-	Each rig element defines its own set of bone groups that it uses. These can be customized via rig parameters. You can browse an existing bone group on the metarig to use as the group for the rig element. But they start out pre-initialized, and if their bonegroup doesn't exist, they will be created on generation.
-	If they do exist, the colors and active layers can be displayed next to it.
-	Different rig elements could define bone groups with the same name - In this case, they will share a bone group.
-	Each bone group can be assigned to one or more layers.
-
-	Layers have names, and can be assigned to a row. Same as Rigify. But they can NOT be assigned a bone group!
+	Need to expose the BoneGroups as rig parameters - just their name. it would be a prop_search in the metarig's bonegroups.
 
 BBone Face Rig idea:
 	What if there are two layers of BBones? One is Automatic, the other is Tangent.
@@ -20,20 +37,28 @@ BBone Face Rig idea:
 
 Addon idea:
 	Make a better Shift+D (duplicate bone) behaviour, where instead of slamming a .001 at the end of the bone name, it increments whatever number it finds in the bone name, and it does the same on the right side.
+	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
 
 Settlers TODO:
-	Make cloud posts about phileas face and backpack
+	Rig Whale eye
 	Phileas:
 		- Better symmetrical curve support, so mirror posing works.
-		- Hook up eye lattice with 3 controls per eye (top middle bottom)
-		
+	Pip:
 	Lunte:
 		- Add new masking tech to the teeth, rename bones.
 		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
+		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
 CloudRig TODO:
-	Normal rigs don't seem to get parented to cloud_bone Create rigs. (Phileas backpack)
-	Spine fails to generate when IK is turned off? (while working on Phileas, with spine length 4)
+	Improve bone group/layer system:
+		Fix layer ID magic numbers
+		Store the layer UI layout data in the generated rig and use it in cloudrig.py.
+		Generator parameters to override DEF, ORG and all Mechanism bone groups. These would be enabled by default.
+		Root bone group should also be handled by the generator (not only as an override, but always)
+
+		Generator parameter: Active and Protected layers
+		Unified Selection Colors should have a factor, so the unified selection color can be blended with the original selection color... hehe.
+
 	Eye Track
 		A rig that sets up an eye tracking system for two eye bones? Not sure on how it is defined in the metarig - is the bone where the target should be? That location can be based on where the eyes are and what direction they look.
 		How to support arbitrary number of eyeballs with such setup on a character, but certain eyes looking at the same thing?
@@ -46,12 +71,13 @@ CloudRig TODO:
 		Ability to have IK control at the end
 	FK Chain
 		Hinge and Root bone functionalities should be moved here, methinks.
+		Counter-Rotate STR param should disable the deform_segments chain param.
 	IK Fingers
 		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
 		Finger controls should go on a finger layer, and their UI needs to be figured out, so they don't clutter too much.
 	IK/FK Snapping
-		The arm pole control seems to land on the wrong side when snapping to IK. Probably should use the same pole finding logic that we use during generation. Could possibly even share code...!
 		pole vector distance should be relative to the scale of the rig. I wonder how it works right now on very small or large rigs.
+		Even going back to Rain, the IK snapping can have pretty shit results when the FK bones are rotated arbitrarily.
 	Spine
 		IMPORTANT: Should force chain segments to 1.
 		IK/FK snapping? I'm guessing it's non-trivial, otherwise we would've done it. But it should be possible.
@@ -65,41 +91,26 @@ CloudRig TODO:
 		AnklePivot must be specified for footroll to work, but it has the old default.
 		IK pole controls should have their roll re-calculated on some useful axis - This should be done by assigning a roll type to the BoneInfo, then calling Recalculate Roll on the appropriate bones in edit mode after generation.
 		Some smartypants way of ensuring that the IK pole, when IK Pole Follow is enabled, follows the IK control on its roll axis, but not the other axes?
+		Scissor limb rig possible? (limb with an extra bone to help elbow/knee deformation) - Can it work in FK?
 	Curve
+		Seems to sometimes hook the wrong bones to the wrong curve point?? (On pip, eg. after scaling CUR-Eye.L -1 Z around its center in edit mode)
 		Would be nice to have the ability for symmetrical rigs(eg. Gabby's mouth) that not only names the bones symmetrically but also flips the handles on one side, so that X-Mirror posing works.
-	Scissor limb rig possible? (limb with an extra bone to help elbow/knee deformation) - Can it work in FK?
-
+		Lunte face breaks when generating with button instead of operator, no clue why, didn't investigate, don't have time.
 	Bone
+		BUG: for some reason now Tweak bones destroy bone shape (phileas FK fingers)
 		Option to copy all children of the bone as well. This would let us be lazy for a while and attach entire manually rigged components to the generated rig, which would be a nice plan B if the face generation doesn't become a thing.
 		Create Deform option should maybe only show up when the bone's Deform option is disabled... otherwise it's a bit error-prone.
 	
 	Manage bone rotation modes better - Currently we set everything to an arbitrary rotation mode, I think? We should probably copy the rotation mode from the metarig.
-
-	When a driver or constraint targets a bone in the generated rig, and that bone's name is the same as the base bone in the metarig, and the rig is re-generated, the thing targetting it will be changed to the ORG- bone.
-		This is because the rig generation starts by copying the metarig - at this stage, a bone with the base bone's name exists, so it gets picked up by those targets. Then this gets renamed to ORG-, and then a new bone with the base name is created.
-		To avoid this, we should make it a point that no bone named the same as the original bone in the metarig should exist, and when such a bone is created, there should be a warning.
-		For cloud_bone that solution doesn't quite work though, because a tweaking bone must be called the same on the base bone as it is on the generated rig.
-			Maybe after the tweaking is done, the bone with the base name should be renamed to a temporary name, then the tweak bone renamed to the old name, deleted, and the other bone named back to what it was originally.
-
+		Perhaps all this needs to be is the classic custom property+driver to let anyone change the rotation mode on the fly for bones that could require it. (shoulders, wrists, thighs, feets)
+		
 	Remove "Root Bone" generator parameter. There should always be a root bone.
 	Generator parameter: Properties bone - If empty, we create a "Properties" bone (not Properties_IKFK), otherwise we can select a bone from the metarig's bones, and we'll create a bone in its place with its name as the Properties bone - or something like that.
-	Generator parameter: Preserve bone layers - If enabled, we save the layers of every bone in the currently generated rig, before re-generating, and re-apply them.
-		This should be grayed out/non-existent when rigify_target_rig==None.
-	Generator operator: Symmetrize properties. Press to copy all rig elements' settings from the active bone's side to the opposite side.
 	Generator parameter: Show Warnings
 		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
 		This panel would be called CloudRig Log. It would read warnings and errors from the rig data, where it is written to from generation-time.
 
-	Protected Layers should be copied from the metarig, unless no layers are protected on the metarig, in which case all layers should be protected.
-
-	Improve bone group/layer system:
-		Expose bone groupsin the UI as rig parameters.
-		On first generation, if empty, these would get pre-filled with names of the bone groups that were created and used.
-		If not empty, use the bone group that was selected. The bone group first has to exist on the metarig.
-
-		Unified Selection Colors should have a factor, so the unified selection color can be blended with the original selection color... hehe.
-		Store the layer UI layout data in the generated rig and use it in cloudrig.py.
-
+	Add operators in the UI somewhere, somehow.
 
 	Implement a quadruped limb rig, similar to Autumn's hind leg.
 
@@ -115,7 +126,3 @@ Code quality:
 		.bone() function should be .ensure().
 	We could use Rigify's neat constraint and driver adding logic, on top of what we already have. After all, we currently define constraints as just an arbitrary dictionary. Nothing is stopping us from passing that dictionary to the Rigify constraint maker function in rig_bones stage. Same idea with drivers?
 		Instead of using Driver abstraction or (type, data) tuples, try storing drivers and constraints in a way where we can use rigify's driver and constraint applying functions to apply them.
-	Instead of declaring every function to the preparation stage, there should be only one or a few prepare_bones function that calls the other functions and passes the neccessary information between them.
-		(In a perfect world) Functions should only rely on calling `self` when referring to things that were created before prepare_bones stage, such as in initialize or in add_params.
-	More and smaller functions:
-		Functions should be split up into bone creating functions, and the functions for the loop that calls those bone creating functions. There shouldn't be two of these loops in one function. This is to make it easy to customize a rig by subclassing it, if needed.
