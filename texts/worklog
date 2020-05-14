@@ -365,17 +365,40 @@ May 6:
 
 May 7:
     - Realizing that a lot of people are trying to learn from cloudrig.py, I added and clarified a ton more comments and renamed some variables to make it as easy to learn from as possible.
-    - Disabled IK setup from Phileas's spine because I don't think it's useful for this kind of character - same might go for Gabby and Lunte, but they were already released with IK spine as an option, so I'm a bit more reluctant there.
     - Posted rig walkthrough video
     - Made eye curves for Pip, still no weights though.
     - Massive progress on the Bone Group system on CloudRig. Now each rig element can assign its set of bones to any arbitrary bone group and assign them to any arbitrary set of layers. It can still be improved by adding rig-wide overrides for certain bone sets, and implementing a customizable bone layer UI. But for now, I can finally move face/hair/finger/clothes related bones to the layers they belong, 100% of the time.
     - Did some tweaks on Phileas that were requested by Pablo and Simon. Also applied the new bone layer tech to his metarig, so all his bones are now nicely organized.
 
 May 8:
-    - Fix some curve rig bugs in CloudRig
+    - Improve reliability of curve rig generation in CloudRig, and better error reporting for when it fails.
     - Finish rigging Pip, including a new mouth shape, all the weight painting, modifiers and drivers. Still some discussion to be had on how to handle the eyes, but I want to wait until he gets some testing.
 
 May 11:
     - Lots of troubleshooting on Phileas.
     - Trying to hunt down why the boolean modifier on Phileas's mouth is behaving erratically. Managed to get it to break a lot less often with Simon's help.
     - Some changes for Pip requested by Hjalti.
+
+May 12: Took a day off.
+
+May 13:
+    - Fix some bone layer assingment issues on Phileas.
+    CloudRig:
+    - Bone layers no longer use ugly magic numbers.
+    - Started implementing customizable Layers UI.
+
+May 14:
+    - Various small fixes on Pip for Hjalti
+    CloudRig:
+    - Fully implemented customizable rig layer UI!!!
+    - Implement layer assignment override for Deform/Mechanism/Org bone sets.
+    - Pre-made MetaRigs (eg. Cloud_Human) are now appended from a .blend file rather than having to be encoded into a generation code, and then re-generated from that code.
+
+    - Move Widget management code to the Generator code, and improve it such that a Widgets collection is always created if it isn't found, is always hidden, and is named after the rig.
+    - Moved root control layer assignment parameters into the Generator code.
+    - Moved CloudRig generator parameters into a PropertyGroup to avoid cluttering python api
+    - Moved Bone Sets parametergroup from the top to the bottom of parameter UI, to better indicate that the available layer assignments are affected by the preceeding parameters.
+
+    - Active and protected rig layers are now copied from the metarig
+    - Armature display modes are now copied from the metarig
+    - Clean up various hackarounds that are no longer needed

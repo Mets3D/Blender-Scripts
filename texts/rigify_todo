@@ -10,8 +10,8 @@ Tutorial ideas
 
 Rigify patch ideas
 	Fix error in new_bone()
-	Metarigs encoding should store envelope properties and custom properties(idk if latter is possible due to pyapi limitations)
-		Alternatively, try the appending metarigs from resource file idea.
+	Metarigs should be appended from a .blend file.
+	Move rigify properties into a propertygroup
 	Rename ORG bones before joining duplicated metarig into generated rig. Justification is that drivers that were targetting non-ORG bones don't get mis-targeted this way.
 		Rigify already worked around this by messing up such drivers' targets, and then un-messing them up later, but to me that seems unneccessarily convoluted.
 	Use BoolVectorProperty subtype='LAYER' instead of hard-coded layer UI drawing
@@ -21,9 +21,6 @@ Rigify patch ideas
 	Add more GeneratorParameters to disable currently hardcoded functionality.
 	As a long term goal, rework the bone group system to be like mine.
 	As an even longer term goal, make it so that I don't have to implement my own Generator class, because the rigify generator should be able to do everything I need it to do.
-
-Bone Group System
-	Need to expose the BoneGroups as rig parameters - just their name. it would be a prop_search in the metarig's bonegroups.
 
 BBone Face Rig idea:
 	What if there are two layers of BBones? One is Automatic, the other is Tangent.
@@ -40,7 +37,15 @@ Addon idea:
 	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
 
 Settlers TODO:
-	Rig Whale eye
+	TODO to get each character updated to latest CloudRig:
+		- rename widgets collection
+		- protect all layers
+		- name layers
+		- re-enable double root generator parameter
+		- re-browse post-generation script
+		- re-assign bone layers in each rig element
+		- create rigify_layers and organize them appropriately
+
 	Phileas:
 		- Better symmetrical curve support, so mirror posing works.
 	Pip:
@@ -51,12 +56,6 @@ Settlers TODO:
 
 CloudRig TODO:
 	Improve bone group/layer system:
-		Fix layer ID magic numbers
-		Store the layer UI layout data in the generated rig and use it in cloudrig.py.
-		Generator parameters to override DEF, ORG and all Mechanism bone groups. These would be enabled by default.
-		Root bone group should also be handled by the generator (not only as an override, but always)
-
-		Generator parameter: Active and Protected layers
 		Unified Selection Colors should have a factor, so the unified selection color can be blended with the original selection color... hehe.
 
 	Eye Track
@@ -103,8 +102,9 @@ CloudRig TODO:
 	
 	Manage bone rotation modes better - Currently we set everything to an arbitrary rotation mode, I think? We should probably copy the rotation mode from the metarig.
 		Perhaps all this needs to be is the classic custom property+driver to let anyone change the rotation mode on the fly for bones that could require it. (shoulders, wrists, thighs, feets)
-		
+
 	Remove "Root Bone" generator parameter. There should always be a root bone.
+		Why tho?
 	Generator parameter: Properties bone - If empty, we create a "Properties" bone (not Properties_IKFK), otherwise we can select a bone from the metarig's bones, and we'll create a bone in its place with its name as the Properties bone - or something like that.
 	Generator parameter: Show Warnings
 		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
@@ -117,7 +117,7 @@ CloudRig TODO:
 	Face!
 
 	Drivers for bone rotation types?
-	Would be nice if rig samples and metarigs could be loaded from a .blend file instead of code-based generation bs. For metarigs it seems easy. For rig samples, it might be tricky because we have to juggle object modes.
+	Would be nice if rig samples could be loaded from a .blend file instead of code-based generation bs. For metarigs it seems easy. For rig samples, it might be tricky because we have to juggle object modes.
 
 Code quality:
 	head and tail should have setters that force the setting to be a copy of the passed vector, so we can remove a bunch of .copy()'s and make the bone definition more foolproof.
