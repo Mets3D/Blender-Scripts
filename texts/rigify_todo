@@ -37,18 +37,14 @@ Addon idea:
 	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
 
 Settlers TODO:
-	TODO to get each character updated to latest CloudRig:
-		- rename widgets collection
-		- protect all layers
-		- name layers
-		- re-enable double root generator parameter
-		- re-browse post-generation script
-		- re-assign bone layers in each rig element
-		- create rigify_layers and organize them appropriately
+	- Make video on Phileas face setup
+	- Make video on something about Pip. Maybe go in depth on how the metarig was set up?
+
 
 	Phileas:
-		- Better symmetrical curve support, so mirror posing works.
+		- His mouth bones are named with the wrong sides, and was released that way in V1, yikes!
 	Pip:
+		- Pressing Update All brings in some duplicate widgets and in general doesn't work too well.
 	Lunte:
 		- Add new masking tech to the teeth, rename bones.
 		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
@@ -56,6 +52,10 @@ Settlers TODO:
 
 CloudRig TODO:
 	Improve bone group/layer system:
+		- Storing layer data in rigify_layers means the addon has to be enabled for the layer panel to work. Not a big fan. Should store that info somewhere else.
+			And I guess this means as a general rule of thumb, the rig shouldn't rely on any fancy data storage other than regular old custom properties. Kind of a shame, but ohwell.
+			Alternatively, cloudrig.py could create rigify_layers if it doesn't exist?
+			Actually, the data should still be there no? Just instead of being API defined and being accessible with the . operator (armature.rigify_layers) it instead turns into a dict custom property (armature['rigify_layers'])? Not sure. Do check.
 		Unified Selection Colors should have a factor, so the unified selection color can be blended with the original selection color... hehe.
 
 	Eye Track
@@ -78,6 +78,7 @@ CloudRig TODO:
 		pole vector distance should be relative to the scale of the rig. I wonder how it works right now on very small or large rigs.
 		Even going back to Rain, the IK snapping can have pretty shit results when the FK bones are rotated arbitrarily.
 	Spine
+		Maybe should be split up to Spine/Neck/Head rigs. Or well, just remove the neck and head, and those should be separate FK chain rigs. Might make the code a lot simpler, but also might not.
 		IMPORTANT: Should force chain segments to 1.
 		IK/FK snapping? I'm guessing it's non-trivial, otherwise we would've done it. But it should be possible.
 		Transformation constraints on FK-C bones (maybe make this optional)
@@ -92,6 +93,7 @@ CloudRig TODO:
 		Some smartypants way of ensuring that the IK pole, when IK Pole Follow is enabled, follows the IK control on its roll axis, but not the other axes?
 		Scissor limb rig possible? (limb with an extra bone to help elbow/knee deformation) - Can it work in FK?
 	Curve
+		Add "X Symmetry" parameter, when enabled, determine hook bone sides automatically based on X coordinate sign, and flip bones on one side so mirror posing works as expected. An actual symmetrical curve shape is not enforced, but expected.
 		Seems to sometimes hook the wrong bones to the wrong curve point?? (On pip, eg. after scaling CUR-Eye.L -1 Z around its center in edit mode)
 		Would be nice to have the ability for symmetrical rigs(eg. Gabby's mouth) that not only names the bones symmetrically but also flips the handles on one side, so that X-Mirror posing works.
 		Lunte face breaks when generating with button instead of operator, no clue why, didn't investigate, don't have time.
