@@ -9,8 +9,6 @@ Tutorial ideas
 		Explain generation stages
 
 Rigify patch ideas
-	Fix error in new_bone()
-	Metarigs should be appended from a .blend file.
 	Move rigify properties into a propertygroup
 	Rename ORG bones before joining duplicated metarig into generated rig. Justification is that drivers that were targetting non-ORG bones don't get mis-targeted this way.
 		Rigify already worked around this by messing up such drivers' targets, and then un-messing them up later, but to me that seems unneccessarily convoluted.
@@ -18,6 +16,7 @@ Rigify patch ideas
 	Call register() and unregister() on feature sets before removing them. (there was an issue with this but I don't quite remember)
 		Add this to the documentation.
 	Ask Alexander what's on his TODO list that I could take
+		Done, Ivan hit me with T54100, T74483
 	Add more GeneratorParameters to disable currently hardcoded functionality.
 	As a long term goal, rework the bone group system to be like mine.
 	As an even longer term goal, make it so that I don't have to implement my own Generator class, because the rigify generator should be able to do everything I need it to do.
@@ -39,30 +38,28 @@ Addon idea:
 Settlers TODO:
 	- Make video on Phileas face setup
 	- Make video on something about Pip. Maybe go in depth on how the metarig was set up?
-
-
 	Phileas:
 		- His mouth bones are named with the wrong sides, and was released that way in V1, yikes!
-	Pip:
-		- Pressing Update All brings in some duplicate widgets and in general doesn't work too well.
 	Lunte:
 		- Add new masking tech to the teeth, rename bones.
 		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
 CloudRig TODO:
-	Improve bone group/layer system:
-		- Storing layer data in rigify_layers means the addon has to be enabled for the layer panel to work. Not a big fan. Should store that info somewhere else.
-			And I guess this means as a general rule of thumb, the rig shouldn't rely on any fancy data storage other than regular old custom properties. Kind of a shame, but ohwell.
-			Alternatively, cloudrig.py could create rigify_layers if it doesn't exist?
-			Actually, the data should still be there no? Just instead of being API defined and being accessible with the . operator (armature.rigify_layers) it instead turns into a dict custom property (armature['rigify_layers'])? Not sure. Do check.
-		Unified Selection Colors should have a factor, so the unified selection color can be blended with the original selection color... hehe.
+	Documentation:
+		- Should do a wiki on github maybe?
+		- A page for each rig type
+		- A page explaining the bone set system and custom rig layer UI
+		- A page explaining the outfit and character property system and UI.
+
+	Ivan Capiello says they have some WIP face rigify rigs at MAD, and we could discuss if I'm interested in contributing code to it. https://blender.chat/channel/blender-riggers?msg=p2Eahj4aXntp8rdRN
 
 	Eye Track
-		A rig that sets up an eye tracking system for two eye bones? Not sure on how it is defined in the metarig - is the bone where the target should be? That location can be based on where the eyes are and what direction they look.
-		How to support arbitrary number of eyeballs with such setup on a character, but certain eyes looking at the same thing?
-		I guess the riglet would be on the eye bones, and there is an "Eye Group" parameter which defines the name of the master target control, and which target controls will get parented to it.
-		Procedural bone shape generation might be nice for the target master...
+		A rig that sets up an eye target thingie.
+			The bone that holds the rig is the eye bone itself. The target is created some distance in front of it (along local Y axis)
+			params:
+				- Target group - all Eye rigs with the same Target Group will have a shared parent control, whose name will be based on this parameter, and location and bone shape based on the average location of the look targets in the group.
+				- Target distance - how far in front the eye target should be created. (No rig scale applied! Unless it's made clear that this is given as some sort of ratio number.)
 	Chain
 		Recursive generation of STR layers as per Pablo's request, so we don't just have main and sub STR controls, but any number of nested layers(although we would probably never use more than 3, but then again, I thought we would never use more than 2, so)
 		Spline IK like controls(the other two types) for bendy bones' handles.
@@ -87,9 +84,6 @@ CloudRig TODO:
 	IK limbs
 		feet control shouldn't be forced onto the floor, maybe based on an option, or use anklepivot bone, or whatever.
 		ROLL-Foot.L shouldn't have its tail be offset in a flat forward direction. Instead, make it perpendicular to the knee, pointing towards the toe. (cross product of knee and toe bones' vectors?)
-		AnklePivot should be renamed to HeelPivot in the script and the rigs...
-		AnklePivot must be specified for footroll to work, but it has the old default.
-		IK pole controls should have their roll re-calculated on some useful axis - This should be done by assigning a roll type to the BoneInfo, then calling Recalculate Roll on the appropriate bones in edit mode after generation.
 		Some smartypants way of ensuring that the IK pole, when IK Pole Follow is enabled, follows the IK control on its roll axis, but not the other axes?
 		Scissor limb rig possible? (limb with an extra bone to help elbow/knee deformation) - Can it work in FK?
 	Curve

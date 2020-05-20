@@ -417,3 +417,11 @@ May 18:
     - Made it easier to parent things to bendy bones(which should be done with Armature constraints, which need to be at the top of the constraint stack)
     - Fix Layers UI relying on Rigify addon to be enabled
     - Minor fixes on Pip's hair for Hjaltin
+    - Crossed off some TODO's in cloud_limbs.
+    - Experimented with a bone group selection color feature where instead of toggling between having all bone groups use the same selected/active color, we have a blend factor, but it turned out pretty useless/bad so I just nuked the whole thing.
+    - Finally figured out how to prevent rig_ui.py from being created... it was... stupidly simple.
+    - Planned out some documentation, a potential eye tracking rig, and the outline of some videos I want to make for the cloud.
+
+May 19:
+    - Some changes and fixes on Pip for Simon
+    - Made most of a video about how I set up Pip's metarig. Editing with Blender is so painful, I've vowed to never do it again.
