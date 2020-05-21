@@ -51,7 +51,10 @@ CloudRig TODO:
 		- A page for each rig type
 		- A page explaining the bone set system and custom rig layer UI
 		- A page explaining the outfit and character property system and UI.
-
+	
+	IMPORTANT:
+		When double root is disabled, IK controls aren't parented to anything(parent switch helper isn't parented to anything)
+	
 	Ivan Capiello says they have some WIP face rigify rigs at MAD, and we could discuss if I'm interested in contributing code to it. https://blender.chat/channel/blender-riggers?msg=p2Eahj4aXntp8rdRN
 
 	Eye Track
