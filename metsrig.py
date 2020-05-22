@@ -843,16 +843,18 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 						o.hide_viewport = not self.physics_toggle
 						o.hide_render = not self.physics_toggle
 
+	def update_physics_cache_start(self, context):
+		if(	self.physics_cache_start > self.physics_cache_end):
+			self.physics_cache_end = self.physics_cache_start + 1
+		self.update_physics_cache_start_end(context)
+
+	def update_physics_cache_end(self, context):
+		if(	self.physics_cache_end < self.physics_cache_start):
+			self.physics_cache_start = self.physics_cache_end - 1
+		self.update_physics_cache_start_end(context)
+
 	def update_physics_cache_start_end(self, context):
 		# Setting Start/End frame (with nudge)
-		if(self.physics_cache_start != m.point_cache.frame_start and 
-			self.physics_cache_start > self.physics_cache_end):
-			self.physics_cache_end = self.physics_cache_start + 1
-			
-		elif(self.physics_cache_end != m.point_cache.frame_end and 
-			self.physics_cache_end < self.physics_cache_start):
-			self.physics_cache_start = self.physics_cache_end - 1
-		
 		for o in bpy.data.objects:
 			for m in o.modifiers:
 				if m.type != 'CLOTH': continue
@@ -868,13 +870,13 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		name='Physics Frame Start',
 		default=1,
 		options={'LIBRARY_EDITABLE'},
-		update=update_physics_cache_start_end,
+		update=update_physics_cache_start,
 		min=0, max=1048573)
 	physics_cache_end: IntProperty(
 		name='Physics Frame End',
 		default=1,
 		options={'LIBRARY_EDITABLE'},
-		update=update_physics_cache_start_end,
+		update=update_physics_cache_end,
 		min=1, max=1048574)
 
 	def update_shrinkwrap_targets(self, context):
