@@ -1,5 +1,5 @@
-"Version: 2.7"
-"Date: 29/09/19 (Last updated for Sombra)"
+"Version: 2.8"
+"Date: 22-05-2020 (Last updated for Sombra)"
 
 import bpy
 from bpy.props import *
@@ -145,8 +145,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 			# Finally, we compare the current and previous properties.
 			# If they do not match, that means there was user input, and it's time to update stuff.
 			if( current_props != prev_props ):
-				# Materials need to update before the depsgraph update, otherwise they will not update even in rendered view.
-				rig.data.metsrig_properties.update_node_values(bpy.context)
 				rig.data['prev_props'] = [current_props[0], current_props[1], current_props[2]]
 				# However, updating meshes before depsgraph update will cause an infinite loop, so we use a flag to let post_depsgraph_update know that it should update meshes.
 				rig.data['update'] = 1
@@ -156,6 +154,7 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		"""Runs after every depsgraph update. If any user input to the rig properties was detected by pre_depsgraph_update(), this will call update_meshes(). """
 		for rig in cls.get_rigs():
 			if(rig.data['update'] == 1):
+				rig.data.metsrig_properties.update_node_values(bpy.context)
 				rig.data.metsrig_properties.update_meshes(bpy.context)
 				rig.data['update'] = 0
 	
@@ -273,7 +272,6 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		if("M:" not in m.name):
 			return None
 		
-		# Gathering data
 		rig = self.get_rig()
 		active_outfit = self.metsrig_outfits
 		outfit_bone = rig.pose.bones.get('Properties_Outfit_' + active_outfit)
@@ -805,69 +803,24 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 		options={'LIBRARY_EDITABLE'},
 		update=change_hair)
 	
-	def update_physics(self, context):
+	def update_physics_toggle(self, context):
 		""" Handle input to the Physics settings found under MetsRig Extras. """
-		
-		# Saving and resetting speed multiplier
-		speed_mult = 0
-		if(self.physics_speed_multiplier != ""):	# This is important to avoid inifnite looping the callback function.
-			try:
-				speed_mult = float(eval(self.physics_speed_multiplier))
-			except ValueError:
-				pass
-			self.physics_speed_multiplier = ""
+		# TODO: break this function up to smaller ones.
 	
 		proxy_rig = self.get_rig()
 		rig = proxy_rig.proxy
 		if not rig:
 			rig = proxy_rig
-
-		colors = {
-			'CLOTH' : (0, 1, 0, 1),
-			'COLLISION' : (1, 0, 0, 1),
-		}
 		
 		for o in bpy.data.objects:
 			if(o.parent != rig): continue
 			
 			# Toggling all physics modifiers
 			for m in o.modifiers:
-				if(	m.type=='CLOTH' or 
-					m.type=='COLLISION' or ( 
-					"phys" in m.name.lower() and ( 
-							( m.type=='MESH_DEFORM' ) or 
-							( m.type=='SURFACE_DEFORM') 
-						)
-					)
-				):
-					# Change object color and save original
-					if(self.physics_toggle and m.type in colors ):
-						o['org_color'] = o.color
-						o.color = colors[m.type]
-					elif('org_color' in o):
-						o.color = o['org_color'].to_list()
-						del(o['org_color'])
-					
+				if m.type in ['CLOTH', 'COLLISION'] or \
+				(m.type in ['MESH_DEFORM', 'SURFACE_DEFORM'] and "phys" in m.name.lower()):
 					m.show_viewport = self.physics_toggle
 					m.show_render = self.physics_toggle
-					
-					if(m.type!='CLOTH'): continue
-				
-					# Applying Speed multiplier
-					if(speed_mult != 0):
-						m.settings.time_scale = m.settings.time_scale * speed_mult
-						
-					# Setting Start/End frame (with nudge)
-					if(self.physics_cache_start != m.point_cache.frame_start and 
-						self.physics_cache_start > self.physics_cache_end):
-						self.physics_cache_end = self.physics_cache_start + 1
-						
-					elif(self.physics_cache_end != m.point_cache.frame_end and 
-						self.physics_cache_end < self.physics_cache_start):
-						self.physics_cache_start = self.physics_cache_end - 1
-					
-					m.point_cache.frame_start = self.physics_cache_start
-					m.point_cache.frame_end = self.physics_cache_end
 		
 		# Toggling Physics bone constraints
 		for b in proxy_rig.pose.bones:
@@ -875,45 +828,53 @@ class MetsRig_Properties(bpy.types.PropertyGroup):
 				if("phys" in c.name.lower()):
 					c.mute = not self.physics_toggle
 
-		# TODO: Rework this. Rig should store information about what the physics toggle should do. I guess just a reference to the physics collection would be nice.
-		# But even then, since in the case of linking hiding the collection doesn't work, every object's visibility would have to be re-evaluated.
-		# And for that, the functionality of enable_all_meshes has to go into determine_object_visibility
-		# Toggling Physics collection(s)...
-		for collection in bpy.data.collections:
-			if(rig in collection.objects[:]):
-				for rig_collection in collection.children:
-					if( 'phys' in rig_collection.name.lower() ):
-						rig_collection.hide_viewport = not self.physics_toggle
-						rig_collection.hide_render = not self.physics_toggle
+		# Toggling Physics collections
+		if 'physics_collections' in rig.data:
+			for coll_name in rig.data['physics_collections']:
+				coll = bpy.data.collections.get(coll_name)
+				if coll:
+					for o in coll.objects:
+						# Update time scale - Each cloth object saved its default, 30fps time_scale in a custom property.
+						if 'time_scale' in o:
+							for m in o.modifiers:
+								if m.type=='CLOTH':
+									m.settings.time_scale = 30/context.scene.render.fps * o['time_scale']
 						# Hiding collection doesn't seem to work in linked rig...
-						for o in rig_collection.objects:
-							o.hide_viewport = not self.physics_toggle
-							o.hide_render = not self.physics_toggle
-						# break
-				break
+						o.hide_viewport = not self.physics_toggle
+						o.hide_render = not self.physics_toggle
+
+	def update_physics_cache_start_end(self, context):
+		# Setting Start/End frame (with nudge)
+		if(self.physics_cache_start != m.point_cache.frame_start and 
+			self.physics_cache_start > self.physics_cache_end):
+			self.physics_cache_end = self.physics_cache_start + 1
+			
+		elif(self.physics_cache_end != m.point_cache.frame_end and 
+			self.physics_cache_end < self.physics_cache_start):
+			self.physics_cache_start = self.physics_cache_end - 1
+		
+		for o in bpy.data.objects:
+			for m in o.modifiers:
+				if m.type != 'CLOTH': continue
+				m.point_cache.frame_start = self.physics_cache_start
+				m.point_cache.frame_end = self.physics_cache_end
 
 	physics_toggle: BoolProperty(
 		name='Physics',
-		description='Toggle Physics systems (Enables Physics collection and Cloth, Mesh Deform, Surface Deform modifiers, etc)',
+		description='Toggle Physics systems (Enables Physics collection and Cloth, Mesh Deform, Surface Deform modifiers, certain constraints, etc)',
 		options={'LIBRARY_EDITABLE'},
-		update=update_physics)
-	physics_speed_multiplier: StringProperty(
-		name='Apply multiplier to physics speed',
-		description = 'Apply entered multiplier to physics speed. The default physics setups are made for 60FPS. If you are animating at 30FPS, enter 2 here once. If you entered 2, you have to enter 0.5 to get back to the original physics speed',
-		default="",
-		options={'LIBRARY_EDITABLE'},
-		update=update_physics)
+		update=update_physics_toggle)
 	physics_cache_start: IntProperty(
 		name='Physics Frame Start',
 		default=1,
 		options={'LIBRARY_EDITABLE'},
-		update=update_physics,
+		update=update_physics_cache_start_end,
 		min=0, max=1048573)
 	physics_cache_end: IntProperty(
 		name='Physics Frame End',
 		default=1,
 		options={'LIBRARY_EDITABLE'},
-		update=update_physics,
+		update=update_physics_cache_start_end,
 		min=1, max=1048574)
 
 	def update_shrinkwrap_targets(self, context):
@@ -1345,10 +1306,6 @@ class MetsRigUI_Extras_Physics(MetsRigUI):
 		cache_row.label(text="Cache: ")
 		cache_row.prop(mets_props, 'physics_cache_start', text="Start")
 		cache_row.prop(mets_props, 'physics_cache_end', text="End")
-		
-		mult_row = layout.row()
-		mult_row.label(text="Apply Speed Multiplier:")
-		mult_row.prop(mets_props, 'physics_speed_multiplier', text="")
 		
 		layout.operator("ptcache.bake_all", text="Bake All Dynamics").bake = True
 		layout.operator("ptcache.free_bake_all", text="Delete All Bakes")
