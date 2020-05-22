@@ -9,16 +9,27 @@ Tutorial ideas
 		Explain generation stages
 
 Rigify patch ideas
+	T74483
+	Clean up badly named parameters (that show up in the ui with underscores and all lowercase)
+	Add user-facing operators to the UI, somewhere.
+	Use BoolVectorProperty subtype='LAYER' instead of hard-coded layer UI drawing
 	Move rigify properties into a propertygroup
+	From CloudRig: 
+		Add all my operators.
+		Add scale management so it doesn't generate like shit at small or large scales.
+		Give BBone scale the same significance as in CloudRig.
+		Rework widget management - only use procedural generation when it makes sense, otherwise load from file. Stop making a unique object for every bone, re-use existing instead.
+	
+	Add Tangent controls(with bbone scale drivers) for BBones(maybe as parameter) for all chain rigs.
 	Rename ORG bones before joining duplicated metarig into generated rig. Justification is that drivers that were targetting non-ORG bones don't get mis-targeted this way.
 		Rigify already worked around this by messing up such drivers' targets, and then un-messing them up later, but to me that seems unneccessarily convoluted.
-	Use BoolVectorProperty subtype='LAYER' instead of hard-coded layer UI drawing
 	Call register() and unregister() on feature sets before removing them. (there was an issue with this but I don't quite remember)
 		Add this to the documentation.
-	Ask Alexander what's on his TODO list that I could take
-		Done, Ivan hit me with T54100, T74483
 	Add more GeneratorParameters to disable currently hardcoded functionality.
-	As a long term goal, rework the bone group system to be like mine.
+		Add warning to Force Widgets Update that it is slow as shit.
+	
+	
+	Rework the bone group system to be like mine.
 	As an even longer term goal, make it so that I don't have to implement my own Generator class, because the rigify generator should be able to do everything I need it to do.
 
 BBone Face Rig idea:
@@ -36,8 +47,9 @@ Addon idea:
 	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
 
 Settlers TODO:
-	- Make video on Phileas face setup
-	- Make video on something about Pip. Maybe go in depth on how the metarig was set up?
+	Pip:
+		- Add three color customproperties for the seed, root, leaf colors. (Maybe a fourth for the face?)
+			Waiting for Simon to give me default values.
 	Phileas:
 		- His mouth bones are named with the wrong sides, and was released that way in V1, yikes!
 	Lunte:
@@ -46,11 +58,12 @@ Settlers TODO:
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
 CloudRig TODO:
+	Maybe BoneSets bone group name parameter should be a PointerProperty at a bpy.types.BoneGroup? Not sure if possible or viable or smart, but would make it a lot easier to rename bone groups.
 	Documentation:
-		- Should do a wiki on github maybe?
-		- A page for each rig type
-		- A page explaining the bone set system and custom rig layer UI
-		- A page explaining the outfit and character property system and UI.
+		- A page for each rig type? (probably in its own custom sidebar)
+		- A page for generator properties?
+		- Put something on the home page? Hell it could be just a duplicate of the readme, or a re-listing of what's already in the sidebar, idk.
+		- Update readme with links to the wiki and more up-to-date screenshots.
 
 	Ivan Capiello says they have some WIP face rigify rigs at MAD, and we could discuss if I'm interested in contributing code to it. https://blender.chat/channel/blender-riggers?msg=p2Eahj4aXntp8rdRN
 

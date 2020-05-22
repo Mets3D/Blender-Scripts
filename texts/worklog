@@ -425,3 +425,18 @@ May 18:
 May 19:
     - Some changes and fixes on Pip for Simon
     - Made most of a video about how I set up Pip's metarig. Editing with Blender is so painful, I've vowed to never do it again.
+
+May 20:
+    - Fix a double parenting issue on Gabby
+    - Submitted a fix for Rigify (D7801)
+    CloudRig:
+    - Added support for vector customproperties being displayed in the rig UI.
+    - Started a Wiki on the github page.
+    - Wrote in-depth documentation on the bone organization system https://github.com/Mets3D/CloudRig/wiki/Organizing-Bones
+    - Wrote in-depth documentation on the custom property system https://github.com/Mets3D/CloudRig/wiki/Custom-Properties
+
+May 21: Ascension Day (holiday)
+
+May 22:
+    - Finish Pip metarig video
+    
