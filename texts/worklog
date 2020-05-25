@@ -439,4 +439,12 @@ May 21: Ascension Day (holiday)
 
 May 22:
     - Finish Pip metarig video
-    
+    - Implement prop_hierarchy so custom properties can be hierarchical. Need to write documentation.
+
+May 25:
+    - Posted Pip metarig video https://cloud.blender.org/p/settlers/5ecb83e1d2d0a4657a7637df
+    - Implement Create Root Bone generator parameter, so rigs can be generated without a root bone.
+    - Fix some Armature constraints not working when they should...
+    - Spent some time learning about GitLab and migrating CloudRig to it. Realized I have some unpushed changes on my home PC, so I'll get those merged first and then start committing on GitLab. Will have to shuffle the ReadMe around a bit.
+    - Wrote in-depth documentation on each rig type 
+    - Was trying to get said documentation to be accessible from within Blender. Failed, and ended up working on a patch for that. (D7837)

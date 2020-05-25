@@ -11,6 +11,7 @@ Tutorial ideas
 Rigify patch ideas
 	T74483
 	Clean up badly named parameters (that show up in the ui with underscores and all lowercase)
+	Link things to the blender manual
 	Add user-facing operators to the UI, somewhere.
 	Use BoolVectorProperty subtype='LAYER' instead of hard-coded layer UI drawing
 	Move rigify properties into a propertygroup
@@ -58,14 +59,14 @@ Settlers TODO:
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
 CloudRig TODO:
+	Sync my repos from home PC, then check out gitlab repos and copy-paste everything there. From then on, we'll be working mainly on gitlab, but still push to github on occasion, I guess.
 	Maybe BoneSets bone group name parameter should be a PointerProperty at a bpy.types.BoneGroup? Not sure if possible or viable or smart, but would make it a lot easier to rename bone groups.
 	Documentation:
-		- A page for each rig type? (probably in its own custom sidebar)
 		- A page for generator properties?
 		- Put something on the home page? Hell it could be just a duplicate of the readme, or a re-listing of what's already in the sidebar, idk.
 		- Update readme with links to the wiki and more up-to-date screenshots.
 
-	Ivan Capiello says they have some WIP face rigify rigs at MAD, and we could discuss if I'm interested in contributing code to it. https://blender.chat/channel/blender-riggers?msg=p2Eahj4aXntp8rdRN
+	Ivan Cappiello says they have some WIP face rigify rigs at MAD, and we could discuss if I'm interested in contributing code to it. https://blender.chat/channel/blender-riggers?msg=p2Eahj4aXntp8rdRN
 
 	Eye Track
 		A rig that sets up an eye target thingie.
@@ -102,10 +103,8 @@ CloudRig TODO:
 	Curve
 		Add "X Symmetry" parameter, when enabled, determine hook bone sides automatically based on X coordinate sign, and flip bones on one side so mirror posing works as expected. An actual symmetrical curve shape is not enforced, but expected.
 		Seems to sometimes hook the wrong bones to the wrong curve point?? (On pip, eg. after scaling CUR-Eye.L -1 Z around its center in edit mode)
-		Would be nice to have the ability for symmetrical rigs(eg. Gabby's mouth) that not only names the bones symmetrically but also flips the handles on one side, so that X-Mirror posing works.
 		Lunte face breaks when generating with button instead of operator, no clue why, didn't investigate, don't have time.
 	Bone
-		BUG: for some reason now Tweak bones destroy bone shape (phileas FK fingers)
 		Option to copy all children of the bone as well. This would let us be lazy for a while and attach entire manually rigged components to the generated rig, which would be a nice plan B if the face generation doesn't become a thing.
 		Create Deform option should maybe only show up when the bone's Deform option is disabled... otherwise it's a bit error-prone.
 	
@@ -118,6 +117,10 @@ CloudRig TODO:
 	Generator parameter: Show Warnings
 		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
 		This panel would be called CloudRig Log. It would read warnings and errors from the rig data, where it is written to from generation-time.
+	MetsRig: Bring in features from MetsRig, where reasonable.
+		Bring back BoolProperties?
+		Property hierarchy? Could it be done better though?
+
 
 	Add operators in the UI somewhere, somehow.
 
@@ -129,7 +132,6 @@ CloudRig TODO:
 	Would be nice if rig samples could be loaded from a .blend file instead of code-based generation bs. For metarigs it seems easy. For rig samples, it might be tricky because we have to juggle object modes.
 
 Code quality:
-	head and tail should have setters that force the setting to be a copy of the passed vector, so we can remove a bunch of .copy()'s and make the bone definition more foolproof.
 	Rename things like "create", "setup" and "make" according to some logic... so far it was decided on a whim.
 	BoneInfoContainer should be an iterable so we can do self.bone_infos instead of self.bone_infos.bones.
 		.bone() function should be .ensure().
