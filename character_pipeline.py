@@ -150,18 +150,28 @@ def cleanup():
     for col in bpy.data.collections:
         if col.name.startswith('rig_'):
             col.hide_viewport = True
-    
+
+    drivers_to_relink = []
+
     for grp in bpy.data.node_groups:
         if grp.name.startswith('DR-'):
             name = grp.name[3:]
+            if not grp.animation_data: continue
             for d in grp.animation_data.drivers:
-                driver = d.driver
-                if driver.variables[0].targets[0].id_type == 'OBJECT':
-                    driver.variables[0].targets[0].id = bpy.data.objects[name]
-                    driver.expression += " "
-                    driver.expression = driver.expression[:-1]
-    return
+                drivers_to_relink.append(d.driver)
+    
+    for m in bpy.data.materials:
+        if not m.animation_data: continue
+        for d in m.animation_data.drivers:
+            drivers_to_relink.append(d.driver)
 
+    # If any variable targets have no target object, set the rig as the target object.
+    for d in drivers_to_relink:
+        for v in d.variables:
+            for t in v.targets:
+                if t.id_type=='OBJECT' and t.id==None:
+                    t.id = bpy.data.objects[name]
+        d.type = d.type
 
 class CharacterUpdateSettings(bpy.types.PropertyGroup):
     imp_mat : bpy.props.BoolProperty(
