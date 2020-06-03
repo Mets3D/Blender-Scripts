@@ -10,16 +10,27 @@ Tutorial ideas
 
 Rigify patch ideas
 	T74483
+	clean up imports, cause there are unused ones, eg. generate.py imports copy_attributes, never uses it.
+	
+	driver_add() should not be allowed to halt generation with a useless error message, such as when the data path is invalid. It should just throw a big ol' warning and skip that driver.
+	entire mechanism.py contains no reference to id_type. This means Single Property drivers can only ever be referencing Object datablocks. This is terrible.
+	Add support for make_constraints for Armature constraints and the targets{} dict.
 	Clean up badly named parameters (that show up in the ui with underscores and all lowercase)
 	Link things to the blender manual
 	Add user-facing operators to the UI, somewhere.
 	Use BoolVectorProperty subtype='LAYER' instead of hard-coded layer UI drawing
 	Move rigify properties into a propertygroup
 	From CloudRig: 
+		make make_property be more like cloud_utils.make_custom_property
+			add subtype support to make_property().
+		add copy_property from cloud_utils to rigify.
+		add copy_driver() from cloud_utils to mechanism.py, and use it from the legacy code that copies drivers.
+
 		Add all my operators.
 		Add scale management so it doesn't generate like shit at small or large scales.
 		Give BBone scale the same significance as in CloudRig.
 		Rework widget management - only use procedural generation when it makes sense, otherwise load from file. Stop making a unique object for every bone, re-use existing instead.
+	
 	
 	Add Tangent controls(with bbone scale drivers) for BBones(maybe as parameter) for all chain rigs.
 	Rename ORG bones before joining duplicated metarig into generated rig. Justification is that drivers that were targetting non-ORG bones don't get mis-targeted this way.
@@ -48,9 +59,6 @@ Addon idea:
 	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
 
 Settlers TODO:
-	Pip:
-		- Add three color customproperties for the seed, root, leaf colors. (Maybe a fourth for the face?)
-			Waiting for Simon to give me default values.
 	Phileas:
 		- His mouth bones are named with the wrong sides, and was released that way in V1, yikes!
 	Lunte:
@@ -59,10 +67,15 @@ Settlers TODO:
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
 CloudRig TODO:
-	Sync my repos from home PC, then check out gitlab repos and copy-paste everything there. From then on, we'll be working mainly on gitlab, but still push to github on occasion, I guess.
-	Maybe BoneSets bone group name parameter should be a PointerProperty at a bpy.types.BoneGroup? Not sure if possible or viable or smart, but would make it a lot easier to rename bone groups.
+	Make outline of some video I could make, by Tuesday.
+		- Secrets of Weight Painting.
+		- Developing your own Rigify Feature Set.
+		- Re-make Pip video slightly longer, going into a bit more detail and explanations.
+
+	Bug: IK-CTR-Chest flies away when moving the chest master far, needs a DSP- bone?
+	
 	Documentation:
-		- A page for generator properties?
+		Add gifs to CloudRig Types page (do it at home with ShareX)
 		- Put something on the home page? Hell it could be just a duplicate of the readme, or a re-listing of what's already in the sidebar, idk.
 		- Update readme with links to the wiki and more up-to-date screenshots.
 
@@ -79,23 +92,26 @@ CloudRig TODO:
 		Spline IK like controls(the other two types) for bendy bones' handles.
 	IK Chain
 		Ability to have IK control at the end
+			Should deprecate ik chain length param first, which might be a day's worth of work.
 	FK Chain
-		Hinge and Root bone functionalities should be moved here, methinks.
 		Counter-Rotate STR param should disable the deform_segments chain param.
 	IK Fingers
 		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
+		Param for useless curl controls
 		Finger controls should go on a finger layer, and their UI needs to be figured out, so they don't clutter too much.
 	IK/FK Snapping
 		pole vector distance should be relative to the scale of the rig. I wonder how it works right now on very small or large rigs.
 		Even going back to Rain, the IK snapping can have pretty shit results when the FK bones are rotated arbitrarily.
 	Spine
 		Maybe should be split up to Spine/Neck/Head rigs. Or well, just remove the neck and head, and those should be separate FK chain rigs. Might make the code a lot simpler, but also might not.
+		IK-CTR-Spine should have a copy rotation constraint to MSTR-Hips and possibly also MSTR-Chest. Ofc, implement this in a smart way, that works with arbitrary spine length. (Similar deal to how STR bones stay inbetween STR main bones, but in this case it's rotation instead of location)
 		IMPORTANT: Should force chain segments to 1.
 		IK/FK snapping? I'm guessing it's non-trivial, otherwise we would've done it. But it should be possible.
 		Transformation constraints on FK-C bones (maybe make this optional)
 			Their values would probably have to be dependent on the length of the bone. Ie, a long bone should slide more when it's rotated, compared to a short bone.
 			Test if these can be overwritten by a cloud_bone rig.
 	IK limbs
+		Deprecate IK chain length parameter. Is a bit tricky cause it's used by foot rigs to put the IK control in the middle of the chain, but that should be handled differently. IK chain length should be implied from the length of the connected ORG chain.
 		feet control shouldn't be forced onto the floor, maybe based on an option, or use anklepivot bone, or whatever.
 		ROLL-Foot.L shouldn't have its tail be offset in a flat forward direction. Instead, make it perpendicular to the knee, pointing towards the toe. (cross product of knee and toe bones' vectors?)
 		Some smartypants way of ensuring that the IK pole, when IK Pole Follow is enabled, follows the IK control on its roll axis, but not the other axes?
@@ -104,6 +120,9 @@ CloudRig TODO:
 		Add "X Symmetry" parameter, when enabled, determine hook bone sides automatically based on X coordinate sign, and flip bones on one side so mirror posing works as expected. An actual symmetrical curve shape is not enforced, but expected.
 		Seems to sometimes hook the wrong bones to the wrong curve point?? (On pip, eg. after scaling CUR-Eye.L -1 Z around its center in edit mode)
 		Lunte face breaks when generating with button instead of operator, no clue why, didn't investigate, don't have time.
+	Spline IK
+		Curve option shows warning for missing curve, even though this guy doesn't need a curve to be selected... In fact, that parameter should probably be disabled. (not hidden)
+		Or maybe this curve param should be separate from the other one. Then we could have separate tooltips, which would be nice.
 	Bone
 		Option to copy all children of the bone as well. This would let us be lazy for a while and attach entire manually rigged components to the generated rig, which would be a nice plan B if the face generation doesn't become a thing.
 		Create Deform option should maybe only show up when the bone's Deform option is disabled... otherwise it's a bit error-prone.
@@ -131,9 +150,4 @@ CloudRig TODO:
 	Drivers for bone rotation types?
 	Would be nice if rig samples could be loaded from a .blend file instead of code-based generation bs. For metarigs it seems easy. For rig samples, it might be tricky because we have to juggle object modes.
 
-Code quality:
-	Rename things like "create", "setup" and "make" according to some logic... so far it was decided on a whim.
-	BoneInfoContainer should be an iterable so we can do self.bone_infos instead of self.bone_infos.bones.
-		.bone() function should be .ensure().
-	We could use Rigify's neat constraint and driver adding logic, on top of what we already have. After all, we currently define constraints as just an arbitrary dictionary. Nothing is stopping us from passing that dictionary to the Rigify constraint maker function in rig_bones stage. Same idea with drivers?
-		Instead of using Driver abstraction or (type, data) tuples, try storing drivers and constraints in a way where we can use rigify's driver and constraint applying functions to apply them.
+	Picker UI? based on https://github.com/jayanam/bl_ui_widgets. Would be quite a big endeavour, and I don't hear a lot of people asking for it.

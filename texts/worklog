@@ -334,117 +334,166 @@ April
         - Added a middle head bone
         - Added eye lattice controls
 
-May 1:
-    Moved back to the office, set up new blender user prefs, git repos and SVN.
-    Settlers:
-        - Some parenting fixes on Gabby
-        Phileas:
-            - Tweaked spine location and weights, in an attempt to reduce the amount of squishing happening on the backpack strap.
-            - Made eye lattice controls horizontal instead of vertical, and made them 4 rows instead of 3, where the middle 2 are owned by the middle bone.
-    		- Additional control for the mid-point of the backpack straps on the sides
-            - Fix a bug with the eyes
-    Cloudrig:
-        - Fixed bug where regular rigs would fail to get parented to cloud_bone rigs.
-        - Fixed a bug where Stretch To constraints would get "-nan m" for their rest length, breaking them.
-        - Fix an issue with spine rigs when there is no head bone, the last FK bone owns the STR- bone before it, which results in some funkyness. This should only be relevant for Phileas, since his head rig is a separate rig element.
+May
 
-May 4:
-    - Set up metarig for Pip 
-    - Investigate Grease Pencil rigging... it's not very good. It's really bad actually, so I made a curve-based replica of the mouth. Not sure about the eyes yet, but will probably have a similar fate.
-    CloudRig:
-        - Fix the same bug on stretch constraints as yesterday, but better
-        - Fix a bug on curve rigs where they would miss some controls when cyclic==False.
-        - IK snapping now uses tail distance (simple maths) instead of rotation difference(complicated maths) to determine which way to put the IK pole. This fixes the snapping issues seen on Gabby and Lunte, but still isn't perfect.
-        - Fix IK pole control having weird rotation (visual issue only)
+    May 1:
+        Moved back to the office, set up new blender user prefs, git repos and SVN.
+        Settlers:
+            - Some parenting fixes on Gabby
+            Phileas:
+                - Tweaked spine location and weights, in an attempt to reduce the amount of squishing happening on the backpack strap.
+                - Made eye lattice controls horizontal instead of vertical, and made them 4 rows instead of 3, where the middle 2 are owned by the middle bone.
+                - Additional control for the mid-point of the backpack straps on the sides
+                - Fix a bug with the eyes
+        Cloudrig:
+            - Fixed bug where regular rigs would fail to get parented to cloud_bone rigs.
+            - Fixed a bug where Stretch To constraints would get "-nan m" for their rest length, breaking them.
+            - Fix an issue with spine rigs when there is no head bone, the last FK bone owns the STR- bone before it, which results in some funkyness. This should only be relevant for Phileas, since his head rig is a separate rig element.
 
-May 5: Dutch Liberation Day
+    May 4:
+        - Set up metarig for Pip 
+        - Investigate Grease Pencil rigging... it's not very good. It's really bad actually, so I made a curve-based replica of the mouth. Not sure about the eyes yet, but will probably have a similar fate.
+        CloudRig:
+            - Fix the same bug on stretch constraints as yesterday, but better
+            - Fix a bug on curve rigs where they would miss some controls when cyclic==False.
+            - IK snapping now uses tail distance (simple maths) instead of rotation difference(complicated maths) to determine which way to put the IK pole. This fixes the snapping issues seen on Gabby and Lunte, but still isn't perfect.
+            - Fix IK pole control having weird rotation (visual issue only)
 
-May 6:
-    - Started implementing bone group and bone layer parameters, so they can be customized on each rig element. Not usable yet, but the UI is there and I think it will work out nicely.
-    - Cleaned up cloudrig.py before Sybren tears it apart on the livestream.
-    - Made short video on Gabby rigging process for the supercut video.
+    May 5: Dutch Liberation Day
 
-May 7:
-    - Realizing that a lot of people are trying to learn from cloudrig.py, I added and clarified a ton more comments and renamed some variables to make it as easy to learn from as possible.
-    - Posted rig walkthrough video
-    - Made eye curves for Pip, still no weights though.
-    - Massive progress on the Bone Group system on CloudRig. Now each rig element can assign its set of bones to any arbitrary bone group and assign them to any arbitrary set of layers. It can still be improved by adding rig-wide overrides for certain bone sets, and implementing a customizable bone layer UI. But for now, I can finally move face/hair/finger/clothes related bones to the layers they belong, 100% of the time.
-    - Did some tweaks on Phileas that were requested by Pablo and Simon. Also applied the new bone layer tech to his metarig, so all his bones are now nicely organized.
+    May 6:
+        - Started implementing bone group and bone layer parameters, so they can be customized on each rig element. Not usable yet, but the UI is there and I think it will work out nicely.
+        - Cleaned up cloudrig.py before Sybren tears it apart on the livestream.
+        - Made short video on Gabby rigging process for the supercut video.
 
-May 8:
-    - Improve reliability of curve rig generation in CloudRig, and better error reporting for when it fails.
-    - Finish rigging Pip, including a new mouth shape, all the weight painting, modifiers and drivers. Still some discussion to be had on how to handle the eyes, but I want to wait until he gets some testing.
+    May 7:
+        - Realizing that a lot of people are trying to learn from cloudrig.py, I added and clarified a ton more comments and renamed some variables to make it as easy to learn from as possible.
+        - Posted rig walkthrough video
+        - Made eye curves for Pip, still no weights though.
+        - Massive progress on the Bone Group system on CloudRig. Now each rig element can assign its set of bones to any arbitrary bone group and assign them to any arbitrary set of layers. It can still be improved by adding rig-wide overrides for certain bone sets, and implementing a customizable bone layer UI. But for now, I can finally move face/hair/finger/clothes related bones to the layers they belong, 100% of the time.
+        - Did some tweaks on Phileas that were requested by Pablo and Simon. Also applied the new bone layer tech to his metarig, so all his bones are now nicely organized.
 
-May 11:
-    - Lots of troubleshooting on Phileas.
-    - Trying to hunt down why the boolean modifier on Phileas's mouth is behaving erratically. Managed to get it to break a lot less often with Simon's help.
-    - Some changes for Pip requested by Hjalti.
+    May 8:
+        - Improve reliability of curve rig generation in CloudRig, and better error reporting for when it fails.
+        - Finish rigging Pip, including a new mouth shape, all the weight painting, modifiers and drivers. Still some discussion to be had on how to handle the eyes, but I want to wait until he gets some testing.
 
-May 12: Took a day off.
+    May 11:
+        - Lots of troubleshooting on Phileas.
+        - Trying to hunt down why the boolean modifier on Phileas's mouth is behaving erratically. Managed to get it to break a lot less often with Simon's help.
+        - Some changes for Pip requested by Hjalti.
 
-May 13:
-    - Fix some bone layer assingment issues on Phileas.
-    CloudRig:
-    - Bone layers no longer use ugly magic numbers.
-    - Started implementing customizable Layers UI.
+    May 12: Took a day off.
 
-May 14:
-    - Various small fixes on Pip for Hjalti
-    CloudRig:
-    - Fully implemented customizable rig layer UI!!!
-    - Implement layer assignment override for Deform/Mechanism/Org bone sets.
-    - Pre-made MetaRigs (eg. Cloud_Human) are now appended from a .blend file rather than having to be encoded into a generation code, and then re-generated from that code.
+    May 13:
+        - Fix some bone layer assingment issues on Phileas.
+        CloudRig:
+        - Bone layers no longer use ugly magic numbers.
+        - Started implementing customizable Layers UI.
 
-    - Move Widget management code to the Generator code, and improve it such that a Widgets collection is always created if it isn't found, is always hidden, and is named after the rig.
-    - Moved root control layer assignment parameters into the Generator code.
-    - Moved CloudRig generator parameters into a PropertyGroup to avoid cluttering python api
-    - Moved Bone Sets parametergroup from the top to the bottom of parameter UI, to better indicate that the available layer assignments are affected by the preceeding parameters.
+    May 14:
+        - Various small fixes on Pip for Hjalti
+        CloudRig:
+        - Fully implemented customizable rig layer UI!!!
+        - Implement layer assignment override for Deform/Mechanism/Org bone sets.
+        - Pre-made MetaRigs (eg. Cloud_Human) are now appended from a .blend file rather than having to be encoded into a generation code, and then re-generated from that code.
 
-    - Active and protected rig layers are now copied from the metarig
-    - Armature display modes are now copied from the metarig
-    - Clean up various hackarounds that are no longer needed
+        - Move Widget management code to the Generator code, and improve it such that a Widgets collection is always created if it isn't found, is always hidden, and is named after the rig.
+        - Moved root control layer assignment parameters into the Generator code.
+        - Moved CloudRig generator parameters into a PropertyGroup to avoid cluttering python api
+        - Moved Bone Sets parametergroup from the top to the bottom of parameter UI, to better indicate that the available layer assignments are affected by the preceeding parameters.
 
-    - Update Gabby with the new features. Phileas also almost done.
+        - Active and protected rig layers are now copied from the metarig
+        - Armature display modes are now copied from the metarig
+        - Clean up various hackarounds that are no longer needed
 
-May 15:
-    - Fixed the tiniest of Blender bugs :) D7744
-    - Did a lot of refactoring in bone.py to make the code a lot more readable and sensible. Inspired by Sybren :)
-    - Fix a backwards compatibility issue with existing animations on Gabby
-    - Finish updating Phileas with latest CloudRig features. Also did Lunte but running into some issues...
+        - Update Gabby with the new features. Phileas also almost done.
 
-May 18:
-    - Fix scale inheritance issue that I ran into while trying to update Lunte to latest CloudRig. Problem also existed on other characters, so updated those again too.
-    - Made it easier to parent things to bendy bones(which should be done with Armature constraints, which need to be at the top of the constraint stack)
-    - Fix Layers UI relying on Rigify addon to be enabled
-    - Minor fixes on Pip's hair for Hjaltin
-    - Crossed off some TODO's in cloud_limbs.
-    - Experimented with a bone group selection color feature where instead of toggling between having all bone groups use the same selected/active color, we have a blend factor, but it turned out pretty useless/bad so I just nuked the whole thing.
-    - Finally figured out how to prevent rig_ui.py from being created... it was... stupidly simple.
-    - Planned out some documentation, a potential eye tracking rig, and the outline of some videos I want to make for the cloud.
+    May 15:
+        - Fixed the tiniest of Blender bugs :) D7744
+        - Did a lot of refactoring in bone.py to make the code a lot more readable and sensible. Inspired by Sybren :)
+        - Fix a backwards compatibility issue with existing animations on Gabby
+        - Finish updating Phileas with latest CloudRig features. Also did Lunte but running into some issues...
 
-May 19:
-    - Some changes and fixes on Pip for Simon
-    - Made most of a video about how I set up Pip's metarig. Editing with Blender is so painful, I've vowed to never do it again.
+    May 18:
+        - Fix scale inheritance issue that I ran into while trying to update Lunte to latest CloudRig. Problem also existed on other characters, so updated those again too.
+        - Made it easier to parent things to bendy bones(which should be done with Armature constraints, which need to be at the top of the constraint stack)
+        - Fix Layers UI relying on Rigify addon to be enabled
+        - Minor fixes on Pip's hair for Hjaltin
+        - Crossed off some TODO's in cloud_limbs.
+        - Experimented with a bone group selection color feature where instead of toggling between having all bone groups use the same selected/active color, we have a blend factor, but it turned out pretty useless/bad so I just nuked the whole thing.
+        - Finally figured out how to prevent rig_ui.py from being created... it was... stupidly simple.
+        - Planned out some documentation, a potential eye tracking rig, and the outline of some videos I want to make for the cloud.
 
-May 20:
-    - Fix a double parenting issue on Gabby
-    - Submitted a fix for Rigify (D7801)
-    CloudRig:
-    - Added support for vector customproperties being displayed in the rig UI.
-    - Started a Wiki on the github page.
-    - Wrote in-depth documentation on the bone organization system https://github.com/Mets3D/CloudRig/wiki/Organizing-Bones
-    - Wrote in-depth documentation on the custom property system https://github.com/Mets3D/CloudRig/wiki/Custom-Properties
+    May 19:
+        - Some changes and fixes on Pip for Simon
+        - Made most of a video about how I set up Pip's metarig. Editing with Blender is so painful, I've vowed to never do it again.
 
-May 21: Ascension Day (holiday)
+    May 20:
+        - Fix a double parenting issue on Gabby
+        - Submitted a fix for Rigify (D7801)
+        CloudRig:
+        - Added support for vector customproperties being displayed in the rig UI.
+        - Started a Wiki on the github page.
+        - Wrote in-depth documentation on the bone organization system https://github.com/Mets3D/CloudRig/wiki/Organizing-Bones
+        - Wrote in-depth documentation on the custom property system https://github.com/Mets3D/CloudRig/wiki/Custom-Properties
 
-May 22:
-    - Finish Pip metarig video
-    - Implement prop_hierarchy so custom properties can be hierarchical. Need to write documentation.
+    May 21: Ascension Day (holiday)
 
-May 25:
-    - Posted Pip metarig video https://cloud.blender.org/p/settlers/5ecb83e1d2d0a4657a7637df
-    - Implement Create Root Bone generator parameter, so rigs can be generated without a root bone.
-    - Fix some Armature constraints not working when they should...
-    - Spent some time learning about GitLab and migrating CloudRig to it. Realized I have some unpushed changes on my home PC, so I'll get those merged first and then start committing on GitLab. Will have to shuffle the ReadMe around a bit.
-    - Wrote in-depth documentation on each rig type 
-    - Was trying to get said documentation to be accessible from within Blender. Failed, and ended up working on a patch for that. (D7837)
+    May 22:
+        - Finish Pip metarig video
+        - Implement prop_hierarchy so custom properties can be hierarchical. Need to write documentation.
+
+    May 25:
+        - Posted Pip metarig video https://cloud.blender.org/p/settlers/5ecb83e1d2d0a4657a7637df
+        - Implement Create Root Bone generator parameter, so rigs can be generated without a root bone.
+        - Fix some Armature constraints not working when they should...
+        - Spent some time learning about GitLab and migrating CloudRig to it. Realized I have some unpushed changes on my home PC, so I'll get those merged first and then start committing on GitLab. Will have to shuffle the ReadMe around a bit.
+        - Wrote in-depth documentation on each rig type 
+        - Was trying to get said documentation to be accessible from within Blender. Failed, and ended up working on a patch for that. (D7837)
+        - Started rigging Pip car.
+
+    May 26:
+        - Finish migration to GitLab.
+        - Finished rigging Pip car and van.
+        CloudRig:
+            Start major refactoring efforts to reduce the areas where I'm re-implementing Rigify functions. 
+            This does require hacking around Rigify limitations, 
+            which were the reason I re-implemented stuff my way in the first place, 
+            but my hope is that one day I will make patches to fix these things upstream.
+
+            - Refactored constraint management so I can now call Rigify's make_constraint() function to create my constraint.
+            - Constraint data is now saved in its own class. Hopefully this won't get as bloated as the BoneInfo class.
+
+            - Got rid of all use cases of utils.copy_attributes() which was a messy piece of recursive clusterfuck. Deleted utils.py.
+            - Delete settlers_mouth rig as I never ended up using it, and it was pretty pointless.
+
+            - Started refactoring drivers, not so happy with the results so far. Also Rigify won't let me create variables that target a datablock type other than Object. Yet another thing to fix upstream.
+
+    May 27:
+        - Finish refactoring drivers.
+        - Added color properties to Pip for Simon to hook up to the shaders.
+        - Pip: Fix scale propagation issue on face and wrong thickness of mouth.
+        - Refactor how I manage custom properties to something a lot more sane. This could be upstreamed to Rigify also.
+
+    May 28:
+        - Tested D7855
+        - Fully refactored BoneGroup, BoneInfoContainer and BoneGroupContainer into one superior BoneSet class.
+        - Deleted bone_group.py, id.py as they were no longer needed.
+        - Basically same deal as previous refactoring efforts. The code structure is really starting to make a lot more sense now.
+        Need to fix a bug with root bone scale tho...
+
+    May 29:
+        - Celebrate CoffeeRun premiere, be on livestream
+        - Fix some toe drivers that got flipped during refactor
+        - Fix root bone shape scale exploding
+        - Curve rigs UI fixes and code cleanup
+
+June 2:
+    - Fix another issue with Pip's toe.
+    - Fix Rigify Buttons panel in edit mode was not working.
+    - Fix regular Rigify types throwing error with CloudRig generator. Although full compatibility with regular Rigify is not really a goal, it should at least manage to generate.
+    - Fix IK/FK switching not working on the spine
+    - Moved a bunch of functionality that belonged in the FK chain code, into the FK chain code.
+
+June 3:
+    - Fix some issues on Rain for Pablo.

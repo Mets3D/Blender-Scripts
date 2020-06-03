@@ -1,5 +1,11 @@
+PATCHES
+    D7837 Waiting on Campbell
+    D7855 Waiting on Campbell
+    D7801 Waiting on Angavrilov
+
 Potential workflow improvements
 BUGS
+    T77052
     https://developer.blender.org/T73434
     https://docs.google.com/document/d/1dOnT5-oQjtsShhsMQSXHwy5mH0vZooXU1hj-dzKyRqs/edit
 FEATURES
