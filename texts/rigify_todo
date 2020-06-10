@@ -1,3 +1,7 @@
+Pablo TODO:
+	- Make an operator that mirrors a bone's transforms to the opposite bone, around an arbitrary bone as the mirror axis.
+	- Try to implement a brute force method of more precise IK->FK snapping with pole target.
+
 Tutorial ideas
 	Advanced Weight Painting course
 		No rigging, just explaining my weight painting workflow in detail, including my addons.

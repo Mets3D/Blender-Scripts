@@ -148,6 +148,8 @@ def optimize_selector_group(nodes, group_node, active_texture=False):
 	else:
 		print("Warning: Selector value not found - Node probably not connected properly?")
 		group_node.label = 'Unconnected Selector'
+	if group_node.mute:
+		selector_value = 0
 
 	# Setting active node for the sake of visual feedback when in Solid view.
 	if len(group_node.inputs[selector_value].links) > 0  and active_texture:
@@ -252,7 +254,13 @@ def register():
 	bpy.app.handlers.depsgraph_update_post.append(post_depsgraph_update)
 	bpy.app.handlers.depsgraph_update_pre.append(pre_depsgraph_update)
 
+	bpy.app.handlers.frame_change_pre.append(pre_depsgraph_update)
+	bpy.app.handlers.frame_change_post.append(post_depsgraph_update)
+
 def unregister():
+	bpy.app.handlers.frame_change_pre.remove(pre_depsgraph_update)
+	bpy.app.handlers.frame_change_post.remove(post_depsgraph_update)
+
 	bpy.app.handlers.depsgraph_update_post.remove(post_depsgraph_update)
 	bpy.app.handlers.depsgraph_update_pre.remove(pre_depsgraph_update)
 

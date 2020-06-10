@@ -497,3 +497,17 @@ June 2:
 
 June 3:
     - Fix some issues on Rain for Pablo.
+
+
+June 8:
+    - Script, record, edit first 6 minutes of weight painting tutorial
+
+June 9:
+    - Script, record, edit another 3 minutes of weight painting tutorial. Showed it to a friend for feedback, found some audio balance issues. Considering cutting into multiple parts soon.
+    - Some troubleshooting for Pablo.
+    - Some discussions on a Rigify patch with Ivan Cappiello and Alexander Gavrilov.
+
+June 10:
+    - Fix an error on Pip/CloudRig for Hjalti.
+    - Figure out how to fix audio and render from Resolve, and rendered first version of the first part of the weight painting tutorial. At this pace it looks like it could be a 3-4 parter.
+    - Got my first fix committed for Rigify. Have ideas for a lot more, but will have to see what time allows.
