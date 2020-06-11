@@ -497,3 +497,12 @@ June 2:
 
 June 3:
     - Fix some issues on Rain for Pablo.
+    Took 3/4 of the day off due to eye pain. It continued at home, even after several hours of taking the lense out. Strange.
+
+June 4:
+    - Some cleanup on Pip so Simon can do a V1 release.
+    - Improve mouth weights on Rain for Pablo.
+    - CloudRig:
+        - Fix rigify compatibility mode always being enabled instead of only when needed.
+        - Fix cloud_spline_ik not working in some cases, and not updating the generated curve in other cases.
+        - Finish documentation of custom properties and curve rig types.

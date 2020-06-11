@@ -54,6 +54,9 @@ BBone Face Rig idea:
 				Tangent angle (parented)
 	In this setup, how do we get the local rotation of Control to affect Tangent angle in a predictable way?
 
+Next Rig notes:
+	- Four lip controls per quarter of lip instead of 3.
+
 Addon idea:
 	Make a better Shift+D (duplicate bone) behaviour, where instead of slamming a .001 at the end of the bone name, it increments whatever number it finds in the bone name, and it does the same on the right side.
 	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
@@ -67,6 +70,11 @@ Settlers TODO:
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
 CloudRig TODO:
+	Rigify compatibility
+		- When enabled, cloud_bones with use_deform=True get overwritten to False.
+		- When enabled, bone groups assigned in cloud_bone seem to get overwritten.
+		Rigify compatibility specific functions should only affect rigify rig types.
+
 	Make outline of some video I could make, by Tuesday.
 		- Secrets of Weight Painting.
 		- Developing your own Rigify Feature Set.
@@ -130,9 +138,6 @@ CloudRig TODO:
 	Manage bone rotation modes better - Currently we set everything to an arbitrary rotation mode, I think? We should probably copy the rotation mode from the metarig.
 		Perhaps all this needs to be is the classic custom property+driver to let anyone change the rotation mode on the fly for bones that could require it. (shoulders, wrists, thighs, feets)
 
-	Remove "Root Bone" generator parameter. There should always be a root bone.
-		Why tho?
-	Generator parameter: Properties bone - If empty, we create a "Properties" bone (not Properties_IKFK), otherwise we can select a bone from the metarig's bones, and we'll create a bone in its place with its name as the Properties bone - or something like that.
 	Generator parameter: Show Warnings
 		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
 		This panel would be called CloudRig Log. It would read warnings and errors from the rig data, where it is written to from generation-time.
