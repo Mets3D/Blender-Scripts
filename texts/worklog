@@ -1,5 +1,4 @@
 March
-
     Mar 16:
         - Set up my Blender user preferences, VSC workspaces, git repos, CoffeeRun SVN at home. RapidSVN crashes on checkout, so I'm trying an SVN extension for VSC for now. (Which might be more convenient, if it turns out to be good)
         - Building Blender from source was failing, so I fixed that... I forgot how god damn slow it is on Windows though, so I'm honestly better off downloading the nightlies.
@@ -335,7 +334,6 @@ April
         - Added eye lattice controls
 
 May
-
     May 1:
         Moved back to the office, set up new blender user prefs, git repos and SVN.
         Settlers:
@@ -507,6 +505,7 @@ June 4:
         - Fix cloud_spline_ik not working in some cases, and not updating the generated curve in other cases.
         - Finish documentation of custom properties and curve rig types.
 
+June 5: Day off due to eye pain.
 
 June 8:
     - Script, record, edit first 6 minutes of weight painting tutorial
@@ -520,3 +519,6 @@ June 10:
     - Fix an error on Pip/CloudRig for Hjalti.
     - Figure out how to fix audio and render from Resolve, and rendered first version of the first part of the weight painting tutorial. At this pace it looks like it could be a 3-4 parter.
     - Got my first fix committed for Rigify. Have ideas for a lot more, but will have to see what time allows.
+
+June 11:
+    - 
