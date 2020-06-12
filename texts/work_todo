@@ -15,9 +15,15 @@ Tutorial ideas:
 		Explain generation stages
 
 Rigify patch ideas
-	T74483
 	clean up imports, cause there are unused ones, eg. generate.py imports copy_attributes, never uses it.
 	
+	legacy/rigs/delta.py seems useless.
+	rigs/experimental/super_eye.py is empty.
+
+	WTF???!?!?! Generate any rigify rig, open a drivers editor and search for any bbone property. It seems like those things are supposed to have drivers? But they are on bone instead of pose.bone, therefore they do nothing! WHAT!??
+		Oh okay maybe I get it - it's the edit mode properties... and they are driven instead of the pose mode properties... which makes no sense, but okay.
+
+
 	driver_add() should not be allowed to halt generation with a useless error message, such as when the data path is invalid. It should just throw a big ol' warning and skip that driver.
 	entire mechanism.py contains no reference to id_type. This means Single Property drivers can only ever be referencing Object datablocks. This is terrible.
 	Add support for make_constraints for Armature constraints and the targets{} dict.

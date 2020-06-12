@@ -521,4 +521,16 @@ June 10:
     - Got my first fix committed for Rigify. Have ideas for a lot more, but will have to see what time allows.
 
 June 11:
-    - 
+    - Split off the weight painting tools from MetsTools into a new EasyWeight addon on gitlab.
+    - Started looking at what I could contribute to Rigify.
+        In doing so I realized it could really use unit tests.
+        I started learning about unit tests with some guidance from Sybren.
+        Managed to get baby's first unit test working, detecting missing bones in the generated rig. Woohoo!
+
+June 12:
+    - Worked more on Rigify rig generation unit testing.
+    - Changes in bone properties, constraints, bone custom properties are detected.
+    - Changes in drivers of bone properties and constraint properties are detected.
+    This more or less covers everything, so next time I will start actually working on a Rigify commit and use this test to make sure I don't break anything.
+
+    - Set up both upstairs and downstairs recording rooms so I don't have to do it at home.
