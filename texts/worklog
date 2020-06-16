@@ -532,5 +532,21 @@ June 12:
     - Changes in bone properties, constraints, bone custom properties are detected.
     - Changes in drivers of bone properties and constraint properties are detected.
     This more or less covers everything, so next time I will start actually working on a Rigify commit and use this test to make sure I don't break anything.
+    In future I can also use this for testing CloudRig refactors, which would've been very helpful some time ago.
 
     - Set up both upstairs and downstairs recording rooms so I don't have to do it at home.
+
+
+June 15:
+    - Scripted and recorded audio for weight painting tutorial part 2.
+    - Made D8041
+
+June 16
+    - Tested D7499
+    Rain:
+        - Updated her to latest cloudrig functionality.
+        - Viewport Display panel works again... /wrists
+        - Reimplemented old "Enable Modifiers" button as a shiny new Quality slider.
+        - Troubleshooting mask modifier performance drop for Pablo, it turned out to be this old problem T68740.
+        - Added python app handler workaround, should have good performance while masks are turned on now.
+    - Got final cut of audio for weight painting tutorial part 2, just need video.
