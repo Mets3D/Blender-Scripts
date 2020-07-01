@@ -550,3 +550,75 @@ June 16
         - Troubleshooting mask modifier performance drop for Pablo, it turned out to be this old problem T68740.
         - Added python app handler workaround, should have good performance while masks are turned on now.
     - Got final cut of audio for weight painting tutorial part 2, just need video.
+
+June 17:
+    - Got final cut of video for weight painting tutorial part 3.
+
+June 18:
+    - Half a day off due to eye appointment.
+    Rain:
+        - Add parent switcher for eye target.
+        - Turn face-settings into a cloudrig-compatible dictionary stored in the armature custom properties.
+        - Update cloudrig.py accordingly, removing the final pieces of hardcoding it used to have for Rain!
+    - More testing and feedback on D7499.
+    - Made D8070.
+
+June 19:
+    - More D7499 constraint UI rework feedback.
+    CloudRig:
+        - BoneInfo class now handles pose bone and data bone property drivers separately.
+        - BBone drivers now go on data bone properties instead of pose bone properties, leaving more control for animators (inspired by what for a minute I thought was a bug in Rigify).
+        - Sharp Sections parameter now affects the driver expression instead of the property value.
+    - Investigated an issue in Rigify where the console is spammed with errors when using Legacy mode and changing rig type options, but fixing it seems like it would be a big undertaking. Despite the error spam, everything works correctly, so I guess it's not a big problem, just a shame.
+    - Made D8077.
+    - Started working on a patch to improve UX when adding or editing custom properties. Will finish in my free time as it's not strongly enough related to my work.
+
+June 22:
+    - Got started planning and implementing a new rig type for CloudRig, CloudBBoneGrid.
+        Rain's face mostly consisted of what I can only describe as a BBone Grid, 
+        so the goal with this is to generate something like that. 
+        The issue is, the customization this needs on a per-character basis is quite low level, 
+        so might have to come up with some new system or convention to allow 
+        per-bone customization of rig behaviour in the metarig, 
+        without requiring so much manual input that it would defeat the purpose of rig generation.
+    - Scripted and recorded audio for part 3 of the weight painting tutorial.
+        Would love to edit it at the same time as well, but Resolve won't open on the recording PC and troubleshooting on Linux is... awful.
+
+June 23: Took a day off.
+
+June 24:
+    - Found a Rigify bug report (T78193), looked into it a bit.
+    - Found another Rigify bug report (T78217) and looked into it.
+    - Submitted D8102. (Not related to either)
+    - Went back to part 2 of the weight painting thing and did some re-recording for some parts I didn't like.
+    - Learned how to make Blender VSE less awful with help from Sebastian. Might try using it again. Will regret.
+
+June 25:
+    - Blender started bugging out after some editing, so after wasting some time troubleshooting it I gave up.
+    - Tried Olive again, but after wasting some time looking for better ways to do retiming I gave up.
+    - Back to Davinci with most of the day gone, I recorded a correction for the audio and got started on the video but couldn't finish.
+
+June 26:
+    - Finished part 3 of the weight painting tutorial disaster... It took the entire week, but at least it wasn't worth it.
+    - Helped Pablo with an issue on Rain's face.
+    - Looked into making IK->FK snapping more reliable, got something that might work, and committed it on Rain.
+
+June 29:
+    - Cleaned up the Barber for Pablo so he can start working when he's ready.
+    - Made some changes to our branch of BlenRig for the same reason.
+    - Investigated T78193 more thoroughly, decided to call in the big guns, Alexander provided a patch that covers the issue very nicely.
+    - Worked on some patches after hours. (D8041, D6100, D8154)
+        - Put up with Juan Pablo's thick skull, this guy is an actual lemon.
+
+June 30:
+    - Birthday!
+    - Worked on getting CloudRig up to date with some recent Rigify updates.
+    - Started implementing a versioning system for CloudRig so I can be more free with changing things and trying to not break backwards compatibility as much.
+    - Right Click->Online Manual on CloudRig operators and properties now links to appropriate wiki pages.
+
+July 1:
+    - Blender presentation by Ton & HR
+    - Had a SUPER interesting and useful hour long video chat with Ivan Cappiello about the procedural face rigging they used at MAD. 
+        He also gave me some code and sample blend file to play around with.
+        Super nice guy!
+        

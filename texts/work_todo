@@ -1,3 +1,12 @@
+I should configure my VSC properly; strip trailing whitespace on save, auto-format C code on save, maybe Python too if possible, but I'm not sure if it is.
+
+I should think of how we could set up a centralized way of downloading feature sets for Rigify. Ideally, feature set maintainers wouldn't have to get commit rights to the addons repo, and wouldn't have to work in the addons repo.
+	Maybe Rigify could just have a list of repository URLs and be able to pull from them at the click of a button? Is that insane?
+	That would also mean being able to update your feature set at the click of a button. It sounds pretty damn good, but idk. Maybe complicated. Maybe not secure. Etc.
+
+Bug reports:
+	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
+
 Rain TODO:
 	- Rename rain_rig.blend to rain.blend for the final release.
 
@@ -5,36 +14,43 @@ Pablo TODO:
 	- Make an operator that mirrors a bone's transforms to the opposite bone, around an arbitrary bone as the mirror axis.
 	- Try to implement a brute force method of more precise IK->FK snapping with pole target.
 
-Tutorial TODO:
-	Strip out the weight painting toolset from MetsTools as a separate addon for cleanliness.
-	Explain some features which I don't use
-
 Tutorial ideas:
 	Developing your own Rigify feature set
 		How to set up file structure, how to name classes, etc.
 		Explain generation stages
 
+Blender patch ideas:
+	Custom Property edit UI is kinda iffy.
+		- Subtypes are undiscoverable
+		- min/max/soft_min/soft_max/default are all useless when the property isn't a number or a list
+		- Not using single column layout, some property names are cut off.
+
 Rigify patch ideas
-	clean up imports, cause there are unused ones, eg. generate.py imports copy_attributes, never uses it.
-	
-	legacy/rigs/delta.py seems useless.
-	rigs/experimental/super_eye.py is empty.
+	- T78463
 
-	WTF???!?!?! Generate any rigify rig, open a drivers editor and search for any bbone property. It seems like those things are supposed to have drivers? But they are on bone instead of pose.bone, therefore they do nothing! WHAT!??
-		Oh okay maybe I get it - it's the edit mode properties... and they are driven instead of the pose mode properties... which makes no sense, but okay.
-
-
-	driver_add() should not be allowed to halt generation with a useless error message, such as when the data path is invalid. It should just throw a big ol' warning and skip that driver.
-	entire mechanism.py contains no reference to id_type. This means Single Property drivers can only ever be referencing Object datablocks. This is terrible.
-	Add support for make_constraints for Armature constraints and the targets{} dict.
-	Clean up badly named parameters (that show up in the ui with underscores and all lowercase)
 	Link things to the blender manual
 	Add user-facing operators to the UI, somewhere.
-	Use BoolVectorProperty subtype='LAYER' instead of hard-coded layer UI drawing
-	Move rigify properties into a propertygroup
+
+	entire mechanism.py contains no reference to id_type. This means Single Property drivers can only ever be referencing Object datablocks. This is terrible.
+	driver_add() should not be allowed to halt generation with a useless error message, such as when the data path is invalid. It should just throw a big ol' warning and skip that driver.
+		In general, better error reporting would be great.
+
+	- Bunch of rig types (at least in Legacy) redefine each others' parameters... not good.
+		That's not to say we should prefix every parameter name with a rig type identifier.
+		Should find out if it's possible to avoid them conflicting in the first plce.
+			Idea: Instead of passing bpy.types.Armature.rigify_params to the functions' `params` arg, rigify_params should become a PropertyGroup of PropertyGroups (ie. a CollectionProperty of type PropertyGroup?) So we can add groups of properties - and each container's name would be the name of the... class? python file name? oof. Not sure on that one. Default to python file name, unless somehow specified?
+		Then if it's possible, ask Alexander why rig parameters are stored in the class. It really makes no sense, and it's clear to see why imo.
+		- There's some spam in the console when using legacy mode, spawning a pitchipoy rig, and fiddling with rig types.
+			I think this should be tackled along with reworking the way rig parameters work. (No longer store in rig class, the relating code seems super messy anyways)
+
+	rigs/experimental/super_eye.py is empty.
+	rigs/rear_paw.py is virtually empty? Is it just to have a different rig sample for the same rig? Seems like the wrong way to go about that.
+
+	Add support for make_constraints for Armature constraints and the targets{} dict.
+	Move rigify properties into a propertygroup? Would break any code that interacts with Rigify, and not serve enough purpose... but an idea.
+
 	From CloudRig: 
-		make make_property be more like cloud_utils.make_custom_property
-			add subtype support to make_property().
+		Add bbone scale drivers for BBones(maybe as parameter) for all chain rigs.
 		add copy_property from cloud_utils to rigify.
 		add copy_driver() from cloud_utils to mechanism.py, and use it from the legacy code that copies drivers.
 
@@ -42,17 +58,13 @@ Rigify patch ideas
 		Add scale management so it doesn't generate like shit at small or large scales.
 		Give BBone scale the same significance as in CloudRig.
 		Rework widget management - only use procedural generation when it makes sense, otherwise load from file. Stop making a unique object for every bone, re-use existing instead.
-	
-	
-	Add Tangent controls(with bbone scale drivers) for BBones(maybe as parameter) for all chain rigs.
+
 	Rename ORG bones before joining duplicated metarig into generated rig. Justification is that drivers that were targetting non-ORG bones don't get mis-targeted this way.
 		Rigify already worked around this by messing up such drivers' targets, and then un-messing them up later, but to me that seems unneccessarily convoluted.
-	Call register() and unregister() on feature sets before removing them. (there was an issue with this but I don't quite remember)
-		Add this to the documentation.
+
 	Add more GeneratorParameters to disable currently hardcoded functionality.
 		Add warning to Force Widgets Update that it is slow as shit.
-	
-	
+
 	Rework the bone group system to be like mine.
 	As an even longer term goal, make it so that I don't have to implement my own Generator class, because the rigify generator should be able to do everything I need it to do.
 
@@ -81,47 +93,84 @@ Settlers TODO:
 		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
+CloudRig ideas:
+	Arbitrary BBone Grid Setup
+		This is what most of Rain's face is made up of.
+		Question 1: How to describe this setup in the Metarig in the best way?
+			The BBones need to be aware of which chains they are part of and which chains they are connected to.
+			The rig element that governs their generation and set-up ofc needs to be aware of all the BBones. That said, we could have more than one of these if needed.
+			Issue is, sometimes rig controls parented to different root bones might have a BBone connecting them, eg. between eyelid and eyering. Or even just between two eyebrow controls.
+				So using hierarchy as a heuristic might not be such a good idea.
+				Maybe only having the BBones is not enough. Or maybe it can be enough, but it would make setting up the metarig inconvenient.
+				
+				BBones can know that a control will be created for them at their head and their tail. This is always true.
+				So, it might be an idea to have head_parent and tail_parent parameters stored on the BBones.
+				However, those controls are not unique to that BBone, as multiple BBones can share the same head or tail control. All the BBones would have to agree on their parent controls' name, and that would get annoying to maintain.
+
+				Alternatively, the metarig could contain the BBones and the controls at the heads and tails. Then the controls can simply know their own parents.
+					I think this is the best. The only inconvenience then, is that we have to move several bones in sync in the metarig. We would already have to do that to a less annoying extent with just the BBones.
+					We could use pose mode with copy loc/stretch to constraints on the BBones, but I'm not sure how big a fan of that I am.
+					Actually, I am a fan of that. That would work quite nicely I think.
+					I wonder now about where the rigify type that governs the generation is, and how many of them there are. If each control bone has to specify who its parent is going to be anyways, then in the metarig they could all be parented to a single bone. That might in fact be the right way.
+				
+				I guess it's worth considering an idea where only the control bones are included in the Metarig, and the BBones are figured outprocedurally... But this results in not being able to customize the initial properties of the BBones, which is bad.
+
+	MODULAR FACE RIGS.
+		Play around with the rig types and samples Ivan Cappiello gave me.
+		They had a similar idea to mine, in that, the face should be made up of cloud_chain rigs. My issue was how these rigs would know about each other.
+			They solved this with a "glue" rig type, which is a bone that connects two joints of two chain rigs, and puts some copy location constraints on them according to its paramteres. Pretty interesting!
+				(This is an alternative to the "bbone grid" idea above)
+
+	cloud_chain
+		Recursive generation of STR layers as per Pablo's request, so we don't just have main and sub STR controls, but any number of nested layers(although we would probably never use more than 3, but then again, I thought we would never use more than 2, so)
+		Spline IK like controls(the other two types) for bendy bones' handles.
+	IK Fingers
+		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
+		Param for useless curl controls
+	cloud_ik_chain
+		IK chains in blender are expected to be perfectly flat along a plane. I'm thinking maybe we could add an operator to the rig settings that would do this for you??
+	cloud_instance
+		This would be a single bone rig with a single parameter, which is another bone from the metarig which has a rigify type.
+		This bone would act as an instance of that entire rig element, copying all its child rigs and everything. Crazy stuff. Not sure if possible.
+		But wait, the hard part of this is name conflicts. Bone names have to be unique, obviously, but if you just copy over all the bones... hmm... more parameters to handle name replacement? probably a similar deal to the batch rename tool. weird stuff.
+	
+	The display toggle parameters, like CR_show_ik_settings and its equivalent on all rigs should be defined and used a bit more procedurally
+		eg. the rig class would have a field, cls.short_name = "IK"
+		Then cloud_base would, when cls.short_name!="", setattr(params, "CR_show_{short_name}_settings, BoolProperty(name="{short_name}+" Settings", description="Show settings for the {file_name} rig type"))
+		And the same thing for the 3 lines that are used to draw it on the UI.
+		This code may be more confusing, but there would be less copy pasting and duplicate code involved.
+
+	Manage bone rotation modes better - Currently we set everything to an arbitrary rotation mode, I think? We should probably copy the rotation mode from the metarig.
+		Perhaps all this needs to be is the classic custom property+driver to let anyone change the rotation mode on the fly for bones that could require it. (shoulders, wrists, thighs, feets)
+
+	Generator parameter: Show Warnings
+		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
+		This panel would be called CloudRig Log. It would read warnings and errors from the rig data, where it is written to from generation-time.
+	
+	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
+	Layers: Show a preview of what the layer UI is going to look like. This should be super easy, we just need to call the function that draws the actual layer UI. We can import cloudrig.py, why not.
+
+	Would be nice if rig samples could be loaded from a .blend file instead of code-based generation bs. For metarigs it seems easy. For rig samples, it might be tricky because we have to juggle object modes.
+
+	Picker UI? based on https://github.com/jayanam/bl_ui_widgets. Would be quite a big endeavour, and I don't hear a lot of people asking for it.
+
 CloudRig TODO:
 	Rigify compatibility
 		- When enabled, cloud_bones with use_deform=True get overwritten to False.
 		- When enabled, bone groups assigned in cloud_bone seem to get overwritten.
 		Rigify compatibility specific functions should only affect rigify rig types.
 
-	Make outline of some video I could make, by Tuesday.
-		- Secrets of Weight Painting.
-		- Developing your own Rigify Feature Set.
-		- Re-make Pip video slightly longer, going into a bit more detail and explanations.
-
 	Bug: IK-CTR-Chest flies away when moving the chest master far, needs a DSP- bone?
-	
+
 	Documentation:
 		Add gifs to CloudRig Types page (do it at home with ShareX)
 		- Put something on the home page? Hell it could be just a duplicate of the readme, or a re-listing of what's already in the sidebar, idk.
 		- Update readme with links to the wiki and more up-to-date screenshots.
 
-	Ivan Cappiello says they have some WIP face rigify rigs at MAD, and we could discuss if I'm interested in contributing code to it. https://blender.chat/channel/blender-riggers?msg=p2Eahj4aXntp8rdRN
-
-	Eye Track
-		A rig that sets up an eye target thingie.
-			The bone that holds the rig is the eye bone itself. The target is created some distance in front of it (along local Y axis)
-			params:
-				- Target group - all Eye rigs with the same Target Group will have a shared parent control, whose name will be based on this parameter, and location and bone shape based on the average location of the look targets in the group.
-				- Target distance - how far in front the eye target should be created. (No rig scale applied! Unless it's made clear that this is given as some sort of ratio number.)
-	Chain
-		Recursive generation of STR layers as per Pablo's request, so we don't just have main and sub STR controls, but any number of nested layers(although we would probably never use more than 3, but then again, I thought we would never use more than 2, so)
-		Spline IK like controls(the other two types) for bendy bones' handles.
 	IK Chain
 		Ability to have IK control at the end
-			Should deprecate ik chain length param first, which might be a day's worth of work.
 	FK Chain
-		Counter-Rotate STR param should disable the deform_segments chain param.
-	IK Fingers
-		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
-		Param for useless curl controls
-		Finger controls should go on a finger layer, and their UI needs to be figured out, so they don't clutter too much.
-	IK/FK Snapping
-		pole vector distance should be relative to the scale of the rig. I wonder how it works right now on very small or large rigs.
-		Even going back to Rain, the IK snapping can have pretty shit results when the FK bones are rotated arbitrarily.
+		Counter-Rotate STR param should disable the deform_segments chain param, and force it to 1.
 	Spine
 		Maybe should be split up to Spine/Neck/Head rigs. Or well, just remove the neck and head, and those should be separate FK chain rigs. Might make the code a lot simpler, but also might not.
 		IK-CTR-Spine should have a copy rotation constraint to MSTR-Hips and possibly also MSTR-Chest. Ofc, implement this in a smart way, that works with arbitrary spine length. (Similar deal to how STR bones stay inbetween STR main bones, but in this case it's rotation instead of location)
@@ -131,40 +180,21 @@ CloudRig TODO:
 			Their values would probably have to be dependent on the length of the bone. Ie, a long bone should slide more when it's rotated, compared to a short bone.
 			Test if these can be overwritten by a cloud_bone rig.
 	IK limbs
-		Deprecate IK chain length parameter. Is a bit tricky cause it's used by foot rigs to put the IK control in the middle of the chain, but that should be handled differently. IK chain length should be implied from the length of the connected ORG chain.
 		feet control shouldn't be forced onto the floor, maybe based on an option, or use anklepivot bone, or whatever.
 		ROLL-Foot.L shouldn't have its tail be offset in a flat forward direction. Instead, make it perpendicular to the knee, pointing towards the toe. (cross product of knee and toe bones' vectors?)
 		Some smartypants way of ensuring that the IK pole, when IK Pole Follow is enabled, follows the IK control on its roll axis, but not the other axes?
 		Scissor limb rig possible? (limb with an extra bone to help elbow/knee deformation) - Can it work in FK?
+			I guess this would have to manifest more like an "arbitrary length limb" idea. IK chains can already be arbitrary length, but to allow that for limbs... might be super tricky. Especially when it comes to IK->FK snapping!
 	Curve
 		Add "X Symmetry" parameter, when enabled, determine hook bone sides automatically based on X coordinate sign, and flip bones on one side so mirror posing works as expected. An actual symmetrical curve shape is not enforced, but expected.
 		Seems to sometimes hook the wrong bones to the wrong curve point?? (On pip, eg. after scaling CUR-Eye.L -1 Z around its center in edit mode)
 		Lunte face breaks when generating with button instead of operator, no clue why, didn't investigate, don't have time.
-	Spline IK
-		Curve option shows warning for missing curve, even though this guy doesn't need a curve to be selected... In fact, that parameter should probably be disabled. (not hidden)
-		Or maybe this curve param should be separate from the other one. Then we could have separate tooltips, which would be nice.
-	Bone
-		Option to copy all children of the bone as well. This would let us be lazy for a while and attach entire manually rigged components to the generated rig, which would be a nice plan B if the face generation doesn't become a thing.
+	cloud_bone
 		Create Deform option should maybe only show up when the bone's Deform option is disabled... otherwise it's a bit error-prone.
-	
-	Manage bone rotation modes better - Currently we set everything to an arbitrary rotation mode, I think? We should probably copy the rotation mode from the metarig.
-		Perhaps all this needs to be is the classic custom property+driver to let anyone change the rotation mode on the fly for bones that could require it. (shoulders, wrists, thighs, feets)
-
-	Generator parameter: Show Warnings
-		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
-		This panel would be called CloudRig Log. It would read warnings and errors from the rig data, where it is written to from generation-time.
-	MetsRig: Bring in features from MetsRig, where reasonable.
-		Bring back BoolProperties?
-		Property hierarchy? Could it be done better though?
-
 
 	Add operators in the UI somewhere, somehow.
 
 	Implement a quadruped limb rig, similar to Autumn's hind leg.
 
-	Face!
-
-	Drivers for bone rotation types?
-	Would be nice if rig samples could be loaded from a .blend file instead of code-based generation bs. For metarigs it seems easy. For rig samples, it might be tricky because we have to juggle object modes.
-
-	Picker UI? based on https://github.com/jayanam/bl_ui_widgets. Would be quite a big endeavour, and I don't hear a lot of people asking for it.
+CloudRig Code Quality
+	Split up cloud_utils, or shuffle the code around in it better, so it's not a massive random set of functions.
