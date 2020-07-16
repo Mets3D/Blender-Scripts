@@ -4,6 +4,7 @@
 # This way I can easily keep unnecessary features out of my professional work with CloudRig.
 
 import bpy
+from bpy.props import *
 
 def get_children_recursive(obj, ret=[]):
 	# Return all the children and children of children of obj in a flat list.
@@ -82,6 +83,7 @@ def post_depsgraph_update(scene, depsgraph=None):
 			outfit_bone = rig.pose.bones.get("Properties_Outfit_"+cloud_props.outfit)
 
 			update_node_values(rig, char_bone, outfit_bone)
+			rig.metsrig.update_meshes()
 			rig['update'] = 0
 
 def nodes_exclusive_to_socket(input_socket, disabled_sockets=[]):
@@ -172,10 +174,6 @@ def optimize_selector_group(nodes, group_node, active_texture=False):
 			if n.type=='VALUE': continue
 			n.mute = True
 
-			if group_node.name=="SELECTOR_GROUP_Body_Final_Color":
-				if selector_value == 1 and i==2:
-					print(n.name)
-
 	# Un-mute nodes that contribute to the active socket.
 	for n in nodes_connected_to_socket(active_socket):
 		n.mute = False
@@ -185,7 +183,6 @@ def update_node_values(rig, char_bone, outfit_bone):
 		eg. when Ciri's "Face" property changes, ensure that the "Face" value node in her material updates.
 		Also update the active texture of materials for better feedback while in Solid View.
 	"""
-	print("Update node values")
 	# Gathering all the keys and values from outfit and character.
 	big_dict = {}
 	for e in [outfit_bone, char_bone]:
@@ -250,7 +247,230 @@ def update_node_values(rig, char_bone, outfit_bone):
 			if("SELECTOR_GROUP" in n.name):
 				optimize_selector_group(nodes, n)
 
+
+
+
+class MetsRig_Properties(bpy.types.PropertyGroup):
+	def determine_visibility_by_expression(self, o, prop_owners):
+		""" Determine whether an object should be visible based on its Expression custom property.
+			Expressions will recognize any character or outfit property names as variables.
+			'Outfit' keyword can also be used to compare with the currently selected outfit.
+			Example expression: "Outfit=='Ciri_Default' and Hood==1"
+		"""
+		rig = self.id_data
+
+		# Support "Outfit" keyword to refer to the cloudrig outfit
+		expression = o['Expression']
+		expression = expression.replace('Outfit', "'" + rig.cloud_rig.outfit + "'")
+
+		# Replacing the variable names in the expression with the corresponding variables' values.
+		found_anything=False
+		for prop_owner in prop_owners:
+			for prop_name in prop_owner.keys():
+				if prop_name in expression:
+					found_anything = True
+					expression = expression.replace(prop_name, str(prop_owner[prop_name]))
+		
+		#if(not found_anything):
+		#	return False
+		
+		try:
+			ret = eval(expression)
+			return ret
+		except NameError:	# When the variable name in an expression doesn't get replaced by its value because the object doesn't belong to the active outfit.
+			return False
+
+	def determine_visibility_by_properties(self, o, prop_owners):
+		""" Determine whether an object should be visible by matching its custom properties to the active character and outfit properties. """
+		rig = self.id_data
+
+		print(o.name)
+		for prop_owner in prop_owners:
+			for prop_name in o.keys():
+				if( (prop_name == '_RNA_UI') or (prop_name not in prop_owner) ): continue
+				
+				prop_value = prop_owner[prop_name]	# Value of the property on the property owner (bone). Changed by the user via the UI.
+				requirement = o[prop_name]			# Value of the property on the object. (Not to be changed by the user) This defines what the property's value must be in order for this object to be visible.
+				
+				# Checking if the property value fits the requirement...
+				if type(requirement) == int:
+					if prop_value != requirement:
+						print(f"{prop_value} not equal to {requirement}, returning False")
+						return False
+				elif 'IDPropertyArray' in str(type(requirement)):
+					if prop_value not in requirement.to_list():
+						print(f"{prop_value} not in {requirement.to_list()}, returning False.")
+						return False
+
+				# TODO: wtf is this next bit?
+				elif type(requirement) == str:
+					if '#' not in requirement: continue
+					if not eval(requirement.replace("#", str(prop_value))):
+						return False
+				else:
+					print("Error: Unsupported property type: " + str(type(requirement)) + " of property: " + p + " on object: " + o.name)
+		
+		# If we got this far without returning False, then all the properties matched and this object should be visible.
+		print("Returning True")
+		return True
+		
+	def determine_object_visibility(self, o):
+		""" Determine if an object should be visible based on its properties and the rig's current state. """
+		rig = self.id_data
+		char_bone = get_char_bone(rig)
+		outfit_bone = rig.pose.bones.get('Properties_Outfit_' + rig.cloud_rig.outfit)
+		prop_owners = [char_bone, outfit_bone]
+
+		if('Expression' in o):
+			return self.determine_visibility_by_expression(o, prop_owners)
+		else:
+			return self.determine_visibility_by_properties(o, prop_owners)
+		
+	def determine_visibility_by_name(self, m, obj=None):
+		""" Determine whether the passed vertex group or shape key should be enabled, based on its name and the properties of the currently active outfit.
+			Naming convention example: M:Ciri_Default:Corset==1*Top==1
+			Split in 3 parts by :(colon) characters.
+			The first part must be "M" to indicate that this shape key/vgroup is used by the outfit swapping system.
+			The second part is the outfit name.
+			The third part is an expression, which recognizes variable names that are custom properties on the given outfit, or the character.
+
+			param m: The vertex group or shape key (or anything with a "name" property).
+		"""
+		
+		if("M:" not in m.name):
+			return None
+		
+		rig = self.get_rig()
+		active_outfit = self.metsrig_outfits
+		outfit_bone = rig.pose.bones.get('Properties_Outfit_' + active_outfit)
+		active_character = self.metsrig_chars
+		character_bone = rig.pose.bones.get('Properties_Character_' + active_character)
+		
+		if(outfit_bone==None):
+			return None
+
+		parts = m.name.split(":")	# The 3 parts: "M" to indicate it's a mask, the outfit/character names, and the expression.
+		prop_owners = parts[1].split(",")	# outfit/characters are divided by ",".
+		
+		bone = None
+		expression = ""
+		
+		if(len(parts) == 3):
+			expression = parts[2]
+			found_owner = False
+			if(active_outfit in prop_owners):
+				bone = outfit_bone
+				found_owner=True
+			elif(active_character in prop_owners):
+				bone = character_bone
+				found_owner=True
+			else:
+				return False
+			if(found_owner):
+				if(expression in ["True", "False"]):	# Sigh.
+					return eval(expression)
+		elif(len(parts) == 2):
+			bone = outfit_bone
+			expression = parts[1]
+		else:
+			assert False, "Vertex group or shape key name is invalid: " + m.name + " In object: " + obj.name
+		
+		found_anything = False
+		
+		for prop_name in bone.keys():
+			if(prop_name in expression):
+				found_anything = True
+				expression = expression.replace(prop_name, str(bone[prop_name]))
+
+		if(not found_anything):
+			return None
+
+		try:
+			return eval(expression)
+		except:
+			print("WARNING: Invalid Expression: " + expression + " from object: " + obj.name + " This thing: " + m.name)
+
+	def activate_vertex_groups_and_shape_keys(self, obj):
+		""" Combines vertex groups with the "Mask" vertex group on all objects belonging to the rig.
+			Whether a vertex group is active or not is decided based on its name, using determine_visibility_by_name().
+		"""
+		#TODO: This of course doesn't work with linking. Hopefully one day with overrides?
+
+		if obj.type!='MESH': return
+		
+		mask_vertex_groups = [vg for vg in obj.vertex_groups if self.determine_visibility_by_name(vg, obj)]
+		final_mask_vg = obj.vertex_groups.get('Mask')
+		if final_mask_vg:
+			for v in obj.data.vertices:
+				final_mask_vg.add([v.index], 0, 'REPLACE')
+				for mvg in mask_vertex_groups:
+					try:
+						if mvg.weight(v.index) > 0:
+							final_mask_vg.add([v.index], 1, 'REPLACE')
+							break
+					except:
+						pass
+		
+		# Toggling shape keys using the same naming convention as the VertexWeightMix modifiers.
+		if obj.data.shape_keys:
+			#shapekeys = [sk for sk in obj.data.shape_keys.key_blocks if "M-" in sk.name]
+			shapekeys = obj.data.shape_keys.key_blocks
+			for sk in shapekeys:
+				visible = self.determine_visibility_by_name(sk, obj)
+				if visible != None:
+					sk.value = visible
+
+	def update_meshes(self, dummy=None):
+		""" Executes the cloth swapping system by updating object visibilities, mask vertex groups and shape key values. """
+
+		def do_child(rig, obj, hide=None):
+			# Recursive function to control item visibilities.
+			# We use the object hierarchy and assume that if an object is disabled, all its children should be disabled.
+			visible = None
+			if hide!=None:
+				visible = not hide
+			else:
+				visible = self.determine_object_visibility(obj)
+
+			if visible != None:
+				obj.hide_viewport = not visible
+				obj.hide_render = not visible
+
+			if obj.hide_viewport == False:
+				self.activate_vertex_groups_and_shape_keys(obj)
+			else:
+				hide = True
+
+			# Recursion
+			for child in obj.children:
+				do_child(rig, child, hide)
+
+		hide = False if self.show_all_meshes else None
+
+		rig = self.id_data
+		# Recursively determining object visibilities
+		for child in rig.children:
+			do_child(rig, child, hide)
+
+	show_all_meshes: BoolProperty(
+		name='show_all_meshes'
+		,description='Enable all child meshes of this armature'
+		,options={'LIBRARY_EDITABLE'}
+		,update=update_meshes
+	)
+
+classes = [
+	MetsRig_Properties,
+]
+
 def register():
+	from bpy.utils import register_class
+	for c in classes:
+		register_class(c)
+
+	# TODO: Might want to rename where this is stored, so it doesn't clash with my older rigs... awkward though.
+	bpy.types.Object.metsrig = bpy.props.PointerProperty(type=MetsRig_Properties)
+
 	bpy.app.handlers.depsgraph_update_post.append(post_depsgraph_update)
 	bpy.app.handlers.depsgraph_update_pre.append(pre_depsgraph_update)
 
@@ -258,6 +478,10 @@ def register():
 	bpy.app.handlers.frame_change_post.append(post_depsgraph_update)
 
 def unregister():
+	from bpy.utils import unregister_class
+	for c in reversed(classes):
+		unregister_class(c)
+
 	bpy.app.handlers.frame_change_pre.remove(pre_depsgraph_update)
 	bpy.app.handlers.frame_change_post.remove(post_depsgraph_update)
 
