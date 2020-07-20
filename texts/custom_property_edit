@@ -1,0 +1,21 @@
+This is a design proposal for reworking the UI of the Custom Property Edit operator, which I would like to do when I can find time. I don't have graphics skills so I will only have previews when I have some code. Until then, I thought it would just be nice to write this down in a public place.
+
+### Motivation
+Custom Properties became a lot more powerful since 2.7, but the UI for editing them has fallen behind. I would like to catch it up, so that making them even more powerful becomes a little bit easier. I think the target users for custom properties is mostly python developers, and making custom properties easier to understand would make it a tiny bit easier to become a python developer.  
+
+### Current shortcomings
+
+- Type is determined by value rather than the other way around
+Although this feels quite pythonic and I see the beauty in it, it's totally backwards. This leaves types undiscoverable and makes it hard to understand that `1`(int) is different from `1.0`(float) which is yet different from `"1.0"`(str). If we wanted to add support for differentiating between a percentage or a factor, you can't do it.
+- Vector subtypes are undiscoverable
+Custom Properties with a value like [1, 2, 3] will reveal the subtype parameter, where the vector can be set to be interpreted as color, raw data, etc. But why on earth would a user ever enter a value like [1, 2, 3] and expect that Blender would give them the option to interpret this as a color? The only way they'll know is if someone tells them.
+- No UI at all for PointerProperty
+Custom Properties can now store a reference to any datablock, but there is simply no way to do this without python. The UI for this already exists in drivers - driver variables can also reference any datablock. Custom Property editing should mimic this UI to create a reference to any datablock.
+- Some values are visible when unused, eg min/max values for strings or colors.
+- Doesn't use single column layout.
+
+### Proposal
+
+- The first thing you should see when clicking Edit on a custom property is its type, and the available types. If a type has subtypes, display those next. THEN the value of the property.
+- Do not allow entering a value that cannot be interpreted as the selected type. If you select Integer type and enter 1.5, it will NOT switch over to float for you, but instead truncate your value to 1. Trying to bend to the user's will and figure out what type they are looking for by looking at the value they entered just results in an unmaintainable mess of a type conversion code. This is much simpler.
+- Don't display irrelevant values anymore and use single column layout.

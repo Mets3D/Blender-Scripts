@@ -621,4 +621,77 @@ July 1:
     - Had a SUPER interesting and useful hour long video chat with Ivan Cappiello about the procedural face rigging they used at MAD. 
         He also gave me some code and sample blend file to play around with.
         Super nice guy!
-        
+    - CloudRig: Cleanup work to improve some stuff in prep for eye rig implementation
+
+July 2:
+    - Helped Andy fix up Pablo's old breakdance animation, got it functioning again.
+    - Spent some time researching horses to help out with a Rigify horse skeleton dilemma. 
+        It also relates to general quadruped rigging, and we talked about implementing a rear paw rig which Pablo mentioned before I should do so CloudRig can work on quadrupeds.
+    - Investigated why Pablo can't customize his selection sets on a library overridden rig... ran into what I guess is just an unfinished part of library overrides? T78534
+    - Added some bones to the barber
+
+July 3:
+    - Implemented the most complex parts of the cloud_eye rig type. Still need to add some basic things though.
+
+July 6:
+    - Finished the cloud_eye rig type, am pretty happy with it.
+    Got started on modifications for the cloud_chain rig to add some functionality to it that will make it more useful for rigging the face.
+        The details here are not crystal clear and it may take a bit of trial and error in terms of what functionality do I actually want, but I have ideas.
+    - cloud_chain chains will now have a smoother curvature. I haven't thought of a use case for when this is not desired, so it's not an option to turn this back off. It wasn't needed before since the rig was only used for limbs, which were straight lines where it didn't matter.
+
+July 7:
+    - cloud_chain will now have a consistent density of bbone segments, rather than the same number of BBone segments on every deform bone.
+    - Overhauled all rig types' UI to single column layout and cleaned up some code.
+    - Had to fix some stuff with the smooth curvature thing I did yesterday.
+    - Added a new parameter to rig parameter copying operator so it can optionally only copy rig parameters into selected bones of the same rig type.
+    Tomorrow plan: implement cloud_glue rig type.
+
+July 8:
+    - Made a cloud_template rig type for copy pasting when implementing new types, and as a learning resource in case someone wanted to make their own rig types based on CloudRig.
+    - Made a cloud_face_chain rig type that extends cloud_chain with functionality that allows these rigs to interact with each other.
+
+July 9:
+    - cloud_face_chain: Chain controls can now merge together when they intersect with other ones
+        We can also relink constraints from ORG bones to control bones
+
+July 10:
+    - Help Bastien with testing a library overrides patch which is vital so we can get Pablo back to testing library overrides.
+        (D8249, D8250)
+    - Finish the two main face chain features from yesterday:
+        - Chains can now merge controls when intersecting within the same rig
+        - Constraints can be relinked to the control at the tail of the chain by prefixing the constraint name with "TAIL".
+    - Made a small proposal (T78794)
+    - Found a crash (T78796)
+    - Chain bones' bbone_segments parameter was replaced with bbone_density, and can now do a consistent density of bbone segments.
+
+July 13:
+    - Looked into a crash relating to Rigify that is (and has been) preventing me from adding PointerProperties to CloudRig, forcing me to use shitty StringProperties instead. Couldn't figure out exactly what's causing it myself, but poked AlexanderGavrilov about it with my best guess.
+    - Tried thinking about how Rigify could better dynamically register property definitions... but every solution has some pretty major downsides.
+
+July 14:
+    - The crash I burned all of yesterday on seems like it may have been caused by mode switching, which AnGavrilov let me know can be avoided via a new PyAPI function vertex_indices_set().
+        I still crashed once after implementing the fix but I couldn't get it to crash anymore, so HMMM...
+        Still, I stuck to it, and I started using PointerProperties in various places, improving UX, as long as it doesn't crash.
+    - Started implementing the Action Set-up system.
+        For Rain, this used to be an operator that automatically set up action constraints.
+        For CloudRig this will be something similar, except instead of an operator it is a list of the data structures that will be used to set up the constraints.
+        That list's UI is mostly done, nice and foolproof, although I'm not too sure on where the whole thing lives atm.
+
+July 15:
+    - Initial functionality for the Action Set-up system. Just needs to support symmetry, and for that I need to take care of some other stuff first.
+    - Improved naming for merging controls between different cloud_face_chains, 
+        so eg. a bone is now named "STR-I-Nostrils1" instead of "STR-I-Nostrils1+Nostrils1.L.R", or 
+        "STR-I-Lip_Top1+Bot1.L" instead of "STR-I-Lip_Top1+Lip_Bot1.L", etc. Ie, the naming for these combined controls is now a lot more compact while still making sense.
+
+July 16:
+    - Merged controls created by cloud_face_chain that have an X head coordinate of 0 will have their orientation set to be world-aligned.
+    - Implemented symmetry for action set-up, as all the prerequisites for it are now done.
+    - Re-wrote the entirety of the cloud_chain rig type. It was the very first rig that got implemented, so at the time I didn't really have the code structure that I wanted figured out yet. Should be a lot cleaner now.
+    - Added a new feature to cloud_chain: Smooth Splines. This is how Rain's face behaved also, except it can be a lot simpler now thanks to some constraint improvements since then by AnGavrilov.
+
+July 20:
+    Started reorganizing my currently terribly organized code. 
+        Thankfully I organize all my terribly organized code into a couple "utils" files - these need to be split up into smaller, more focused files with a descriptive name.
+    - Consolidated all naming related functionality into utils/naming.py
+    - Consolidated all object related functionality into utils/object.py
+    - Consolidated all math related functionality into utils/maths.py
