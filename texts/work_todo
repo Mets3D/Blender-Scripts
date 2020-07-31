@@ -1,5 +1,3 @@
-I should configure my VSC properly; strip trailing whitespace on save, auto-format C code on save, maybe Python too if possible, but I'm not sure if it is.
-
 Bug reports:
 	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
 		Fixing this would totally break Rigify, because it relies on this bug...
@@ -98,11 +96,9 @@ Settlers TODO:
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
 CloudRig ideas:
-	IK Fingers
+	cloud_finger
 		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
 		Param for useless curl controls
-	cloud_ik_chain
-		IK chains in blender are expected to be perfectly flat along a plane. I'm thinking maybe we could add an operator to the rig settings that would do this for you??
 	cloud_instance
 		This would be a single bone rig with a single parameter, which is another bone from the metarig which has a rigify type.
 		This bone would act as an instance of that entire rig element, copying all its child rigs and everything. Crazy stuff. Not sure if possible.
@@ -123,55 +119,36 @@ CloudRig ideas:
 	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
 	Layers: Show a preview of what the layer UI is going to look like. This should be super easy, we just need to call the function that draws the actual layer UI. We can import cloudrig.py, why not.
 
-	Would be nice if rig samples could be loaded from a .blend file instead of code-based generation bs. For metarigs it seems easy. For rig samples, it might be tricky because we have to juggle object modes.
-
 	Picker UI? based on https://github.com/jayanam/bl_ui_widgets. Would be quite a big endeavour, and I don't hear a lot of people asking for it.
 
 CloudRig TODO:
-	Rigify compatibility
-		- When enabled, cloud_bones with use_deform=True get overwritten to False.
-		- When enabled, bone groups assigned in cloud_bone seem to get overwritten.
-		Rigify compatibility specific functions should only affect rigify rig types.
+	Priority 1: Face rigging features
+		Seems mostly done but if anything comes up it should get fixed asap.
 
-	Bug: IK-CTR-Chest flies away when moving the chest master far, needs a DSP- bone?
+	Priority 2: Changes that will affect metarigs
+		Try splitting up the spine rig into spine/neck/head rigs (Some of which may not need actual rig types since they might just be simple FK Chains).
+		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 
-	Documentation:
+	Priority 3: Bugs
+	Priority 4: Code quality
+		cloud_base should define a deformation bone set and every rig should just use that one.
+		Consider if cloud_utils needs to be split up further, but even if not, definitely rename it to something more descriptive and move it out of rigs folder.
+		All UI functions that take a UILayout as first parameter should be prefixed with ui_ or draw_ instead of a random mix of ui_/draw_ prefix/suffixes that we have now...
+		I think it's still arbitrary whether we use the work make, create, or define. If it isn't, we should probably write some documentation about the code structure and my conventions and include it in the wiki. (I'm thinking a "How to contribute" page or so)
+		Consider where we want to use typing and where not.
+
+		We should stop using @stage decorators, I think they make the code more confusing.
+		Instead just have the stage function and call the functions in the order they should be called.
+		Functions should also be defined roughly in the order that they are called, rather than the other way around.
+	Priority 5: UI, UX & documentation
+		Add operators in the UI somewhere, somehow.
 		Add gifs to CloudRig Types page (do it at home with ShareX)
-		- Put something on the home page? Hell it could be just a duplicate of the readme, or a re-listing of what's already in the sidebar, idk.
-		- Update readme with links to the wiki and more up-to-date screenshots.
-
-	IK Chain
-		Ability to have IK control at the end
-	FK Chain
-		Counter-Rotate STR param should disable the deform_segments chain param, and force it to 1.
-	Spine
-		Maybe should be split up to Spine/Neck/Head rigs. Or well, just remove the neck and head, and those should be separate FK chain rigs. Might make the code a lot simpler, but also might not.
-		IK-CTR-Spine should have a copy rotation constraint to MSTR-Hips and possibly also MSTR-Chest. Ofc, implement this in a smart way, that works with arbitrary spine length. (Similar deal to how STR bones stay inbetween STR main bones, but in this case it's rotation instead of location)
-		IMPORTANT: Should force chain segments to 1.
-		IK/FK snapping? I'm guessing it's non-trivial, otherwise we would've done it. But it should be possible.
-		Transformation constraints on FK-C bones (maybe make this optional)
-			Their values would probably have to be dependent on the length of the bone. Ie, a long bone should slide more when it's rotated, compared to a short bone.
-			Test if these can be overwritten by a cloud_bone rig.
-	IK limbs
-		feet control shouldn't be forced onto the floor, maybe based on an option, or use anklepivot bone, or whatever.
-		ROLL-Foot.L shouldn't have its tail be offset in a flat forward direction. Instead, make it perpendicular to the knee, pointing towards the toe. (cross product of knee and toe bones' vectors?)
-		Some smartypants way of ensuring that the IK pole, when IK Pole Follow is enabled, follows the IK control on its roll axis, but not the other axes?
-		Scissor limb rig possible? (limb with an extra bone to help elbow/knee deformation) - Can it work in FK?
-			I guess this would have to manifest more like an "arbitrary length limb" idea. IK chains can already be arbitrary length, but to allow that for limbs... might be super tricky. Especially when it comes to IK->FK snapping!
-	Curve
-		Add "X Symmetry" parameter, when enabled, determine hook bone sides automatically based on X coordinate sign, and flip bones on one side so mirror posing works as expected. An actual symmetrical curve shape is not enforced, but expected.
-		Seems to sometimes hook the wrong bones to the wrong curve point?? (On pip, eg. after scaling CUR-Eye.L -1 Z around its center in edit mode)
-		Lunte face breaks when generating with button instead of operator, no clue why, didn't investigate, don't have time.
-	cloud_bone
-		Create Deform option should maybe only show up when the bone's Deform option is enabled. In this case the bone's use_deform would be False, but a new def bone is created instead.
-		Split up into cloud_tweak for the tweaking functionality, maybe one can extend the other idk.
-		Rework the entire thing so it uses BoneInfo instead of doing things normally? Not sure, should think about pros and cons.
-
-	Add operators in the UI somewhere, somehow.
-
-CloudRig Code Quality
-	Consider if cloud_utils needs to be split up further, but even if not, definitely rename it to something more descriptive and move it out of rigs folder.
-	All UI functions that take a UILayout as first parameter should be prefixed with ui_ or draw_ instead of a random mix of ui_/draw_ prefix/suffixes that we have now...
-	I think it's still arbitrary whether we use the work make, create, or define. If it isn't, we should probably write some documentation about the code structure and my conventions and include it in the wiki. (I'm thinking a "How to contribute" page or so)
-	Consider where we want to use typing and where not.
-	Look at PEP-8 again and do a pass on everything to make it PEP-8 compliant.
+		Maybe hack the Rigify Buttons panel and change the "Options:" label to the rig description.
+		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
+		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
+	Priority 6: Rigify compatibility
+		When enabled, cloud_bones with use_deform=True gets overwritten to False. (This might be fixed now?)
+		When enabled, bone groups assigned in cloud_bone seem to get overwritten.
+		Rigify compatibility specific functions should only affect rigify rig types.
+	Priority 7: Upstream fixes and features to Rigify.
+		create_selection_sets() code is bad.

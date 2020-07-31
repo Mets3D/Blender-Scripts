@@ -486,135 +486,136 @@ May
         - Fix root bone shape scale exploding
         - Curve rigs UI fixes and code cleanup
 
-June 2:
-    - Fix another issue with Pip's toe.
-    - Fix Rigify Buttons panel in edit mode was not working.
-    - Fix regular Rigify types throwing error with CloudRig generator. Although full compatibility with regular Rigify is not really a goal, it should at least manage to generate.
-    - Fix IK/FK switching not working on the spine
-    - Moved a bunch of functionality that belonged in the FK chain code, into the FK chain code.
+June
+    June 2:
+        - Fix another issue with Pip's toe.
+        - Fix Rigify Buttons panel in edit mode was not working.
+        - Fix regular Rigify types throwing error with CloudRig generator. Although full compatibility with regular Rigify is not really a goal, it should at least manage to generate.
+        - Fix IK/FK switching not working on the spine
+        - Moved a bunch of functionality that belonged in the FK chain code, into the FK chain code.
 
-June 3:
-    - Fix some issues on Rain for Pablo.
-    Took 3/4 of the day off due to eye pain. It continued at home, even after several hours of taking the lense out. Strange.
+    June 3:
+        - Fix some issues on Rain for Pablo.
+        Took 3/4 of the day off due to eye pain. It continued at home, even after several hours of taking the lense out. Strange.
 
-June 4:
-    - Some cleanup on Pip so Simon can do a V1 release.
-    - Improve mouth weights on Rain for Pablo.
-    - CloudRig:
-        - Fix rigify compatibility mode always being enabled instead of only when needed.
-        - Fix cloud_spline_ik not working in some cases, and not updating the generated curve in other cases.
-        - Finish documentation of custom properties and curve rig types.
+    June 4:
+        - Some cleanup on Pip so Simon can do a V1 release.
+        - Improve mouth weights on Rain for Pablo.
+        - CloudRig:
+            - Fix rigify compatibility mode always being enabled instead of only when needed.
+            - Fix cloud_spline_ik not working in some cases, and not updating the generated curve in other cases.
+            - Finish documentation of custom properties and curve rig types.
 
-June 5: Day off due to eye pain.
+    June 5: Day off due to eye pain.
 
-June 8:
-    - Script, record, edit first 6 minutes of weight painting tutorial
+    June 8:
+        - Script, record, edit first 6 minutes of weight painting tutorial
 
-June 9:
-    - Script, record, edit another 3 minutes of weight painting tutorial. Showed it to a friend for feedback, found some audio balance issues. Considering cutting into multiple parts soon.
-    - Some troubleshooting for Pablo.
-    - Some discussions on a Rigify patch with Ivan Cappiello and Alexander Gavrilov.
+    June 9:
+        - Script, record, edit another 3 minutes of weight painting tutorial. Showed it to a friend for feedback, found some audio balance issues. Considering cutting into multiple parts soon.
+        - Some troubleshooting for Pablo.
+        - Some discussions on a Rigify patch with Ivan Cappiello and Alexander Gavrilov.
 
-June 10:
-    - Fix an error on Pip/CloudRig for Hjalti.
-    - Figure out how to fix audio and render from Resolve, and rendered first version of the first part of the weight painting tutorial. At this pace it looks like it could be a 3-4 parter.
-    - Got my first fix committed for Rigify. Have ideas for a lot more, but will have to see what time allows.
+    June 10:
+        - Fix an error on Pip/CloudRig for Hjalti.
+        - Figure out how to fix audio and render from Resolve, and rendered first version of the first part of the weight painting tutorial. At this pace it looks like it could be a 3-4 parter.
+        - Got my first fix committed for Rigify. Have ideas for a lot more, but will have to see what time allows.
 
-June 11:
-    - Split off the weight painting tools from MetsTools into a new EasyWeight addon on gitlab.
-    - Started looking at what I could contribute to Rigify.
-        In doing so I realized it could really use unit tests.
-        I started learning about unit tests with some guidance from Sybren.
-        Managed to get baby's first unit test working, detecting missing bones in the generated rig. Woohoo!
+    June 11:
+        - Split off the weight painting tools from MetsTools into a new EasyWeight addon on gitlab.
+        - Started looking at what I could contribute to Rigify.
+            In doing so I realized it could really use unit tests.
+            I started learning about unit tests with some guidance from Sybren.
+            Managed to get baby's first unit test working, detecting missing bones in the generated rig. Woohoo!
 
-June 12:
-    - Worked more on Rigify rig generation unit testing.
-    - Changes in bone properties, constraints, bone custom properties are detected.
-    - Changes in drivers of bone properties and constraint properties are detected.
-    This more or less covers everything, so next time I will start actually working on a Rigify commit and use this test to make sure I don't break anything.
-    In future I can also use this for testing CloudRig refactors, which would've been very helpful some time ago.
+    June 12:
+        - Worked more on Rigify rig generation unit testing.
+        - Changes in bone properties, constraints, bone custom properties are detected.
+        - Changes in drivers of bone properties and constraint properties are detected.
+        This more or less covers everything, so next time I will start actually working on a Rigify commit and use this test to make sure I don't break anything.
+        In future I can also use this for testing CloudRig refactors, which would've been very helpful some time ago.
 
-    - Set up both upstairs and downstairs recording rooms so I don't have to do it at home.
+        - Set up both upstairs and downstairs recording rooms so I don't have to do it at home.
 
 
-June 15:
-    - Scripted and recorded audio for weight painting tutorial part 2.
-    - Made D8041
+    June 15:
+        - Scripted and recorded audio for weight painting tutorial part 2.
+        - Made D8041
 
-June 16
-    - Tested D7499
-    Rain:
-        - Updated her to latest cloudrig functionality.
-        - Viewport Display panel works again... /wrists
-        - Reimplemented old "Enable Modifiers" button as a shiny new Quality slider.
-        - Troubleshooting mask modifier performance drop for Pablo, it turned out to be this old problem T68740.
-        - Added python app handler workaround, should have good performance while masks are turned on now.
-    - Got final cut of audio for weight painting tutorial part 2, just need video.
+    June 16
+        - Tested D7499
+        Rain:
+            - Updated her to latest cloudrig functionality.
+            - Viewport Display panel works again... /wrists
+            - Reimplemented old "Enable Modifiers" button as a shiny new Quality slider.
+            - Troubleshooting mask modifier performance drop for Pablo, it turned out to be this old problem T68740.
+            - Added python app handler workaround, should have good performance while masks are turned on now.
+        - Got final cut of audio for weight painting tutorial part 2, just need video.
 
-June 17:
-    - Got final cut of video for weight painting tutorial part 3.
+    June 17:
+        - Got final cut of video for weight painting tutorial part 3.
 
-June 18:
-    - Half a day off due to eye appointment.
-    Rain:
-        - Add parent switcher for eye target.
-        - Turn face-settings into a cloudrig-compatible dictionary stored in the armature custom properties.
-        - Update cloudrig.py accordingly, removing the final pieces of hardcoding it used to have for Rain!
-    - More testing and feedback on D7499.
-    - Made D8070.
+    June 18:
+        - Half a day off due to eye appointment.
+        Rain:
+            - Add parent switcher for eye target.
+            - Turn face-settings into a cloudrig-compatible dictionary stored in the armature custom properties.
+            - Update cloudrig.py accordingly, removing the final pieces of hardcoding it used to have for Rain!
+        - More testing and feedback on D7499.
+        - Made D8070.
 
-June 19:
-    - More D7499 constraint UI rework feedback.
-    CloudRig:
-        - BoneInfo class now handles pose bone and data bone property drivers separately.
-        - BBone drivers now go on data bone properties instead of pose bone properties, leaving more control for animators (inspired by what for a minute I thought was a bug in Rigify).
-        - Sharp Sections parameter now affects the driver expression instead of the property value.
-    - Investigated an issue in Rigify where the console is spammed with errors when using Legacy mode and changing rig type options, but fixing it seems like it would be a big undertaking. Despite the error spam, everything works correctly, so I guess it's not a big problem, just a shame.
-    - Made D8077.
-    - Started working on a patch to improve UX when adding or editing custom properties. Will finish in my free time as it's not strongly enough related to my work.
+    June 19:
+        - More D7499 constraint UI rework feedback.
+        CloudRig:
+            - BoneInfo class now handles pose bone and data bone property drivers separately.
+            - BBone drivers now go on data bone properties instead of pose bone properties, leaving more control for animators (inspired by what for a minute I thought was a bug in Rigify).
+            - Sharp Sections parameter now affects the driver expression instead of the property value.
+        - Investigated an issue in Rigify where the console is spammed with errors when using Legacy mode and changing rig type options, but fixing it seems like it would be a big undertaking. Despite the error spam, everything works correctly, so I guess it's not a big problem, just a shame.
+        - Made D8077.
+        - Started working on a patch to improve UX when adding or editing custom properties. Will finish in my free time as it's not strongly enough related to my work.
 
-June 22:
-    - Got started planning and implementing a new rig type for CloudRig, CloudBBoneGrid.
-        Rain's face mostly consisted of what I can only describe as a BBone Grid, 
-        so the goal with this is to generate something like that. 
-        The issue is, the customization this needs on a per-character basis is quite low level, 
-        so might have to come up with some new system or convention to allow 
-        per-bone customization of rig behaviour in the metarig, 
-        without requiring so much manual input that it would defeat the purpose of rig generation.
-    - Scripted and recorded audio for part 3 of the weight painting tutorial.
-        Would love to edit it at the same time as well, but Resolve won't open on the recording PC and troubleshooting on Linux is... awful.
+    June 22:
+        - Got started planning and implementing a new rig type for CloudRig, CloudBBoneGrid.
+            Rain's face mostly consisted of what I can only describe as a BBone Grid, 
+            so the goal with this is to generate something like that. 
+            The issue is, the customization this needs on a per-character basis is quite low level, 
+            so might have to come up with some new system or convention to allow 
+            per-bone customization of rig behaviour in the metarig, 
+            without requiring so much manual input that it would defeat the purpose of rig generation.
+        - Scripted and recorded audio for part 3 of the weight painting tutorial.
+            Would love to edit it at the same time as well, but Resolve won't open on the recording PC and troubleshooting on Linux is... awful.
 
-June 23: Took a day off.
+    June 23: Took a day off.
 
-June 24:
-    - Found a Rigify bug report (T78193), looked into it a bit.
-    - Found another Rigify bug report (T78217) and looked into it.
-    - Submitted D8102. (Not related to either)
-    - Went back to part 2 of the weight painting thing and did some re-recording for some parts I didn't like.
-    - Learned how to make Blender VSE less awful with help from Sebastian. Might try using it again. Will regret.
+    June 24:
+        - Found a Rigify bug report (T78193), looked into it a bit.
+        - Found another Rigify bug report (T78217) and looked into it.
+        - Submitted D8102. (Not related to either)
+        - Went back to part 2 of the weight painting thing and did some re-recording for some parts I didn't like.
+        - Learned how to make Blender VSE less awful with help from Sebastian. Might try using it again. Will regret.
 
-June 25:
-    - Blender started bugging out after some editing, so after wasting some time troubleshooting it I gave up.
-    - Tried Olive again, but after wasting some time looking for better ways to do retiming I gave up.
-    - Back to Davinci with most of the day gone, I recorded a correction for the audio and got started on the video but couldn't finish.
+    June 25:
+        - Blender started bugging out after some editing, so after wasting some time troubleshooting it I gave up.
+        - Tried Olive again, but after wasting some time looking for better ways to do retiming I gave up.
+        - Back to Davinci with most of the day gone, I recorded a correction for the audio and got started on the video but couldn't finish.
 
-June 26:
-    - Finished part 3 of the weight painting tutorial disaster... It took the entire week, but at least it wasn't worth it.
-    - Helped Pablo with an issue on Rain's face.
-    - Looked into making IK->FK snapping more reliable, got something that might work, and committed it on Rain.
+    June 26:
+        - Finished part 3 of the weight painting tutorial disaster... It took the entire week, but at least it wasn't worth it.
+        - Helped Pablo with an issue on Rain's face.
+        - Looked into making IK->FK snapping more reliable, got something that might work, and committed it on Rain.
 
-June 29:
-    - Cleaned up the Barber for Pablo so he can start working when he's ready.
-    - Made some changes to our branch of BlenRig for the same reason.
-    - Investigated T78193 more thoroughly, decided to call in the big guns, Alexander provided a patch that covers the issue very nicely.
-    - Worked on some patches after hours. (D8041, D6100, D8154)
-        - Put up with Juan Pablo's thick skull, this guy is an actual lemon.
+    June 29:
+        - Cleaned up the Barber for Pablo so he can start working when he's ready.
+        - Made some changes to our branch of BlenRig for the same reason.
+        - Investigated T78193 more thoroughly, decided to call in the big guns, Alexander provided a patch that covers the issue very nicely.
+        - Worked on some patches after hours. (D8041, D6100, D8154)
+            - Put up with Juan Pablo's thick skull, this guy is an actual lemon.
 
-June 30:
-    - Birthday!
-    - Worked on getting CloudRig up to date with some recent Rigify updates.
-    - Started implementing a versioning system for CloudRig so I can be more free with changing things and trying to not break backwards compatibility as much.
-    - Right Click->Online Manual on CloudRig operators and properties now links to appropriate wiki pages.
+    June 30:
+        - Birthday!
+        - Worked on getting CloudRig up to date with some recent Rigify updates.
+        - Started implementing a versioning system for CloudRig so I can be more free with changing things and trying to not break backwards compatibility as much.
+        - Right Click->Online Manual on CloudRig operators and properties now links to appropriate wiki pages.
 
 July 1:
     - Blender presentation by Ton & HR
@@ -695,3 +696,45 @@ July 20:
     - Consolidated all naming related functionality into utils/naming.py
     - Consolidated all object related functionality into utils/object.py
     - Consolidated all math related functionality into utils/maths.py
+
+July 21:
+    - Improve code structure of naming utilities. I originally wanted to use multiple-inheritance but that turned out very messy.
+    - Cross out a lot of TODO's.... and find some new ones.
+
+July 22:
+    - Fixed all remaining TODO's that were marked IMPORTANT.
+    - Got started on an eyelid setup system. I could do this in the metarig, so I didn't do it before because it didn't seem vital... But on second thought, I think some parts of this can be kept procedural, so it's probably worth a shot.
+
+July 23:
+    - Implemented the eyelid thing for the most part, but kind of a crap day for my brain. Felt like I was functioning at a solid 20% capacity. Very slow day, quite sad.
+
+July 24:
+    - The issue that I was stumped on for like 3 hours yesterday I fixed in 10 minutes... it was very simple... brain power was definitely at a low point yesterday.
+
+July 27:
+    - Helped Pablo get up and running again (had to fiddle with his BlenRig installation and bringing over 2.90 userprefs)
+    - Submitted https://developer.blender.org/D8403 so Pablo can use selection sets.
+    CloudRig:
+        - Eye rig's sticky eyelids feature now tapers off towards the edges of the eyelids. It should work regardless of eye orientation and eye size. Hopefully.
+
+July 28:
+    - Some updates to documentation.
+    - Override troubleshooting for Pablo.
+    - Got some feedback on CloudRig from Ivan Cappiello, some bugs, some suggestions, worked on those.
+
+July 29:
+    - Final updates to the documentation.
+    - Added the Sintel metarig to CloudRig to showcase the Actions system.
+    - D8422
+    - Made two versions of a Snow character rig for Sebastian to test the soft body GSoC thing.
+
+July 30:
+    - Split up cloud_eye rig into a simpler cloud_aim rig. cloud_eye now just extends that and adds the eyelid functionality.
+    - Troubleshoot some weirdness for Pablo
+    - Attempt to implement Bone Sets as a UIList and figure out why it is kind of impossible.
+    - Added basic support for Selection Sets.
+
+July 31:
+    - Fix Rigify elements failing to generate with CloudRig elements (reported by Ivan Cappiello)
+    - Update docs for cloud_eye and cloud_aim.
+    - Make a quick test on Emily to see how troublesome the thin neck would be.
