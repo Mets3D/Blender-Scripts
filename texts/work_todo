@@ -96,6 +96,8 @@ Settlers TODO:
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
 
 CloudRig ideas:
+	Try implementing the full body IK systems from angavrilov?
+
 	cloud_finger
 		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
 		Param for useless curl controls
@@ -147,7 +149,6 @@ CloudRig TODO:
 		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
 		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
 	Priority 6: Rigify compatibility
-		When enabled, cloud_bones with use_deform=True gets overwritten to False. (This might be fixed now?)
 		When enabled, bone groups assigned in cloud_bone seem to get overwritten.
 		Rigify compatibility specific functions should only affect rigify rig types.
 	Priority 7: Upstream fixes and features to Rigify.
