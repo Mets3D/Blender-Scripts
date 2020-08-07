@@ -70,19 +70,6 @@ Rigify patch ideas
 	Rework the bone group system to be like mine.
 	As an even longer term goal, make it so that I don't have to implement my own Generator class, because the rigify generator should be able to do everything I need it to do.
 
-BBone Face Rig idea:
-	What if there are two layers of BBones? One is Automatic, the other is Tangent.
-	We then steal the tangents of the Automatic with Copy Transforms constraints that have splining enabled.
-	meh, you still need two bones to do translation+rotation separately methinks.
-	Control
-		Automatic chain
-			Automatic angle reader
-				Tangent angle (parented)
-	In this setup, how do we get the local rotation of Control to affect Tangent angle in a predictable way?
-
-Next Rig notes:
-	- Four lip controls per quarter of lip instead of 3.
-
 Addon idea:
 	Make a better Shift+D (duplicate bone) behaviour, where instead of slamming a .001 at the end of the bone name, it increments whatever number it finds in the bone name, and it does the same on the right side.
 	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
@@ -125,31 +112,20 @@ CloudRig ideas:
 
 CloudRig TODO:
 	Priority 1: Face rigging features
-		Seems mostly done but if anything comes up it should get fixed asap.
-
 	Priority 2: Changes that will affect metarigs
-		Try splitting up the spine rig into spine/neck/head rigs (Some of which may not need actual rig types since they might just be simple FK Chains).
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
-
 	Priority 3: Bugs
 	Priority 4: Code quality
 		cloud_base should define a deformation bone set and every rig should just use that one.
-		Consider if cloud_utils needs to be split up further, but even if not, definitely rename it to something more descriptive and move it out of rigs folder.
-		All UI functions that take a UILayout as first parameter should be prefixed with ui_ or draw_ instead of a random mix of ui_/draw_ prefix/suffixes that we have now...
-		I think it's still arbitrary whether we use the work make, create, or define. If it isn't, we should probably write some documentation about the code structure and my conventions and include it in the wiki. (I'm thinking a "How to contribute" page or so)
-		Consider where we want to use typing and where not.
-
-		We should stop using @stage decorators, I think they make the code more confusing.
-		Instead just have the stage function and call the functions in the order they should be called.
-		Functions should also be defined roughly in the order that they are called, rather than the other way around.
 	Priority 5: UI, UX & documentation
 		Add operators in the UI somewhere, somehow.
 		Add gifs to CloudRig Types page (do it at home with ShareX)
-		Maybe hack the Rigify Buttons panel and change the "Options:" label to the rig description.
 		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
 		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
+		Add a template for reporting issues - only important when we go wide public, so probably after Sprites. https://gitlab.com/help/user/project/description_templates
 	Priority 6: Rigify compatibility
 		When enabled, bone groups assigned in cloud_bone seem to get overwritten.
 		Rigify compatibility specific functions should only affect rigify rig types.
 	Priority 7: Upstream fixes and features to Rigify.
 		create_selection_sets() code is bad.
+		Ivan wants his paw rig.

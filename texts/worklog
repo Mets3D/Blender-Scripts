@@ -746,5 +746,26 @@ August 3
 
 August 4
     - Wrote a script for Pablo to time remap his animation because it was accidently on 30 fps and they want it to be on 24.
+    - Finished refactoring cloud_spine.
+        - Support multiple spines within a single rig.
+        - Support arbitrary length spine rig (worked before but badly)
+        - Slightly better behaviour for hip and torso controls (affect the center of the spine a bit more)
 
-    TODO for the week: Slap a quick rig on the sprite and all 5 main characters.
+August 5
+    - Slapped a simple rig on the Sprite.
+    - Lots of easy code refactoring. (I left the easy stuff last, for some reason)
+    - Wrote some notes on how one could fork or contribute to CloudRig
+        - Includes some coding conventions which I wasn't really adhering to before but now I am.
+        - Includes some thoughts on what CloudRig features might be a good idea to upstream into Rigify. 
+        A lot of the stuff is inter-dependent though, so it needs some thought put into it, but I have an idea on where I could start.
+
+August 6
+    - Worked on versioning code so that Lunte's now outdated metarig is automatically updated with the correct new rig types and parameters on file load.
+        (I don't actually care about Lunte's metarig working, but this is a test to see what I can and can't do by versioning, since it informs what kind of changes will be backwards-compatibility breaking in the future)
+        Result was satisfactory, although some things still needed to be tweaked manually.
+    - Ran into a number of bugs while testing Lunte. Luckily so, because they would've caused a mess if Pablo started animating the sprite before they got fixed, because the naming and numbering of bones was wrong.
+
+August 7
+    - Implemented a proper way for rigs to disable their inherited parameters. For example, the cloud_spine rig inherits the deform_segments parameter from cloud_chain, but it should always be 1. 
+    Previously, forcing it to 1 and graying it out required putting code all over the place. Now it's just one line at the top of the class, and it's all handled by code in cloud_base.
+    This did require having to use wrapper functions for UILayout.prop() and prop_search(), but I'm okay with that.
