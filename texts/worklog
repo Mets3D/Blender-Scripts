@@ -769,3 +769,36 @@ August 7
     - Implemented a proper way for rigs to disable their inherited parameters. For example, the cloud_spine rig inherits the deform_segments parameter from cloud_chain, but it should always be 1. 
     Previously, forcing it to 1 and graying it out required putting code all over the place. Now it's just one line at the top of the class, and it's all handled by code in cloud_base.
     This did require having to use wrapper functions for UILayout.prop() and prop_search(), but I'm okay with that.
+    - D8496: Rigify: Implement T78463: better support unguligrade animals (horse) setup
+
+August 10
+    - D8514: Rigify: Code tweaks
+    - D8519: Rigify: Addon Prefs & Feature Sets UI
+    - D8524: Rigify: Add manual mapping
+
+August 11
+    - Rigged Emily and played around with physics a lot. 
+    The results are okay but only when scaled up 10x, which is not great.
+
+August 12
+    - Started implementing my Make Physics Bone Chain operator from many years ago as a rig type. Halfway there.
+
+August 13:
+    - Finished implementing cloud_physics_chain rig, added documentation.
+    - Implement new Preserve Volume parameter on cloud_chain rig so Pablo can have true squash and stretch where he needs it.
+    - Some bugfixes on cloud_spine and widget collection code
+
+August 14:
+    - Fixes and improvements on the physics rig
+    - Begging people to look at my patches
+    - Scaled the Sprite rig while unbreaking pablo's animations, as it was originally 20 meters tall
+
+August 17:
+    - Pipeline discussions with Simon and a little bit with Sybren
+    - Gave another attempt to BoneSet UIList idea, this time given up on it permanently and deleted the file.
+    - Majorish cleanup in bone.py to make BoneSets and BoneInfos easier and less confusing to create.
+
+August 18:
+    - Finish BoneInfo refactor from yesterday
+    - Start cleaning up pipeline script, turning it into a proper addon, testing.
+    - Update my Rigify patch D8519 based on feedback from Ivan & Alexander.

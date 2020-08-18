@@ -1,12 +1,15 @@
 PATCHES
-    D7837 Waiting on Campbell
-    D7855 Waiting on Campbell
-    D7801 Waiting on Angavrilov
+    D7855 Waiting on the author, or campbell? I don't really get their problem.
+    Waiting on Angavrilov
+        D8496
+        D8514
+        D8519
+    D8524 Waiting for help from Aaron or Campbell
 
 Potential workflow improvements
 BUGS
     T77052
-    https://developer.blender.org/T73434
+    T73434
     https://docs.google.com/document/d/1dOnT5-oQjtsShhsMQSXHwy5mH0vZooXU1hj-dzKyRqs/edit
 FEATURES
 - LOW Let me access armature data from weight paint mode. (can be done with addon, but it should be in Blender)
@@ -36,14 +39,13 @@ Small things:
 	- Unlink Action
 	- Clear Pose Constraints operator
 - ME! When unparenting a bone with Alt+P, Disconnect Bone option shouldn't show up when none of the bones are connected.
-    - https://developer.blender.org/D6100
+    - D6100
     - Could try adding warnings instead of empty menus, eg. RNA_warning("Expected an integer active data property");
-- ME! use_connect should never be able to be true when there is no parent. It causes the head of the bone to stop drawing.
-    - https://developer.blender.org/D6101
-- When deleting an object, there's no need to preserve references to it in bone shapes or custom properties.
-    - Preserving bone shapes used to make some kind of sense before we had collections (even then, it was kind of bad practice) since otherwise they would take up a precious layer. This is no longer the case, and this bad workflow should no longer be supported. Bone shapes should be put in a collection and hidden via collection visibility settings.
-    - Preserving references in custom properties is just nonsense, and causes terrible things to happen when deleting proxy armatures that are still being referenced by a custom property.
-    - Delete should mean Delete. Not "sometimes kinda delete if I feel like it."
+- Deleting an object should also clear all references to it - Just give a warning in this case. The current behaviour is inconsistent:
+    - When deleting an armature object, all mesh objects who had a modifier that referenced that armature object lose their reference, and the armature will be purged on reload because it has 0 users.
+    - When deleting any object that is referenced by a custom property, the custom property is not set to empty, so the object still has a user and it lingers in the file.
+
+
 - ME? When deleting from a list like vertex groups or shape keys, the search functionality is ignored.
     - There is already code for it, it's just commented out. https://developer.blender.org/T48001
     - Nevermind, that code is stupid. What we need to do is to let add/delete operators communicate with the list.
@@ -68,12 +70,10 @@ Small things:
     - I implemented a proof of concept of this into MetsTools.
 
 - BBone improvements
-    - When BBone handle type is set to Automatic, let us still choose a handle target, and have it behave such that the changes the target would apply when the handle type is set to Tangent, are applied on top of the changes that are done currently when the handle type is Automatic, effectively allowing us to combine the two behaviors.
-        - Gavrilov said this is not this simple. But I wish it was.
     - When BBone handle type is set to Automatic, the bbone splining should only affect the bone itself, the child's start handle, and the parent's end handle. This is currently not the case for roll, meaning if a BBone chain is set to Automatic, and any of the bones in the chain start rolling, the entire chain will start rolling.
-        - If we wanted to keep this behavior as an option, we could have a new handle type enum.
+        - If we wanted to keep this behavior as an option, we could have a new handle type, like "Auto With Roll".
 - Auto-Normalize should never add weights to 0 weights. (I couldn't reproduce this though)
-- Ctrl+0,1,2 to set subsurf levels should work in weight paint mode on the weight paint object.
+
 - In the vertex weight panel in edit mode N panel, let us sort influences by weight instead of alphabetical.
 - ME? Give me a PoseBone.constraints.clear() for the python API, to delete all constraints. There is already a bpy.ops operator for this.
 

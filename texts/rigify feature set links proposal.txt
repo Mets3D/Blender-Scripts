@@ -1,0 +1,22 @@
+Rigify is an addon that can have its own sub-addons, currently known as [feature sets](https://wiki.blender.org/wiki/Process/Addons/Rigify/FeatureSets). This means that, just like Blender, Rigify itself is completely extensible.
+
+
+##### Existing benefits of this system:
+
+- The base Rigify addon can remain simple and free of an overwhelming amount of rig types that do similar things.
+- Feature Set maintainers don't need Blender commit rights, nor approval from Rigify's maintainers. They can do whatever crazy things they want in their own repositories. 
+
+
+##### Issues
+
+- The base Rigify addon is not simple and free of confusing choices because of the Legacy rigs that it still houses from a long time ago. This muddles both the code and the UX... but especially the code.
+- Users may not even realize Rigify is extensible, since it's unique as a Blender addon in that respect. Even if they do realize it is extensible, they would have to seek out feature sets on google.
+
+### Proposal
+I propose adding a list of repository links to the Rigify Addon Preferences interface with some existing feature sets from around the web. These would not be direct download links, merely links to a feature set's repository.
+- Feature Set developers can then request Rigify maintainers to add their feature set to this list.
+- Rigify maintainers can remove feature sets if they are no longer being maintained, or any other reason.
+- Users can still seek out feature sets from any other place on the web. These buttons would just help discoverability of some of the more complete and usable feature sets.
+- The Legacy feature set can be removed from base Rigify, and a link to it can be added as an external repository. Users who still wish to use the legacy features will have to take a couple extra clicks to install the Legacy feature set.
+- People and studios might feel more motivated to share their feature sets! :)
+- There can also be an Experimental feature set from the Rigify maintainers, that would house features that aren't considered ready or well-tested for master.
