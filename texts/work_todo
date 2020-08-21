@@ -120,6 +120,7 @@ CloudRig ideas:
 CloudRig TODO:
 	Priority 0: Requested features
 	Priority 1: Face rigging features
+		Jaw rig: Specify any number of cloud_face_chain rigs, and the controls of these would be automagically parented between the jaw and the jaw's parent (expected to be the head) with some sort of influence gradient. Could really use a custom widget though.
 	Priority 2: Changes that will affect metarigs
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 	Priority 3: Bugs

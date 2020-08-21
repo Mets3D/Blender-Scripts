@@ -802,3 +802,10 @@ August 18:
     - Finish BoneInfo refactor from yesterday
     - Start cleaning up pipeline script, turning it into a proper addon, testing.
     - Update my Rigify patch D8519 based on feedback from Ivan & Alexander.
+
+August 19:
+    - Another update to D8519 and some failed experiments for allowing feature sets to register their own preferences.
+    - Generator now keeps track of all BoneInfo and BoneSet instances of all rigs
+    - CloudBaseRig class no longer does any special thing with BoneInfo and BoneSets.
+    My hope is that this will make it easier to potentially upstream these features in Rigify, but I have no timeline on that...
+    Even my current tiny patches are taking an absolute eternity to get reviewed.
