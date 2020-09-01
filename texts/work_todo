@@ -1,20 +1,82 @@
-Currently working on: All bones should be created with self.new_bonei() then find a better name for it, then add duplicate name checking and whatnot. Also, all BoneInfo's should be added to a master list in the generator.
 
 
-Bug reports:
-	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
-		Fixing this would totally break Rigify, because it relies on this bug...
+Sprites TODO
+	Emily:
+		Make tracking layer with "tracking" bones that are parented to relevant bones and their transforms are locked:
+			Front of shoe
+			Heel
+			Knee
+			Nose
+			Wrist
 
-Pablo TODO:
-	- Make an operator that mirrors a bone's transforms to the opposite bone, around an arbitrary bone as the mirror axis.
-	- Try to implement a brute force method of more precise IK->FK snapping with pole target.
+CloudRig TODO:
+	Priority 0: Requested features
+		Auto Rubber Hose control:
+			Make middle STR transformation constraint for auto rubber hose activate quadratically rather than linear
+			Make a control in front of the knee that follows the location(only) of the middle main STR control...
+			Meanwhile the UI control should continue working...??
+		Make IK shape a single arrow instead of two arrows, and make it not so gigantic on Emily's legs (maybe make it not use bone size)
+	Priority 1: Face rigging features
+		Jaw rig: Specify any number of cloud_face_chain rigs, and the controls of these would be automagically parented between the jaw and the jaw's parent (expected to be the head) with some sort of influence gradient. Could really use a custom widget though.
+	Priority 2: Changes that will affect metarigs
+		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
+	Priority 3: Bugs
+	Priority 4: Code quality
+		cloud_limbs should be renamed to cloud_limb
+			And possibly split up into cloud_leg and cloud_arm, both of which inheriting from a cloud_limb that is not (neccessarily) exposed
+		cloud_base should define a deformation bone set and every rig should just use that one.
+	Priority 5: UI, UX & documentation
+		Add operators in the UI somewhere, somehow.
+		Add gifs to CloudRig Types page (do it at home with ShareX)
+		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
+		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
+		Add a template for reporting issues - only important when we go wide public, so probably after Sprites. https://gitlab.com/help/user/project/description_templates
+	Priority 6: Rigify compatibility
+		When enabled, bone groups assigned in cloud_bone seem to get overwritten.
+		Rigify compatibility specific functions should only affect rigify rig types.
+	Priority 7: Upstream fixes and features to Rigify.
+		Get these patches approved and committed
+			D8496 D8514 D8519 D8524
 
-Tutorial ideas:
-	Developing your own Rigify feature set
-		How to set up file structure, how to name classes, etc.
-		Explain generation stages
+CloudRig ideas:
+	For limb rigs, there should be a warning for when the limb isn't perfectly flat on a plane, and an operator to flatten it.
+		This flatness is required for perfect IK/FK snapping!
+	Try implementing the full body IK systems from angavrilov?
+
+	cloud_finger
+		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
+		Param for useless curl controls
+	cloud_instance
+		This would be a single bone rig with a single parameter, which is another bone from the metarig which has a rigify type.
+		This bone would act as an instance of that entire rig element, copying all its child rigs and everything. Crazy stuff. Not sure if possible.
+		But wait, the hard part of this is name conflicts. Bone names have to be unique, obviously, but if you just copy over all the bones... hmm... more parameters to handle name replacement? probably a similar deal to the batch rename tool. weird stuff.
+
+	Bone Sets
+		Instead of having 3 checkboxes on the generator level for overriding DEF/MCH/ORG assignments,
+		it would be better to have those checkboxes on the individual rig parameters. Then, when those checkboxes are enabled, we draw the generator override layers grayed out, and when disabled, we draw the rig parameter layers normally.
+		Documentation for this would need an update too.
+
+	It would be amazing if both Bone Sets and BoneInfo stuff was something outside of CloudBaseRig, such that one could just take those files and import them in a regular Rigify rig or their own featureset. But idk if it would really be possible since they rely on modified generator code...
+
+	Customizing bone shapes would be pretty neat.
+		I'm thinking an enum dropdown where we list out all the available widget names from Widgets.blend.
+		I'm thinking a Bone Shapes parameter section underneath Bone Sets.
+		What are the use cases for this currently? Feel like it's not that many. Pretty much FK and STR. Might be better not to overthink this one and just add an enum to cloud_chain between sphere or cube.
+
+	Manage bone rotation modes better - Currently we set everything to an arbitrary rotation mode, I think? We should probably copy the rotation mode from the metarig.
+		Perhaps all this needs to be is the classic custom property+driver to let anyone change the rotation mode on the fly for bones that could require it. (shoulders, wrists, thighs, feets)
+
+	Generator parameter: Show Warnings
+		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
+		This panel would be called CloudRig Log. It would read warnings and errors from the rig data, where it is written to from generation-time.
+	
+	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
+
+	Picker UI? based on https://github.com/jayanam/bl_ui_widgets. Would be quite a big endeavour, and I don't hear a lot of people asking for it.
 
 Rigify patch ideas
+	BUG: super_palm seems to parent to the wrong bone when its parent rig has Limb Segments==1.
+
 	Documentation is probably out of date as hell. For example, https://docs.blender.org/manual/en/dev/addons/rigging/rigify/basics.html#library-linking is still talking about groups, a la 2.79.
 	rig_ui.py should be saved in a custom property rather than weird driver magic
 		https://developer.blender.org/T79833 - bone roll for fingers should probably be set to manual X instead of automatic.
@@ -71,9 +133,20 @@ Rigify patch ideas
 	Rework the bone group system to be like mine.
 		Actually, rigify/utils/layers.py implements a class that reminds me a lot of BoneSet, just calls it ControlLayersOption. Interesting.
 
-Addon idea:
+Bug reports:
+	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
+		Fixing this would totally break Rigify, because it relies on this bug...
+
+Addon ideas:
+	Add an operator to Selection Sets addon that lets you select one from a list of selection sets, which is the list of selection sets that any of the currently selected bones are in. On confirm, select all bones belonging to that selection set.
 	Make a better Shift+D (duplicate bone) behaviour, where instead of slamming a .001 at the end of the bone name, it increments whatever number it finds in the bone name, and it does the same on the right side.
 	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
+	Add Copy Custom Properties to the Copy Attributes addon.
+
+Tutorial ideas:
+	Developing your own Rigify feature set
+		How to set up file structure, how to name classes, etc.
+		Explain generation stages
 
 Settlers TODO:
 	Phileas:
@@ -82,60 +155,3 @@ Settlers TODO:
 		- Add new masking tech to the teeth, rename bones.
 		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
-
-CloudRig ideas:
-	Try implementing the full body IK systems from angavrilov?
-
-	cloud_finger
-		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
-		Param for useless curl controls
-	cloud_instance
-		This would be a single bone rig with a single parameter, which is another bone from the metarig which has a rigify type.
-		This bone would act as an instance of that entire rig element, copying all its child rigs and everything. Crazy stuff. Not sure if possible.
-		But wait, the hard part of this is name conflicts. Bone names have to be unique, obviously, but if you just copy over all the bones... hmm... more parameters to handle name replacement? probably a similar deal to the batch rename tool. weird stuff.
-
-	Bone Sets
-		Instead of having 3 checkboxes on the generator level for overriding DEF/MCH/ORG assignments,
-		it would be better to have those checkboxes on the individual rig parameters. Then, when those checkboxes are enabled, we draw the generator override layers grayed out, and when disabled, we draw the rig parameter layers normally.
-		Documentation for this would need an update too.
-
-	It would be amazing if both Bone Sets and BoneInfo stuff was something outside of CloudBaseRig, such that one could just take those files and import them in a regular Rigify rig or their own featureset. But idk if it would really be possible since they rely on modified generator code...
-
-	Customizing bone shapes would be pretty neat.
-		I'm thinking an enum dropdown where we list out all the available widget names from Widgets.blend.
-		I'm thinking a Bone Shapes parameter section underneath Bone Sets.
-		What are the use cases for this currently? Feel like it's not that many. Pretty much FK and STR. Might be better not to overthink this one and just add an enum to cloud_chain between sphere or cube.
-
-	Manage bone rotation modes better - Currently we set everything to an arbitrary rotation mode, I think? We should probably copy the rotation mode from the metarig.
-		Perhaps all this needs to be is the classic custom property+driver to let anyone change the rotation mode on the fly for bones that could require it. (shoulders, wrists, thighs, feets)
-
-	Generator parameter: Show Warnings
-		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
-		This panel would be called CloudRig Log. It would read warnings and errors from the rig data, where it is written to from generation-time.
-	
-	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
-
-	Picker UI? based on https://github.com/jayanam/bl_ui_widgets. Would be quite a big endeavour, and I don't hear a lot of people asking for it.
-
-CloudRig TODO:
-	Priority 0: Requested features
-	Priority 1: Face rigging features
-		Jaw rig: Specify any number of cloud_face_chain rigs, and the controls of these would be automagically parented between the jaw and the jaw's parent (expected to be the head) with some sort of influence gradient. Could really use a custom widget though.
-	Priority 2: Changes that will affect metarigs
-		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
-	Priority 3: Bugs
-		When disabling final control on the cloud_human spine, the last DEF bone isn't parented to the last STR bone, and the neck doesn't get connected properly either.
-	Priority 4: Code quality
-		cloud_base should define a deformation bone set and every rig should just use that one.
-	Priority 5: UI, UX & documentation
-		Add operators in the UI somewhere, somehow.
-		Add gifs to CloudRig Types page (do it at home with ShareX)
-		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
-		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
-		Add a template for reporting issues - only important when we go wide public, so probably after Sprites. https://gitlab.com/help/user/project/description_templates
-	Priority 6: Rigify compatibility
-		When enabled, bone groups assigned in cloud_bone seem to get overwritten.
-		Rigify compatibility specific functions should only affect rigify rig types.
-	Priority 7: Upstream fixes and features to Rigify.
-		Get these patches approved and committed
-			D8496 D8514 D8519 D8524

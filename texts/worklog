@@ -740,72 +740,115 @@ July
         - Update docs for cloud_eye and cloud_aim.
         - Make a quick test on Emily to see how troublesome the thin neck would be.
 
-August 3
-    - Implement cyclic functionality for cloud_chain.
-    - Started refactoring cloud_spine so that it is no longer responsible for the neck and the head, and inherits from cloud_fk_chain rather than cloud_chain. Still WIP.
+August
+    August 3
+        - Implement cyclic functionality for cloud_chain.
+        - Started refactoring cloud_spine so that it is no longer responsible for the neck and the head, and inherits from cloud_fk_chain rather than cloud_chain. Still WIP.
 
-August 4
-    - Wrote a script for Pablo to time remap his animation because it was accidently on 30 fps and they want it to be on 24.
-    - Finished refactoring cloud_spine.
-        - Support multiple spines within a single rig.
-        - Support arbitrary length spine rig (worked before but badly)
-        - Slightly better behaviour for hip and torso controls (affect the center of the spine a bit more)
+    August 4
+        - Wrote a script for Pablo to time remap his animation because it was accidently on 30 fps and they want it to be on 24.
+        - Finished refactoring cloud_spine.
+            - Support multiple spines within a single rig.
+            - Support arbitrary length spine rig (worked before but badly)
+            - Slightly better behaviour for hip and torso controls (affect the center of the spine a bit more)
 
-August 5
-    - Slapped a simple rig on the Sprite.
-    - Lots of easy code refactoring. (I left the easy stuff last, for some reason)
-    - Wrote some notes on how one could fork or contribute to CloudRig
-        - Includes some coding conventions which I wasn't really adhering to before but now I am.
-        - Includes some thoughts on what CloudRig features might be a good idea to upstream into Rigify. 
-        A lot of the stuff is inter-dependent though, so it needs some thought put into it, but I have an idea on where I could start.
+    August 5
+        - Slapped a simple rig on the Sprite.
+        - Lots of easy code refactoring. (I left the easy stuff last, for some reason)
+        - Wrote some notes on how one could fork or contribute to CloudRig
+            - Includes some coding conventions which I wasn't really adhering to before but now I am.
+            - Includes some thoughts on what CloudRig features might be a good idea to upstream into Rigify. 
+            A lot of the stuff is inter-dependent though, so it needs some thought put into it, but I have an idea on where I could start.
 
-August 6
-    - Worked on versioning code so that Lunte's now outdated metarig is automatically updated with the correct new rig types and parameters on file load.
-        (I don't actually care about Lunte's metarig working, but this is a test to see what I can and can't do by versioning, since it informs what kind of changes will be backwards-compatibility breaking in the future)
-        Result was satisfactory, although some things still needed to be tweaked manually.
-    - Ran into a number of bugs while testing Lunte. Luckily so, because they would've caused a mess if Pablo started animating the sprite before they got fixed, because the naming and numbering of bones was wrong.
+    August 6
+        - Worked on versioning code so that Lunte's now outdated metarig is automatically updated with the correct new rig types and parameters on file load.
+            (I don't actually care about Lunte's metarig working, but this is a test to see what I can and can't do by versioning, since it informs what kind of changes will be backwards-compatibility breaking in the future)
+            Result was satisfactory, although some things still needed to be tweaked manually.
+        - Ran into a number of bugs while testing Lunte. Luckily so, because they would've caused a mess if Pablo started animating the sprite before they got fixed, because the naming and numbering of bones was wrong.
 
-August 7
-    - Implemented a proper way for rigs to disable their inherited parameters. For example, the cloud_spine rig inherits the deform_segments parameter from cloud_chain, but it should always be 1. 
-    Previously, forcing it to 1 and graying it out required putting code all over the place. Now it's just one line at the top of the class, and it's all handled by code in cloud_base.
-    This did require having to use wrapper functions for UILayout.prop() and prop_search(), but I'm okay with that.
-    - D8496: Rigify: Implement T78463: better support unguligrade animals (horse) setup
+    August 7
+        - Implemented a proper way for rigs to disable their inherited parameters. For example, the cloud_spine rig inherits the deform_segments parameter from cloud_chain, but it should always be 1. 
+        Previously, forcing it to 1 and graying it out required putting code all over the place. Now it's just one line at the top of the class, and it's all handled by code in cloud_base.
+        This did require having to use wrapper functions for UILayout.prop() and prop_search(), but I'm okay with that.
+        - D8496: Rigify: Implement T78463: better support unguligrade animals (horse) setup
 
-August 10
-    - D8514: Rigify: Code tweaks
-    - D8519: Rigify: Addon Prefs & Feature Sets UI
-    - D8524: Rigify: Add manual mapping
+    August 10
+        - D8514: Rigify: Code tweaks
+        - D8519: Rigify: Addon Prefs & Feature Sets UI
+        - D8524: Rigify: Add manual mapping
 
-August 11
-    - Rigged Emily and played around with physics a lot. 
-    The results are okay but only when scaled up 10x, which is not great.
+    August 11
+        - Rigged Emily and played around with physics a lot. 
+        The results are okay but only when scaled up 10x, which is not great.
 
-August 12
-    - Started implementing my Make Physics Bone Chain operator from many years ago as a rig type. Halfway there.
+    August 12
+        - Started implementing my Make Physics Bone Chain operator from many years ago as a rig type. Halfway there.
 
-August 13:
-    - Finished implementing cloud_physics_chain rig, added documentation.
-    - Implement new Preserve Volume parameter on cloud_chain rig so Pablo can have true squash and stretch where he needs it.
-    - Some bugfixes on cloud_spine and widget collection code
+    August 13:
+        - Finished implementing cloud_physics_chain rig, added documentation.
+        - Implement new Preserve Volume parameter on cloud_chain rig so Pablo can have true squash and stretch where he needs it.
+        - Some bugfixes on cloud_spine and widget collection code
 
-August 14:
-    - Fixes and improvements on the physics rig
-    - Begging people to look at my patches
-    - Scaled the Sprite rig while unbreaking pablo's animations, as it was originally 20 meters tall
+    August 14:
+        - Fixes and improvements on the physics rig
+        - Begging people to look at my patches
+        - Scaled the Sprite rig while unbreaking pablo's animations, as it was originally 20 meters tall
 
-August 17:
-    - Pipeline discussions with Simon and a little bit with Sybren
-    - Gave another attempt to BoneSet UIList idea, this time given up on it permanently and deleted the file.
-    - Majorish cleanup in bone.py to make BoneSets and BoneInfos easier and less confusing to create.
+    August 17:
+        - Pipeline discussions with Simon and a little bit with Sybren
+        - Gave another attempt to BoneSet UIList idea, this time given up on it permanently and deleted the file.
+        - Majorish cleanup in bone.py to make BoneSets and BoneInfos easier and less confusing to create.
 
-August 18:
-    - Finish BoneInfo refactor from yesterday
-    - Start cleaning up pipeline script, turning it into a proper addon, testing.
-    - Update my Rigify patch D8519 based on feedback from Ivan & Alexander.
+    August 18:
+        - Finish BoneInfo refactor from yesterday
+        - Start cleaning up pipeline script, turning it into a proper addon, testing.
+        - Update my Rigify patch D8519 based on feedback from Ivan & Alexander.
 
-August 19:
-    - Another update to D8519 and some failed experiments for allowing feature sets to register their own preferences.
-    - Generator now keeps track of all BoneInfo and BoneSet instances of all rigs
-    - CloudBaseRig class no longer does any special thing with BoneInfo and BoneSets.
-    My hope is that this will make it easier to potentially upstream these features in Rigify, but I have no timeline on that...
-    Even my current tiny patches are taking an absolute eternity to get reviewed.
+    August 19:
+        - Another update to D8519 and some failed experiments for allowing feature sets to register their own preferences.
+        - Generator now keeps track of all BoneInfo and BoneSet instances of all rigs
+        - CloudBaseRig class no longer does any special thing with BoneInfo and BoneSets.
+        My hope is that this will make it easier to potentially upstream these features in Rigify, but I have no timeline on that...
+        Even my current tiny patches are taking an absolute eternity to get reviewed.
+
+    August 20:
+        - Work on Pipeline script.
+
+    August 21:
+        - More work on Pipeline script.
+
+    August 24:
+        - Fix icky error in CloudRig that's been making it totally broken for 5 days, oops.
+        - Override crash bug hunt T80078
+        - Updated Rigify patch D8496 with feedback from Ivan Cappiello.
+        - Got started on an automatic rubber hose limb feature for cloud_limbs rig.
+
+    August 25:
+        - Finished Auto Rubber Hose feature.
+        - Two more rounds of feedback on D8496. Hopefully that's it.
+        - Fix some new scale propagation issues in CloudRig, cause it's been a while, and that shit never stays unbroken for too long.
+        - Fix some other bugs I found some time ago.
+        - Spent some time thinking about a keyframe baking addon for a specific use case that Pablo asked for. Might work on it tomorrow. I'm not sure if it should be part of CloudRig or not.
+
+    August 26:
+        - Trying to untangle keyframe baking code that already exists in Rigify and seems to work well, but is a bit complex.
+        - Got parent switching with keyframe baking to work but it is dodgy and very basic for now.
+
+    August 27:
+        - More fiddling and headache with the Rigify keyframe baking code. 
+        I can't decide whether it's good code or bad, but I think at least now 
+        I know which parts of it I want to use and how... still, not sure if 
+        I'll get it working by tomorrow.
+
+    August 28:
+        - Parent switching and hinge toggle keyframe baking now work, IK/FK switch is still TODO.
+
+    August 31:
+        - Fix the more glaring issues on Emily, but don't want to spend too much time on rigging a sculpt mesh it so it's still terrible all around.
+        - Fix some IK/FK snapping and parent switching related bugs
+        - Do some testing on overrides.
+
+September
+    Sept 1:
+        - Finish IK/FK snapping and baking
+        - Got some notes from Pablo for some general rig improvement ideas, got started on those
