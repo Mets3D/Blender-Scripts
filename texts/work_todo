@@ -1,29 +1,26 @@
-
-
-Sprites TODO
-	Emily:
-		Make tracking layer with "tracking" bones that are parented to relevant bones and their transforms are locked:
-			Front of shoe
-			Heel
-			Knee
-			Nose
-			Wrist
+Sprites TODO:
+	Rig new Phil with Rex-like limbs
 
 CloudRig TODO:
-	Priority 0: Requested features
-		Auto Rubber Hose control:
-			Make middle STR transformation constraint for auto rubber hose activate quadratically rather than linear
-			Make a control in front of the knee that follows the location(only) of the middle main STR control...
-			Meanwhile the UI control should continue working...??
-		Make IK shape a single arrow instead of two arrows, and make it not so gigantic on Emily's legs (maybe make it not use bone size)
+	Priority 0: Requested
 	Priority 1: Face rigging features
 		Jaw rig: Specify any number of cloud_face_chain rigs, and the controls of these would be automagically parented between the jaw and the jaw's parent (expected to be the head) with some sort of influence gradient. Could really use a custom widget though.
+			The chain rigs should be aware of the jaw rather than the other way around?
+			I would only implement this after doing some rigs with simple Armature constraint re-linking, to see if I end up following an easily reproducible logic with setting the influences, because I'm really not sure.
+		Parent candidate identifiers are currently hard-coded, which eg. means eye target parent switching won't work if the head bone is called anything other than "Head". 
+			An idea is to add a new "Parent Switching" parameter section, similar to Bone Sets. 
+			This would be a list of lists, eg. "IK Master Parents", "IK Pole Parents", "Eye Target Parents" which are CollectionProperties with String type that prop_search() in the generated rig's bones to define a list of parents to switch between.
+			But it might make setting up new metarigs more complicated, since these couldn't be pre-filled properly.
+			Also I don't think CollectionProperties are allowed in rigify parameters.
 	Priority 2: Changes that will affect metarigs
-		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 	Priority 3: Bugs
+		Various IK related features *probably* currently only work in certain orientations... Need to list them, test them and fix them:
+			- IK/FK snapping
+			- Flatten Bones operator
+			- AutoRubberHose control rotation
 	Priority 4: Code quality
-		cloud_limbs should be renamed to cloud_limb
-			And possibly split up into cloud_leg and cloud_arm, both of which inheriting from a cloud_limb that is not (neccessarily) exposed
+		use reparent_bone() in more places. All sorts of places! (ie. root bone of every rig, including cloud_bone)
+		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
 		Add operators in the UI somewhere, somehow.
@@ -36,16 +33,33 @@ CloudRig TODO:
 		Rigify compatibility specific functions should only affect rigify rig types.
 	Priority 7: Upstream fixes and features to Rigify.
 		Get these patches approved and committed
-			D8496 D8514 D8519 D8524
+			D8496 D8519 D8524
 
 CloudRig ideas:
-	For limb rigs, there should be a warning for when the limb isn't perfectly flat on a plane, and an operator to flatten it.
-		This flatness is required for perfect IK/FK snapping!
 	Try implementing the full body IK systems from angavrilov?
+
+	Generate test animation for FK rigs.
+		How would this work? It's all one action. Symmetrical rigs should animate at the same time. I don't want to make abstractions for curves so this should happen at a very late generation stage... although, it might not even matter - the bones don't need to exist in order to be able to create curves.
+		Do any other rig types need this besides fk_chain?
+		Should this be a generator option or a rig option?
+
+		MVP:
+			Keyframe every X frames, 20 by default
+			Every 2nd keyframe is the default pose
+			Every rotation axis tested to 160 degrees extremity
+		
+		Part 2:
+			Child rigs should start after their parents are done.
+			If the rig has an IK/FK switch, make sure to keyframe it to FK at the start and back to the default at the end.
+			Skip axes that are locked.
+		
+		Might want to make a class that manages this process and composit it into any rig that needs to generate a test animation?
+
 
 	cloud_finger
 		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
 		Param for useless curl controls
+		I'm thinking several fingers could come together into a palm, but maybe that should just be an Action constraint type of deal.
 	cloud_instance
 		This would be a single bone rig with a single parameter, which is another bone from the metarig which has a rigify type.
 		This bone would act as an instance of that entire rig element, copying all its child rigs and everything. Crazy stuff. Not sure if possible.
@@ -72,7 +86,17 @@ CloudRig ideas:
 	
 	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
 
-	Picker UI? based on https://github.com/jayanam/bl_ui_widgets. Would be quite a big endeavour, and I don't hear a lot of people asking for it.
+	Overlay:
+		- Display bone shape size as a circle around bones
+		- Display AutoRubberHose control position
+
+		- Display aim target position and group aim target position
+
+		Interactable widgets?
+			These are indeed possible, see auto_fmap_widgets, bpy.types.GizmoGroup.
+			- Make the pole target thing into an interactable widget.
+			- Heel position
+		- Picker UI? This would already be possible, but would have to go into cloudrig.py, so, that's a bit yikes.
 
 Rigify patch ideas
 	BUG: super_palm seems to parent to the wrong bone when its parent rig has Limb Segments==1.

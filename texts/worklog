@@ -852,3 +852,99 @@ September
     Sept 1:
         - Finish IK/FK snapping and baking
         - Got some notes from Pablo for some general rig improvement ideas, got started on those
+    
+    Sept 2:
+        - Finished addressing Pablo feedback, he also found some bugs with IK/FK snapping (not surprised) that I fixed.
+        - Did some pipeline testing with Phil, found some errors, fixed em.
+        - Made metarig for Phil.
+    
+    Sept 3:
+        - Did some weight painting for Phil so he can be animated more or less properly.
+        - Did some experimenting with detachable limbs for the sprite.
+    Sept 4:
+        - Add an operator to flatten IK chains for easier metarig authoring.
+        - Take part in Code Quality Day, got some Rigify code cleanup in with help from Sybren: D8514, D8801
+
+    Sept 7:
+        - Fix baking keyframe range not working.
+        - Keyframe baking logic is now part of cloudrig.py, no longer requires CloudRig being installed.
+        - Finish code cleanup patches from Friday: D8802, D8804
+        - Refactor cloud_eye into cloud_eyelid - same logic, but the correct way around. This should be more intuitive and requires fiddling with less settings, just need to update documentation.
+    Sept 8:
+        - Learned a bit about hair in Blender
+        - Checked out the soft body GSOC branch, looks fairly promising, UX could be better and there is some jittering.
+
+    Sept 9:
+        - Some Overrides and other troubleshooting for Pablo, apparently his Blender was stuck on July 30.
+        - Tortured Julian Eisel by watching him work on D8846 for me for an hour, to print object names in the console for modifier errors, which will save me a lot of time.
+        - Rigged a Sprite hat
+        - Found a major bug/limitation in cloud_face_chain and tried to tackle it but failed... will get back to this when I'm back on Monday.
+        - More playing around with GSOC soft body.
+
+    Sept 10: Day off (Mom wedding)
+    Sept 11: Day off
+
+    Sept 14:
+        - Put a temp-rig on Ellie sculpt
+        - Fixed a CloudRig bug resulting in a dependency cycle on leg rigs
+
+    Sept 15:
+        - Experimenting with https://developer.blender.org/D7437, I think I might be able to use it to greatly improve my face rig tech.
+    
+    Sept 16:
+        - More experimenting and success! Started implementing it in CloudRig with optimism that the patch will make it to master soon.
+        I don't think implementing it will be simple because there are a lot of weird cases to cover.
+    
+    Sept 17:
+        - Managed to re-implement cloud_face_chain with the Custom Space feature, seems to be fully working.
+    
+    Sept 18:
+        - It was NOT fully working. Spent the entire day re-thinking my solution, and after staying in till 23:30 
+        with help from Simon, now it seems to be fully working... until further notice.
+    
+    Sept 21:
+        - Worked on some Pablo requests:
+            - Keyframe All Properties operator
+            - Fix a snapping bug (was already fixed, had to commit)
+            - Ask Bastien about latest news on Overrides, and whether the Animation Layers addon could work anytime soon. (no)
+        - Slapped together and committed D8971
+        - Tested some stuff for AnGavrilov https://developer.blender.org/rBS71b595fc0e6e592dad741c262e00c43298a55f46
+    
+    Sept 22:
+        - Rigged Jay again.
+        - Made T81059 after finally being able to reproduce this override crash on Pablo's PC.
+        - CloudRig bug fixing
+    
+    Sept 23:
+        - Experimented and found great success with overlay drawing for CloudRig. 
+        It is a super fun feature to develop and to use, but it doesn't actually add any functionality and takes a lot of time to implement.
+        It's just something I can work on when I have nothing better to do.
+
+        Although it's possible that I could find animator-facing use cases, such as a proper Bone Picker, if anyone ever asks for that.
+
+        - Rigged Rex for first time.
+    
+    Sept 24:
+        - More hunting down this same crash for Bastien T81059
+        - Round of feedback on Rex for Pablo
+        CloudRig:
+            - Fix an error
+            - Add bone parenting logic for properly parenting things to chain rigs.
+            - Experimented a bit with Gizmos. Super fun, and makes CloudRig fun to use. But it's a lot of time investment for something not that useful. Might work on it if I feel I can spare the time.
+        
+    Sept 25:
+        CloudRig:
+            - Improve IK control and FootRoll control placement so it's not always flattened against the world floor
+            - Big refactor on cloud_limbs. It's now called cloud_limb and only contains the code for arms. Leg code is now split off into cloud_leg which inherits from cloud_limb.
+            - Fix metarig versioning so the above changes are automatically applied to older metarigs.
+        - Helped Bastien test a fix for the crash. It seems to have worked.
+        - Experimented with and did some cleanup on the ShapeView addon that someone threw into the #blender-riggers chat this morning.
+        https://github.com/joeedh/ShapeView
+        This idea hasn't even occurred to me before and I think it could be REALLY interesting, for Sprites specifically. 
+        The code is functional, just full of prints and the UI is a mess.
+        Forked it: https://gitlab.com/blender/shapeview
+
+    Sept 28:
+        - Rigged new Phil.
+        - Started working on automated generation of deformation test animations. Got an initial thing working but it needs some smartness put into it.
+        - Wasted some time on figuring out curve background colors
