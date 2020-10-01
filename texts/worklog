@@ -948,3 +948,32 @@ September
         - Rigged new Phil.
         - Started working on automated generation of deformation test animations. Got an initial thing working but it needs some smartness put into it.
         - Wasted some time on figuring out curve background colors
+    
+    Sept 29:
+        - First day of quarantine, pretty unproductive
+        - Updated repos again, set up the new blender dropbox
+        - Some work on making test animation generation better...
+    
+    Sept 30:
+        - More work on test animation generation. It's a bit more headache to make it good than I'd hoped.
+        - Some Phil troubleshooting for Pablo
+    
+October
+    Oct 1:
+        - Some more Phil fixes for Pablo
+        
+        CloudRig:
+        Finally landed on a code and UI design for animation generation that feels like a fair middle ground between usability, UI clutter and clean code.
+            - Test animation generation is now handled by the generator. This is great so we don't have to rely on rig execution order, which is counter-productive to usability in this case (Fingers should animate after the arm, not after the leg).
+            - Exposed (for now only) three parameters on FK chains and its extensions:
+                - Whether to generate a test animation for this rig at all (Some chains like hair or clothes might want to be excluded from testing)
+                - Minimum and maximum rotation angles to test (Most rigs need their own numbers, so this is changed often)
+                - Which rotation axes to test (Fingers really only need to test for one rotation axis)
+                The first option is only available when the generator's Generate Test Action parameter is enabled, and the other two options are only available when the first option is enabled.
+                This is intended as a pretty advanced feature, so I don't mind if it's hard to find.
+            This still can still be improved; Limb rigs currently test the elbow joints way harder than need be, but ohwell.
+            Also needs some documentation and the correct setup to be included in the metarigs. I will do this after more testing when I'm sure I want to keep the current design.
+
+        Made D9081.
+        Made D9082.
+        

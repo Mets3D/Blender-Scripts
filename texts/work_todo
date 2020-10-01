@@ -1,9 +1,10 @@
 Sprites TODO:
-	Rig new Phil with Rex-like limbs
+	Probably wanna rig Victoria soon, with Sergey's riggable hair particle technologies.
 
 CloudRig TODO:
 	Priority 0: Requested
-	Priority 1: Face rigging features
+	Priority 1: New features
+
 		Jaw rig: Specify any number of cloud_face_chain rigs, and the controls of these would be automagically parented between the jaw and the jaw's parent (expected to be the head) with some sort of influence gradient. Could really use a custom widget though.
 			The chain rigs should be aware of the jaw rather than the other way around?
 			I would only implement this after doing some rigs with simple Armature constraint re-linking, to see if I end up following an easily reproducible logic with setting the influences, because I'm really not sure.
@@ -39,22 +40,6 @@ CloudRig ideas:
 	Try implementing the full body IK systems from angavrilov?
 
 	Generate test animation for FK rigs.
-		How would this work? It's all one action. Symmetrical rigs should animate at the same time. I don't want to make abstractions for curves so this should happen at a very late generation stage... although, it might not even matter - the bones don't need to exist in order to be able to create curves.
-		Do any other rig types need this besides fk_chain?
-		Should this be a generator option or a rig option?
-
-		MVP:
-			Keyframe every X frames, 20 by default
-			Every 2nd keyframe is the default pose
-			Every rotation axis tested to 160 degrees extremity
-		
-		Part 2:
-			Child rigs should start after their parents are done.
-			If the rig has an IK/FK switch, make sure to keyframe it to FK at the start and back to the default at the end.
-			Skip axes that are locked.
-		
-		Might want to make a class that manages this process and composit it into any rig that needs to generate a test animation?
-
 
 	cloud_finger
 		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
@@ -99,69 +84,72 @@ CloudRig ideas:
 		- Picker UI? This would already be possible, but would have to go into cloudrig.py, so, that's a bit yikes.
 
 Rigify patch ideas
-	BUG: super_palm seems to parent to the wrong bone when its parent rig has Limb Segments==1.
+	Bugs
+		super_palm seems to parent to the wrong bone when its parent rig has Limb Segments==1.
 
-	Documentation is probably out of date as hell. For example, https://docs.blender.org/manual/en/dev/addons/rigging/rigify/basics.html#library-linking is still talking about groups, a la 2.79.
-	rig_ui.py should be saved in a custom property rather than weird driver magic
-		https://developer.blender.org/T79833 - bone roll for fingers should probably be set to manual X instead of automatic.
+	Documentation
+		https://docs.blender.org/manual/en/dev/addons/rigging/rigify/basics.html#library-linking is still talking about groups, a la 2.79.
+		https://docs.blender.org/manual/en/latest/addons/rigging/rigify/bone_positioning.html#fingers-bones
+			"If your character’s hand is placed like the above figures" - there are no figures.
+			As https://developer.blender.org/T79833 points out, this section should mention the rotation axis rig parameter, since Manual X might be better than Automatic.
 
-	There is a lot of random shit in rigify/ui.py, eg. tons of IK/FK operators and whatever else.
+	Code Quality
+		Rename ORG bones before joining duplicated metarig into generated rig. Justification is that drivers that were targetting non-ORG bones don't get mis-targeted this way.
+			Rigify already worked around this by messing up such drivers' targets, and then un-messing them up later, but to me that seems unneccessarily convoluted.
+		There is a lot of random shit in rigify/ui.py, eg. tons of IK/FK operators and whatever else. It's used code, but it doesn't belong in a file named "ui.py"!!
+		- Bunch of rig types (at least in Legacy) redefine each others' parameters... not good.
 
-	Rework the way parameters are registered, there is a lot of hacking around going on now, eg. __init__->ParameterValidator.
-		Every rig type should have its own namespace so it can't possibly ever conflict with another rig type. Having to worry about avoiding these conflicts is annoying.
-			This means every rig type should have its own PropertyGroup.
-				How does inheritance work with that? I don't think it does... frick.
+	Architecture
+		Rework the way parameters are registered, there is a lot of hacking around going on now, eg. __init__->ParameterValidator.
+			Every rig type should have its own namespace so it can't possibly ever conflict with another rig type. Having to worry about avoiding these conflicts is annoying.
+				This means every rig type should have its own PropertyGroup.
+					How does inheritance work with that? I don't think it does... frick.
 
-	Think of how we could set up a centralized way of downloading feature sets for Rigify. Ideally, feature set maintainers wouldn't have to get commit rights to the addons repo, and wouldn't have to work in the addons repo.
-		Maybe Rigify could just have a list of repository URLs and be able to pull from them at the click of a button? Is that insane?
-		That would also mean being able to update your feature set at the click of a button. It sounds pretty damn good, but idk. Maybe complicated. Maybe not secure. Etc.
-			Simpler: These community-maintained feature sets would simply have a button with a link to them in the feature set UI. When they are installed, the "Download" button is replaced by the "Remove" button - but there is no one-click download from Blender. We just give you the link, you have to download and install the feature set.
+		Think of how we could set up a centralized way of downloading feature sets for Rigify. Ideally, feature set maintainers wouldn't have to get commit rights to the addons repo, and wouldn't have to work in the addons repo.
+			Maybe Rigify could just have a list of repository URLs and be able to pull from them at the click of a button? Is that insane?
+			That would also mean being able to update your feature set at the click of a button. It sounds pretty damn good, but idk. Maybe complicated. Maybe not secure. Etc.
+				Simpler: These community-maintained feature sets would simply have a button with a link to them in the feature set UI. When they are installed, the "Download" button is replaced by the "Remove" button - but there is no one-click download from Blender. We just give you the link, you have to download and install the feature set.
 
-	Improve the UI where feature sets are installed, particularly the way they are listed - their titles are so close to each other and don't look like titles.
+	UI
+		Improve the UI where feature sets are installed, particularly the way they are listed - their titles are so close to each other and don't look like titles.
+			D8519 stuck in Review Limbo since August, number of requests for review is in the dozens, idk what to do :shrug:
+		Link things to the blender manual
+			D8524, D9081 waiting for Aaron Carlisle.
+		Add "Rigify Dev Tools" operators to the UI.
+			They already exist in the sidebar but apparently that is not searchable. Would rather add them to a new sub-menu called Rigify, within the Armature menu in armature edit mode.
+			Generate operator shouldn't be set to 'INTERNAL'.
 
-	Link things to the blender manual
-	Add user-facing operators to the UI, somewhere.
+	Features
+		Add support for make_constraints for Armature constraints and the targets{} dict.
+		entire mechanism.py contains no reference to id_type. This means Single Property drivers can only ever be referencing Object datablocks.
+			Should get a use case before I go fixing this.
+		driver_add() should not be allowed to halt generation with a useless error message, such as when the data path is invalid. It should just throw a big ol' warning and skip that driver.
+			In general, better error reporting would be great.
+		From CloudRig: 
+			The ultimate long term goal would be that we should be able to remove the CloudGenerator class without any compromises. This would require upstreaming lots of functionality, without stepping on any toes.
+			Add bbone scale drivers for BBones(maybe as parameter) for all chain rigs.
+			add copy_property from cloud_utils to rigify.
+			add copy_driver() from cloud_utils to mechanism.py, and use it from the legacy code that copies drivers.
 
-	entire mechanism.py contains no reference to id_type. This means Single Property drivers can only ever be referencing Object datablocks.
-	driver_add() should not be allowed to halt generation with a useless error message, such as when the data path is invalid. It should just throw a big ol' warning and skip that driver.
-		In general, better error reporting would be great.
+			Add all my operators.
+			Add scale management so it doesn't generate like shit at small or large scales.
+			Give BBone scale the same significance as in CloudRig.
+			Rework widget management - only use procedural generation when it makes sense, otherwise load from file. Stop making a unique object for every bone, re-use existing instead.
 
-	- Bunch of rig types (at least in Legacy) redefine each others' parameters... not good.
-		That's not to say we should prefix every parameter name with a rig type identifier.
-		Should find out if it's possible to avoid them conflicting in the first plce.
-			Idea: Instead of passing bpy.types.Armature.rigify_params to the functions' `params` arg, rigify_params should become a PropertyGroup of PropertyGroups (ie. a CollectionProperty of type PropertyGroup?) So we can add groups of properties - and each container's name would be the name of the... class? python file name? oof. Not sure on that one. Default to python file name, unless somehow specified?
-		Then if it's possible, ask Alexander why rig parameters are stored in the class. It really makes no sense, and it's clear to see why imo.
-		- There's some spam in the console when using legacy mode, spawning a pitchipoy rig, and fiddling with rig types.
-			I think this should be tackled along with reworking the way rig parameters work. (No longer store in rig class, the relating code seems super messy anyways)
+			Add more GeneratorParameters to disable currently hardcoded functionality.
+				Add warning to Force Widgets Update that it is slow as shit.
 
-	Add support for make_constraints for Armature constraints and the targets{} dict.
-	Move rigify properties into a propertygroup? Would break any code that interacts with Rigify, and not serve enough purpose... but an idea.
-
-	From CloudRig: 
-		The ultimate long term goal would be that we should be able to remove the CloudGenerator class without any compromises. This would require upstreaming lots of functionality, without stepping on any toes.
-		Add bbone scale drivers for BBones(maybe as parameter) for all chain rigs.
-		add copy_property from cloud_utils to rigify.
-		add copy_driver() from cloud_utils to mechanism.py, and use it from the legacy code that copies drivers.
-
-		Add all my operators.
-		Add scale management so it doesn't generate like shit at small or large scales.
-		Give BBone scale the same significance as in CloudRig.
-		Rework widget management - only use procedural generation when it makes sense, otherwise load from file. Stop making a unique object for every bone, re-use existing instead.
-
-	Rename ORG bones before joining duplicated metarig into generated rig. Justification is that drivers that were targetting non-ORG bones don't get mis-targeted this way.
-		Rigify already worked around this by messing up such drivers' targets, and then un-messing them up later, but to me that seems unneccessarily convoluted.
-
-	Add more GeneratorParameters to disable currently hardcoded functionality.
-		Add warning to Force Widgets Update that it is slow as shit.
-
-	Rework the bone group system to be like mine.
-		Actually, rigify/utils/layers.py implements a class that reminds me a lot of BoneSet, just calls it ControlLayersOption. Interesting.
+			Rework the bone group system to be like mine.
+				Actually, rigify/utils/layers.py implements a class that reminds me a lot of BoneSet, just calls it ControlLayersOption. Interesting.
 
 Bug reports:
 	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
 		Fixing this would totally break Rigify, because it relies on this bug...
 
 Addon ideas:
+	https://twitter.com/soyposmoderno/status/1307222594047758337
+	On a linked and overridden rig, create a lattice at the 3d cursor, slap a Lattice modifier on the active object targetting it, hook up the middle of the cage to an empty, parent that empty to another empty which also owns the lattice. Scale the parent empty to increase the lattice's influence, transform the child lattice to deform the mesh.
+
 	Add an operator to Selection Sets addon that lets you select one from a list of selection sets, which is the list of selection sets that any of the currently selected bones are in. On confirm, select all bones belonging to that selection set.
 	Make a better Shift+D (duplicate bone) behaviour, where instead of slamming a .001 at the end of the bone name, it increments whatever number it finds in the bone name, and it does the same on the right side.
 	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
@@ -179,3 +167,6 @@ Settlers TODO:
 		- Add new masking tech to the teeth, rename bones.
 		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
 		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
+
+SVN passwords:
+	Sprites: azecungrd56d?Fje
