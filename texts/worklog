@@ -976,4 +976,22 @@ October
 
         Made D9081.
         Made D9082.
+
+    Oct 2:
+        D9092
+        D9094
+        D9096
+
+    Oct 5:
+        CloudRig:
+            - Update/fix rig samples/metarigs
+            - Testing and error fixing on the animation generation and general rig generation.
         
+        - Some work on character pipeline addon
+        - (somewhat) Prepared a metarig for Victoria for when Julien has time to clean up her mesh
+        - Tested a super secret beta of a Picker add-on... It... sort of mostly functions. But for something whose sole purpose is convenience, it needs a lot of work still.
+
+    Oct 6:
+        - Make CloudRig Flatten Chain operator more betterer. TODO: More IK related things need to be less picky about bone axis angles.
+        - Helped Simon investigate some issues with Jay and Rex's eyeballs exploding using the pipeline addon.
+        - Rigged Victoria. Usable but very rough and no face yet.
