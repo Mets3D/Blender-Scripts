@@ -1,13 +1,57 @@
+- Add text to weeklies on the new cloud
+- Think of cute things to do for Ton for being a cool boss
+
 Sprites TODO:
-	rig Victoria, with Sergey's riggable hair particle technologies.
+	Adjusting the shrinkwrap tech for rigs is an absolute pain and should be scripted, like so:
+		For every bone with a shrinkwrap constraint
+			If it's not part of a cloud_face_chain rig, return
+			Disconnect bone in edit mode
+			Apply transforms
+			Move tail back where it was
+			If the head X position was 0, set it back to 0. 
+			Do a proximity search for other bone heads or tails at the parent's tail
+			Move all of those heads and tails to our new head.
+		This would ideally run in reverse-hierarchical order but maybe it's easier to just run it several times. That would also make center-bones more accurate anyways.
+
+	Ellie
+		Add basic actions
+		Add quality slider
+	Sprite
+		Add quality slider
+	Victoria
+		Hip control on victoria doesn't mirror correctly?
+	Rex
+		Make face controls all the same size on Rex
+		try to align controls a bit more to his facial geometry (tilt the eyebrow master)
+		Add bone to cricket bat to let it bend
+		Experiment with shrinkwrapping the face bones onto a base mesh of his head (without mouth)
+			And potentially on top of that, the actual face mesh could also shrinkwrap on that base mesh.
+			Base mesh is only deformed by the main DEF-Head and DEF-Head_Top bones.
 
 CloudRig TODO:
+	Lol, generation infinite loops when metarig is in local view, how the fuck is that possible?
+	EnsureVisible should account for local view.
+
+	I wonder if we could fix mismatches between rest pose and true rest pose - it seems mostly to do with bendy bone twisting. Can be noticed when objects are unparented from the armature and the armature is moved, or simply toggling between rest pose and real rest pose. Not a big deal though.
+	We unparent things from the rig at generation start, but don't fix it when generation fails. Not good!
+		On the other hand, failed generations should always be Ctrl+Z'd anyways!
+
+	Rex shrinkwrap tech
+		Need a script to apply transforms and stuff (I wrote about it somewhere I think)
+
+	Ellie fanny pack swapping: Want to put drivers on relinked constraints on cloud_face_chain.
+		This would mean: Reading constraint drivers in bone.py->bone_info_from_real() thingie function
+			Then in ConstraintInfo.relink() also relink the drivers (mechanism.py already has a copy_and_relink_drivers())
+
 	Priority 0: Requested
 	Priority 1: New features
+		Corrective Actions
+			If we have a Lips_Wide and a Lips_UpDown action, we want to be able to have a Lips_Wide+UpDown action that activates when the previous two activate.
+			Thing is though, I don't want to rely on a naming convention for this. Instead, I'd maybe have a checkbox in the Action set-up called "Corrective". When enabled, all parameters are replaced with two(or more?) action selectors - where by "Action" I mean a CloudRigAction, not a bpy.types.Action - I don't know if this is possible (if prop_search supports python CollectionProperties).
+			Also, all actions should use the new slider instead of the old set-up.
+			This would also mean breaking backwards compatibility though, so we have to make a release.
 
-		Jaw rig: Specify any number of cloud_face_chain rigs, and the controls of these would be automagically parented between the jaw and the jaw's parent (expected to be the head) with some sort of influence gradient. Could really use a custom widget though.
-			The chain rigs should be aware of the jaw rather than the other way around?
-			I would only implement this after doing some rigs with simple Armature constraint re-linking, to see if I end up following an easily reproducible logic with setting the influences, because I'm really not sure.
+		Active layers on the generated rig shouldn't be the same as the metarig afterall - or maybe it should be an option (sometimes we do enable the deform layer because we want to see it on generation)
 		Parent candidate identifiers are currently hard-coded, which eg. means eye target parent switching won't work if the head bone is called anything other than "Head". 
 			An idea is to add a new "Parent Switching" parameter section, similar to Bone Sets. 
 			This would be a list of lists, eg. "IK Master Parents", "IK Pole Parents", "Eye Target Parents" which are CollectionProperties with String type that prop_search() in the generated rig's bones to define a list of parents to switch between.
@@ -15,16 +59,20 @@ CloudRig TODO:
 			Also I don't think CollectionProperties are allowed in rigify parameters.
 	Priority 2: Changes that will affect metarigs
 	Priority 3: Bugs
+		- temp_highlight_group from overlay.py gets into the generated rig, ugh.
+			- It feels really good but it's really not worth the trouble. Things like Select Groupped fail, my custom Assign Bone Group operator is annoying to use because of it, etc.
+			- If we can implement this as a gizmo then great, otherwise, cut it.
+			- Will also stick around when saving the file which I'm not a fan of. (Someone without the addon could end up with it and wonder wtf it is)
 		Various IK related features *probably* currently only work in certain orientations... Need to list them, test them and fix them:
 			- IK/FK snapping
-			- Flatten Bones operator
-				This is currently flattening along world axes instead of the axis defined by the first bone's head and last bone's tail, is it not? That's no good I think.
 			- AutoRubberHose control roll angle
 	Priority 4: Code quality
+		Remove parentheses from if() (search for `if(`)
 		use reparent_bone() in more places. All sorts of places! (ie. root bone of every rig, including cloud_bone)
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
+		Turn the "code crap" wiki page into a proper "Contribute" page - The project is now big enough that I would actually welcome if someone competent wanted to join me in working on this.
 		Add operators in the UI somewhere, somehow.
 		Add documentation about the new test animation generation parameters.
 		Add gifs to CloudRig Types page (do it at home with ShareX)
@@ -39,25 +87,47 @@ CloudRig TODO:
 			D8496 D8519 D9081
 
 CloudRig ideas:
-	Try implementing the full body IK systems from angavrilov?
+	Rigs:
+		Try implementing the full body IK systems from angavrilov?
 
-	Generate test animation for FK rigs.
-
-	cloud_finger
-		Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
-		Param for useless curl controls
-		I'm thinking several fingers could come together into a palm, but maybe that should just be an Action constraint type of deal.
-	cloud_instance
-		This would be a single bone rig with a single parameter, which is another bone from the metarig which has a rigify type.
-		This bone would act as an instance of that entire rig element, copying all its child rigs and everything. Crazy stuff. Not sure if possible.
-		But wait, the hard part of this is name conflicts. Bone names have to be unique, obviously, but if you just copy over all the bones... hmm... more parameters to handle name replacement? probably a similar deal to the batch rename tool. weird stuff.
+		cloud_finger
+			Would extend IK chain, but rotating the IK control would sort of bend the finger somehow, or something.
+			Param for useless curl controls
+			I'm thinking several fingers could come together into a palm, but maybe that should just be an Action constraint type of deal.
+		cloud_instance
+			This would be a single bone rig with a single parameter, which is another bone from the metarig which has a rigify type.
+			This bone would act as an instance of that entire rig element, copying all its child rigs and everything. Crazy stuff. Not sure if possible.
+			But wait, the hard part of this is name conflicts. Bone names have to be unique, obviously, but if you just copy over all the bones... hmm... more parameters to handle name replacement? probably a similar deal to the batch rename tool. weird stuff.
+		cloud_ik_chain
+			Add display helpers for IK master controls. This display helper should stick to the end of the IK chain when IK stretch is disabled. This is so that the IK control doesn't get lost.
 
 	Bone Sets
 		Instead of having 3 checkboxes on the generator level for overriding DEF/MCH/ORG assignments,
 		it would be better to have those checkboxes on the individual rig parameters. Then, when those checkboxes are enabled, we draw the generator override layers grayed out, and when disabled, we draw the rig parameter layers normally.
 		Documentation for this would need an update too.
+		It would be amazing if both Bone Sets and BoneInfo stuff was something outside of CloudBaseRig, such that one could just take those files and import them in a regular Rigify rig or their own featureset. But idk if it would really be possible since they rely on modified generator code...
 
-	It would be amazing if both Bone Sets and BoneInfo stuff was something outside of CloudBaseRig, such that one could just take those files and import them in a regular Rigify rig or their own featureset. But idk if it would really be possible since they rely on modified generator code...
+	Actions:
+		Maybe thonk of a way to author and support corrective actions? (Actions that trigger when two other actions are triggering)
+			Could just give users a dummy Influence value that they can slap a dummy driver on, and that driver will be relinked to the action constraints' influences. Not great UX though imo.
+		When adding a new Rigify Action, it should duplicate the data of the previously active one.
+
+	Overlay:
+		- Convert existing overlay into a gizmo instead. Less hacky.
+		- Display bone shape size as a circle around bones
+	
+		cloud_limb
+			- Display AutoRubberHose control position
+		cloud_aim
+			- Display aim target position and group aim target position
+		cloud_eyelid
+			- Display lines representing ROT bones
+
+		Interactable widgets?
+			These are indeed possible, see auto_fmap_widgets, bpy.types.GizmoGroup.
+			- Make the pole target thing into an interactable widget.
+			- Heel position
+		- Picker UI? This could rely on an external addon, and we'd just generate data for that addon. But maybe even cooler if it's just included in cloudrig.py. That's probably a LOT of code to include though.
 
 	Customizing bone shapes would be pretty neat.
 		I'm thinking an enum dropdown where we list out all the available widget names from Widgets.blend.
@@ -67,23 +137,7 @@ CloudRig ideas:
 	Manage bone rotation modes better - Currently we set everything to an arbitrary rotation mode, I think? We should probably copy the rotation mode from the metarig.
 		Perhaps all this needs to be is the classic custom property+driver to let anyone change the rotation mode on the fly for bones that could require it. (shoulders, wrists, thighs, feets)
 
-	Generator parameter: Show Warnings
-		When enabled, this will add a custom property to the rig data, to indicate to the UI script to add a new panel to the Properties Editor.
-		This panel would be called CloudRig Log. It would read warnings and errors from the rig data, where it is written to from generation-time.
-	
 	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
-
-	Overlay:
-		- Display bone shape size as a circle around bones
-		- Display AutoRubberHose control position
-
-		- Display aim target position and group aim target position
-
-		Interactable widgets?
-			These are indeed possible, see auto_fmap_widgets, bpy.types.GizmoGroup.
-			- Make the pole target thing into an interactable widget.
-			- Heel position
-		- Picker UI? This would already be possible, but would have to go into cloudrig.py, so, that's a bit yikes.
 
 Rigify patch ideas
 	Bugs
@@ -158,10 +212,26 @@ Addon ideas:
 	https://twitter.com/soyposmoderno/status/1307222594047758337
 	On a linked and overridden rig, create a lattice at the 3d cursor, slap a Lattice modifier on the active object targetting it, hook up the middle of the cage to an empty, parent that empty to another empty which also owns the lattice. Scale the parent empty to increase the lattice's influence, transform the child lattice to deform the mesh.
 
-	Add an operator to Selection Sets addon that lets you select one from a list of selection sets, which is the list of selection sets that any of the currently selected bones are in. On confirm, select all bones belonging to that selection set.
+	Selection Sets + Select Similar
+		Add an operator to Selection Sets addon that lets you select one from a list of selection sets, which is the list of selection sets that any of the currently selected bones are in. On confirm, select all bones belonging to that selection set.
+	
 	Make a better Shift+D (duplicate bone) behaviour, where instead of slamming a .001 at the end of the bone name, it increments whatever number it finds in the bone name, and it does the same on the right side.
-	Make a Straighten Bone Chain operator for armature edit mode, to straighten IK chains - Head and tail of the chain wouldn't move, eveything in between gets redistributed to the same length ratios as before along a perfectly straight line.
 	Add Copy Custom Properties to the Copy Attributes addon.
+
+	Add a proper Rigging panel to the Properties editor.
+		This would have the following panels:
+		- Object->Relations (With no Pass Index or axes)
+		- Armature Display
+			X-ray, axes, shapes, names, group colors, armature display type.
+		- Object Constraints
+		- Bone Constraints
+		- Bone Display
+		 - Put "hide" in the panel header so no need for Custom Shape to be a separate drop-down.
+		- Custom Properties
+			- Object
+			- Armature
+			- Bone
+
 
 Tutorial ideas:
 	Developing your own Rigify feature set

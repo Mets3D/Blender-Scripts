@@ -995,3 +995,68 @@ October
         - Make CloudRig Flatten Chain operator more betterer. TODO: More IK related things need to be less picky about bone axis angles.
         - Helped Simon investigate some issues with Jay and Rex's eyeballs exploding using the pipeline addon.
         - Rigged Victoria. Usable but very rough and no face yet.
+    
+    Oct 7:
+        - Fix some bugs with CloudRig face chain
+        - Rigged Victoria's face to some extent:
+            - only high level control for now is upper eyelid, rest are low-level
+            - as always, all automatic weights (will probably stay that way until final topo)
+
+    Oct 8:
+        - More Victoria face rigging. Calling it finished for now. Can move both eyelids, mouth corners and open her mouth.
+        - cloud_face_chain intersection controls' rotation propagates to STR controls again (needs Custom Space patch to be better! ^^)
+        - Used my brain waves to concieve a warning/logging/troubleshooting system for CloudRig. Want to ditch the terminal especially for user-facing warnings. Wrote some of the boilerplate.
+
+    Oct 9:
+        - Rigged Victoria's hair with Sergey's tech
+        - Implemented the warning/logging/troubleshooting system with all of the features based on the design I came up with yesterday. Am very happy. Just need to use it in more places.
+
+    Oct 12:
+        - Started working on Rex face, not done yet
+        - Get Rex to work with the pipeline
+        Some assistance for Pablo:
+        - Fix some things and performance on Victoria
+        - Quick fix a crash after Resync, if it comes up again I'll poke Bastien
+        - Fix a bug with the sprite's mushroom hat
+        CloudRig:
+        - Add a stack trace to CloudRig log entries.
+
+    Oct 13:
+        - Spent the morning troubleshooting some override breakage for Pablo (reported a crash for Bastien)
+            + a quick Jay pipeline-compatibility fix
+        - Fix some issues on Victoria face
+        - More work on Rex face. Deform and STR layer are done, just needs weights and actions.
+
+    Oct 14:
+        - Finish Rex face rig
+
+    Oct 15:
+        - Fix some things on Rex
+        - Added Bug Report feature in CloudRig (part of troubleshooting features - if a log entry is considered a bug, it will show a Report Bug operator.)
+        - Set up Ellie for the pipeline and set up metarig for the body.
+        - Went on Animation module meeting to kick devs
+
+    Oct 16:
+        - Set up Blender building.
+        - Tried to hunt down a bug/feature that is not letting me work on Ellie because weight painting is going full potato. T81745
+        - Re-made Rex anim/pose files with latest master to get super stable overrides (<3 Bastien)
+        - Started rigging the latest version of Ellie. Face is TODO.
+    
+    Oct 19:
+        - Update Ellie rig with latest face and hair changes
+        - Finished Ellie face rig deformation layer (it deforms but still needs some work to be usable)
+    
+    Oct 20:
+        - Fix stuff on Ellie
+        - Hunt down my weight painting issue D9287
+        - Improve fingers on Sprite
+    
+    Oct 21:
+        - Rex tech experimentation with Shrinkwrap (not exactly what I meant to do this week but relevant)
+
+    Oct 22:
+        - Some fire extinguishing for the cover blend file pipeline compatibility
+        - More Rex tech experimentation with Shrinkwrap
+        - Fix all four current sources of console warning spam during rig generation.
+        - Start work on Corrective Actions: Action set-ups now use new Eval Timer feature, whose value I will be able to use to activate corrective actions. 
+            Still need a design on how to communicate to the metarig that an action set-up should be a corrective one, and what parameters that needs.
