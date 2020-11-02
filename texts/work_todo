@@ -1,18 +1,9 @@
 - Add text to weeklies on the new cloud
-- Think of cute things to do for Ton for being a cool boss
+
+Try Lattice black magic for Pablo
+	https://animplay.wordpress.com/2015/11/18/smear-frame-script-maya/
 
 Sprites TODO:
-	Adjusting the shrinkwrap tech for rigs is an absolute pain and should be scripted, like so:
-		For every bone with a shrinkwrap constraint
-			If it's not part of a cloud_face_chain rig, return
-			Disconnect bone in edit mode
-			Apply transforms
-			Move tail back where it was
-			If the head X position was 0, set it back to 0. 
-			Do a proximity search for other bone heads or tails at the parent's tail
-			Move all of those heads and tails to our new head.
-		This would ideally run in reverse-hierarchical order but maybe it's easier to just run it several times. That would also make center-bones more accurate anyways.
-
 	Ellie
 		Add basic actions
 		Add quality slider
@@ -29,28 +20,15 @@ Sprites TODO:
 			Base mesh is only deformed by the main DEF-Head and DEF-Head_Top bones.
 
 CloudRig TODO:
-	Lol, generation infinite loops when metarig is in local view, how the fuck is that possible?
-	EnsureVisible should account for local view.
-
-	I wonder if we could fix mismatches between rest pose and true rest pose - it seems mostly to do with bendy bone twisting. Can be noticed when objects are unparented from the armature and the armature is moved, or simply toggling between rest pose and real rest pose. Not a big deal though.
-	We unparent things from the rig at generation start, but don't fix it when generation fails. Not good!
-		On the other hand, failed generations should always be Ctrl+Z'd anyways!
-
-	Rex shrinkwrap tech
-		Need a script to apply transforms and stuff (I wrote about it somewhere I think)
-
 	Ellie fanny pack swapping: Want to put drivers on relinked constraints on cloud_face_chain.
 		This would mean: Reading constraint drivers in bone.py->bone_info_from_real() thingie function
 			Then in ConstraintInfo.relink() also relink the drivers (mechanism.py already has a copy_and_relink_drivers())
 
 	Priority 0: Requested
+		Implement Pablo's rubber hose behaviour suggestion.
+		Leg chain should be "separate" from the foot chain in the sense that STR-Foot.L should be split up into two bones, so the curvature can be controlled separately for the two bones that are being connected.
+		Pablo still wants recursively nested STR controls, I don't think it's achieavable in a reasonable timeframe.
 	Priority 1: New features
-		Corrective Actions
-			If we have a Lips_Wide and a Lips_UpDown action, we want to be able to have a Lips_Wide+UpDown action that activates when the previous two activate.
-			Thing is though, I don't want to rely on a naming convention for this. Instead, I'd maybe have a checkbox in the Action set-up called "Corrective". When enabled, all parameters are replaced with two(or more?) action selectors - where by "Action" I mean a CloudRigAction, not a bpy.types.Action - I don't know if this is possible (if prop_search supports python CollectionProperties).
-			Also, all actions should use the new slider instead of the old set-up.
-			This would also mean breaking backwards compatibility though, so we have to make a release.
-
 		Active layers on the generated rig shouldn't be the same as the metarig afterall - or maybe it should be an option (sometimes we do enable the deform layer because we want to see it on generation)
 		Parent candidate identifiers are currently hard-coded, which eg. means eye target parent switching won't work if the head bone is called anything other than "Head". 
 			An idea is to add a new "Parent Switching" parameter section, similar to Bone Sets. 
@@ -59,6 +37,7 @@ CloudRig TODO:
 			Also I don't think CollectionProperties are allowed in rigify parameters.
 	Priority 2: Changes that will affect metarigs
 	Priority 3: Bugs
+		I wonder if we could fix mismatches between rest pose and true rest pose - it seems mostly to do with bendy bone twisting. Can be noticed when objects are unparented from the armature and the armature is moved, or simply toggling between rest pose and real rest pose. Not a big deal though.
 		- temp_highlight_group from overlay.py gets into the generated rig, ugh.
 			- It feels really good but it's really not worth the trouble. Things like Select Groupped fail, my custom Assign Bone Group operator is annoying to use because of it, etc.
 			- If we can implement this as a gizmo then great, otherwise, cut it.

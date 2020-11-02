@@ -1060,3 +1060,33 @@ October
         - Fix all four current sources of console warning spam during rig generation.
         - Start work on Corrective Actions: Action set-ups now use new Eval Timer feature, whose value I will be able to use to activate corrective actions. 
             Still need a design on how to communicate to the metarig that an action set-up should be a corrective one, and what parameters that needs.
+        
+    Oct 23:
+        - Finish implementing Corrective Actions, after lots of headache.
+    
+    Oct 26:
+        - Write 7 tips for 3D World.
+    
+    Oct 27:
+        - Fix a pipeline addon issue for Simon
+        - Work on automating one of the processes required for Shrinkwrap tech which will likely be used on all characters to preserve silhouettes.
+        - Some brainstorming with Pablo on how the basic chain rig works and could be improved.
+    
+    Oct 28:
+        CloudRig: 
+        - Fix some generation errors
+        - Fail more gracefully, don't cause a mess
+        - Add some more automatic metarig troubleshooting
+        - Fix console warning spam, we have a clean console again, for now.
+
+    Oct 29:
+        - Make video for Blender Conference
+    
+    Oct 30:
+        - Implement initial functionality of Pablo's alternate rubberhose behaviour.
+        - Blender Conference!
+    
+November
+    Nov 1:
+        - Helping out Rik with onboarding
+        - Working on rubber hose tech for Pablo
