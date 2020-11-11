@@ -29,6 +29,8 @@ FEATURES
         Shift + Left Mouse Button - paint Blur
 
 Small things:
+- Blend From Shape operator should work on Lattices, or anything else that supports shape keys.
+- use_shape_key_edit_mode even says in the tooltip that it only works for meshes, so why is it displayed for non-meshes, like lattices? -.-
 - Bone axis display in pose/object mode should ignore Custom Shape Transform.
 - ME "Remove Unused Slots" operator should be renamed to "Remove Unused Material Slots" and get an X icon in the UI. In the UI, the text can stay as it is.
     Also, it should work on all, selected, or active object, instead of only active object.
@@ -82,15 +84,17 @@ Small things:
 - ME? Give me a PoseBone.constraints.clear() for the python API, to delete all constraints. There is already a bpy.ops operator for this.
 
 VERY small things:
+- bpy.ops.lattice.flip() operator should be renamed Flip(Distortion Free)->Flip. Of course it's distortion free...
 - It should be easier(I'm not even sure it's reliably possible at all) to set the inverse of Child Of constraint through python. Maybe move the code that finds the matrix to a utility function, expose that utility function to bpy?
 - When clicking on the Toolbar, the tool should switch on mouse button press, not only after a full click(mouse release) - I often try to click too fast, and my mouse cursor is moved off the toolbar by the time I finish the click, therefore the tool doesn't change.
 
 Defaults:
 - In the Normalize All Vertex Groups operator, Lock Active should be disabled by default.
 - In Transformation constraints, the scale min/max values should all default to 1.
+    I think this was done.
 - All constraints transform space should default to Local Space. At least for bones, but probably for objects too.
 - Local View should not focus the viewport camera
-
+- IK constraint chain length should be 2.
 
 
 

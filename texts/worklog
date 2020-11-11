@@ -1087,6 +1087,41 @@ October
         - Blender Conference!
     
 November
-    Nov 1:
+    Nov 2:
         - Helping out Rik with onboarding
-        - Working on rubber hose tech for Pablo
+        - Working on rubber hose tech for Pablo (Is usable but could maybe be better still)
+        - Started writing description for Cloud assets but ran into a lack of formatting, poked the web department and will pick up later Markdown support arrives :)
+    
+    Nov 3:
+        - Waste some time on stressing about the heating bill
+        - Iterate on rigging of the Effect Plane for Pablo
+        - Help out Rik with some Rain/Blender stuff
+        - Waste some time on coming up with a complex solution for a thing Pablo requested, which is splitting the ankle toon controls in two. In the end I went with a simpler solution that works somewhat.
+    
+    Nov 4:
+        - Set up more development stuff on my home Windows PC so I can commit (arcanist, PHP, SSH all that bs).
+        Rigify:
+        - D9082: Committed.
+        - D9096: Committed.
+        - D9092: Updated based on feedback from AnGavrilov, whom I poked but no response.
+        - D9094: Added Sybren as reviewer due to lack of feedback from AnGavrilov.
+        CloudRig:
+        - Rework a bit of the parent switching logic to fix something for Pablo
+        Lattice Smear tech:
+        - Got around to some initial UI and bare minimum functionality. Plan to dedicate the rest of the week to this so this is good enough progress.
+    
+    Nov 5:
+        - Worked on Camera Lattice addon, is pretty usable
+    
+    Nov 6:
+        - Worked on Tweak Lattice addon, is pretty usable
+    
+    Nov 9:
+        - Improved Camera Lattice and Tweak Lattice addons and merged them into a single Lattice Magic addon.
+        - Fixed some issues on Rex
+
+    Nov 10:
+        - Fixed an issue in the pipeline addon.
+        - Fixed some issues on Rex, Victoria and CloudRig in general.
+        - Tested some patches for Alexander Gavrilov.
+        - Wrote descriptions for all my Sprites files on the Cloud.

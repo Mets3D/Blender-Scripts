@@ -1,0 +1,22 @@
+Rigify plans
+
+- Split the space switching into a separate addon
+- Make rig generation not fail when target rig is hidden (use EnsureVisible class).
+
+- Add some Operators
+    - Mirror Rigify Parameters
+    - Copy Rigify Parameters
+        - Add this to Copy Attributes menu if that addon is enabled.
+        - Won't this fail depending on addon load order though?
+    - Regenerate All Rigify Rigs
+        - I guess this still goes in the Rigify menu that's only visible when you have a metarig selected, but the poll function won't check the active object since there's no need.
+        - This also uses EnsureVisible, which is kinda meh. If we include EnsureVisible then we might as well use it for regular rig generation - which we should tbh.
+- Rip out Legacy
+- Add links to external feature sets (Legacy, CloudRig, MAD, AnGavrilov experiments, more?)
+- CloudRig bone group system
+- Scale independency
+- BBone Scale for Bone Shape sizes
+- Store Metarigs and samples in one or more .blend files instead of text.
+- Face chain rig that works like mine
+    - Action set-up system
+- Log system

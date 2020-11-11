@@ -1,23 +1,23 @@
+- Fix Victoria shoulders
+- Test AnGavrilov patches (build during lunch)
 - Add text to weeklies on the new cloud
-
-Try Lattice black magic for Pablo
-	https://animplay.wordpress.com/2015/11/18/smear-frame-script-maya/
+- CloudRig:
+	- Add Foot Roll 2nd roll activation parameter, or something to that effect (so Victoria can have useful foot roll)
+		Maybe a driver on the roll control forward translation axis.
+	- Add Excluded keywords to parent switching setup
+	- Investigate rest pose misalignments.
 
 Sprites TODO:
-	Ellie
-		Add basic actions
-		Add quality slider
-	Sprite
-		Add quality slider
-	Victoria
-		Hip control on victoria doesn't mirror correctly?
-	Rex
-		Make face controls all the same size on Rex
-		try to align controls a bit more to his facial geometry (tilt the eyebrow master)
-		Add bone to cricket bat to let it bend
-		Experiment with shrinkwrapping the face bones onto a base mesh of his head (without mouth)
-			And potentially on top of that, the actual face mesh could also shrinkwrap on that base mesh.
-			Base mesh is only deformed by the main DEF-Head and DEF-Head_Top bones.
+	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
+	Character feature checklist:
+		- Tracking bones are in the right place
+		- Semi-detachable limbs
+		- Quality slider
+		- Arm/Leg Masking
+		- Footroll works!
+		- Make sure Rubber Hose Type is Short
+		- IK-MSTR-C in secondary IK layer
+		- Tongue correctly parents to the jaw (will need to fix this at some point by re-writing cloud_bone.py)
 
 CloudRig TODO:
 	Ellie fanny pack swapping: Want to put drivers on relinked constraints on cloud_face_chain.
@@ -25,16 +25,9 @@ CloudRig TODO:
 			Then in ConstraintInfo.relink() also relink the drivers (mechanism.py already has a copy_and_relink_drivers())
 
 	Priority 0: Requested
-		Implement Pablo's rubber hose behaviour suggestion.
-		Leg chain should be "separate" from the foot chain in the sense that STR-Foot.L should be split up into two bones, so the curvature can be controlled separately for the two bones that are being connected.
-		Pablo still wants recursively nested STR controls, I don't think it's achieavable in a reasonable timeframe.
 	Priority 1: New features
+		cloud_leg should have a new foot roll parameter called "secondary activation angle" or something better, which can be adjusted to improve behaviour for high heels, ie. the second bone's rotation will trigger sooner.
 		Active layers on the generated rig shouldn't be the same as the metarig afterall - or maybe it should be an option (sometimes we do enable the deform layer because we want to see it on generation)
-		Parent candidate identifiers are currently hard-coded, which eg. means eye target parent switching won't work if the head bone is called anything other than "Head". 
-			An idea is to add a new "Parent Switching" parameter section, similar to Bone Sets. 
-			This would be a list of lists, eg. "IK Master Parents", "IK Pole Parents", "Eye Target Parents" which are CollectionProperties with String type that prop_search() in the generated rig's bones to define a list of parents to switch between.
-			But it might make setting up new metarigs more complicated, since these couldn't be pre-filled properly.
-			Also I don't think CollectionProperties are allowed in rigify parameters.
 	Priority 2: Changes that will affect metarigs
 	Priority 3: Bugs
 		I wonder if we could fix mismatches between rest pose and true rest pose - it seems mostly to do with bendy bone twisting. Can be noticed when objects are unparented from the armature and the armature is moved, or simply toggling between rest pose and real rest pose. Not a big deal though.
@@ -119,6 +112,8 @@ CloudRig ideas:
 	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
 
 Rigify patch ideas
+	Make a huge (probably nested) design proposal on Phabricator about Rigify improvements that I'd like to implement (including many CloudRig features)
+
 	Bugs
 		super_palm seems to parent to the wrong bone when its parent rig has Limb Segments==1.
 
@@ -148,10 +143,8 @@ Rigify patch ideas
 			After that patch, some built-in entries could be added to the FeatureSets list which are not installed but have a download button.
 
 	UI
-		Improve the UI where feature sets are installed, particularly the way they are listed - their titles are so close to each other and don't look like titles.
-			D8519 stuck in Review Limbo since August, number of requests for review is in the dozens, idk what to do :shrug:
 		Link things to the blender manual
-			D8524, D9081 waiting for Aaron Carlisle.
+			D9081 Should be tested, I don't think it worked.
 		Add "Rigify Dev Tools" operators to the UI.
 			They already exist in the sidebar but apparently that is not searchable. Would rather add them to a new sub-menu called Rigify, within the Armature menu in armature edit mode.
 			Generate operator shouldn't be set to 'INTERNAL'.
@@ -188,9 +181,6 @@ Bug reports:
 		Fixing this would totally break Rigify, because it relies on this bug...
 
 Addon ideas:
-	https://twitter.com/soyposmoderno/status/1307222594047758337
-	On a linked and overridden rig, create a lattice at the 3d cursor, slap a Lattice modifier on the active object targetting it, hook up the middle of the cage to an empty, parent that empty to another empty which also owns the lattice. Scale the parent empty to increase the lattice's influence, transform the child lattice to deform the mesh.
-
 	Selection Sets + Select Similar
 		Add an operator to Selection Sets addon that lets you select one from a list of selection sets, which is the list of selection sets that any of the currently selected bones are in. On confirm, select all bones belonging to that selection set.
 	
