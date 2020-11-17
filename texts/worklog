@@ -1106,22 +1106,56 @@ November
         - D9092: Updated based on feedback from AnGavrilov, whom I poked but no response.
         - D9094: Added Sybren as reviewer due to lack of feedback from AnGavrilov.
         CloudRig:
-        - Rework a bit of the parent switching logic to fix something for Pablo
+        - Rework a bit of the parent switching logic to fix something for Pablo.
         Lattice Smear tech:
         - Got around to some initial UI and bare minimum functionality. Plan to dedicate the rest of the week to this so this is good enough progress.
     
     Nov 5:
-        - Worked on Camera Lattice addon, is pretty usable
+        - Worked on Camera Lattice addon, is pretty usable.
     
     Nov 6:
-        - Worked on Tweak Lattice addon, is pretty usable
+        - Worked on Tweak Lattice addon, is pretty usable.
     
     Nov 9:
         - Improved Camera Lattice and Tweak Lattice addons and merged them into a single Lattice Magic addon.
-        - Fixed some issues on Rex
+        - Fixed some issues on Rex.
 
     Nov 10:
         - Fixed an issue in the pipeline addon.
         - Fixed some issues on Rex, Victoria and CloudRig in general.
         - Tested some patches for Alexander Gavrilov.
         - Wrote descriptions for all my Sprites files on the Cloud.
+
+    Nov 11:
+        - Updated D9094.
+        - Tested D7437 and D9493.
+        - Updated all characters' metarigs and rigs to latest CloudRig. (And started putting together a script for making all metarigs consistent)
+
+    Nov 12:
+        - Fixed some Rigify documentation rBM7367 rBM7368
+        - Listened in on Animation Module meeting
+        - Updated CloudRig documentation with some new features and gifs.
+        - Discussions with Alexander on how to proceed on removing Legacy from Rigify, which would be a great code quality task.
+        - Discussions with Alexander on his patch D9493.
+        - Some override troubleshooting with Simon.
+    
+    Nov 13:
+        CloudRig Refactoring day!
+        - Split up cloud_bone into two new rig types: cloud_copy and cloud_tweak.
+        - They both now use my abstracted bone system, which makes the code 400x cleaner than before, and lets me do more things like relink drivers.
+        - Versioning code so old metarigs should be updated automagically.
+        - BoneInfo objects are now only created in one way, in one place, and nowhere else.
+        - In the hierarchy of Generator->Rig->Bone Set->BoneInfo, each element is now only aware of the container one above or below it, rather than madness such as BoneInfo being aware of its generator or generator keeping track of all bone sets.
+        - Dropped support for creating BoneInfos outside of BoneSets, which I should've done a long time ago.
+            Bone Sets can still be created arbitrarily, which is fine.
+            Exposing and accessing bone sets could still be improved.
+        - Got rid of the stupid new_bonei() functions, as it's now replaced by BoneSet.new() which makes a whole lot more sense.
+        - Original bones can now be read into a BoneInfo instance including their constraints and drivers. Means they can be modified from there too.
+            They can even be renamed, which was extremely satanic before, but not anymore. Only slightly now.
+        - Use 3 dictionaries to read and write between BoneInfo and Blender bone types instead of repeating a bunch of properties
+        - Get rid of silly `all_bones` property that was always just a lazy hack. Rigs shouldn't directly be aware of all their bones, only all their bone sets.
+            If needed, this can come back as a @property, but only as that!
+        - Some UI improvements:
+            - Updated outdated Spine rig description
+            - Fix text boxes missing the first line of every word... been like that for months, yikes.
+            - Bone selector and a warning when Armature Constraint will be used for selecting parent bone for cloud_copy.

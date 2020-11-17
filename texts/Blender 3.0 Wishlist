@@ -2,19 +2,15 @@ PATCHES
     D7855 Waiting on the author, or campbell? I don't really get their problem.
     Waiting on Angavrilov
         D8496
-        D8514
-        D8519
-    D8524 Waiting for help from Aaron or Campbell
 
 DESIGN
     
-
-
 Potential workflow improvements
 BUGS
     T77052
     T73434
     https://docs.google.com/document/d/1dOnT5-oQjtsShhsMQSXHwy5mH0vZooXU1hj-dzKyRqs/edit
+
 FEATURES
 - LOW Let me access armature data from weight paint mode. (can be done with addon, but it should be in Blender)
 - MED Sculpting works poorly with mirror modifier, especially when sculpting shape keys, especially especially when sculpting shape keys on a mesh deformed by an armature.

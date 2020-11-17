@@ -1,13 +1,16 @@
-- Fix Victoria shoulders
-- Test AnGavrilov patches (build during lunch)
-- Add text to weeklies on the new cloud
-- CloudRig:
-	- Add Foot Roll 2nd roll activation parameter, or something to that effect (so Victoria can have useful foot roll)
-		Maybe a driver on the roll control forward translation axis.
-	- Add Excluded keywords to parent switching setup
-	- Investigate rest pose misalignments.
+IK double controls seem to get same layer and group as original, not gud.
 
-Sprites TODO:
+Lattice Magic:
+	Camera Lattice errors on Generate Lattice in pose mode
+	Add operator to keyframe all shape key values to 0 (Insert Blank/Reset Grid)
+	Add frame change handler to set current shape key to active
+	Idea?
+		Generate an armature rig for the lattice, so the guys are animating bones instead of shape key values.
+
+	Tweak Lattice: Add bone selector above "Create Lattice" button.
+	Add button to add and remove objects to and from a tweak lattice
+
+Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
 	Character feature checklist:
 		- Tracking bones are in the right place
@@ -25,12 +28,27 @@ CloudRig TODO:
 			Then in ConstraintInfo.relink() also relink the drivers (mechanism.py already has a copy_and_relink_drivers())
 
 	Priority 0: Requested
+		- Add Foot Roll 2nd roll activation parameter, or something to that effect (so Victoria can have useful foot roll)
+			Maybe a driver on the roll control forward translation axis.
 	Priority 1: New features
+		Add a date to the generated rig so it can be known when it was generated. Could even be displayed in the cloudrig ui.
 		cloud_leg should have a new foot roll parameter called "secondary activation angle" or something better, which can be adjusted to improve behaviour for high heels, ie. the second bone's rotation will trigger sooner.
 		Active layers on the generated rig shouldn't be the same as the metarig afterall - or maybe it should be an option (sometimes we do enable the deform layer because we want to see it on generation)
-	Priority 2: Changes that will affect metarigs
-	Priority 3: Bugs
+		Perhaps some parameters could belong all the way up in CloudBaseRig.
+			- Parent to DEF
+			- Delete ORG bones (can force to False for rigs that need it)
+			- Relink constraints (This may be implemented differently for each rig)
+	Priority 2: Bugs
+		!!! We need a better heuristic for picking which controller STR-I controls should align with.
+			It can be anything, even if it's stupid, like, pick the shortest bone, or the one with the largest absolute X coordinate, but it has to be SOMETHING, to ensure symmetry.
+
+		Ask animators what they would expect to happen when leg IK stretch is off and then using footroll.
+			Currently in this case, the leg ends up becoming not fully extended.
+			It's always been like this (since Rain) so I wonder if this behaviour is expected.
+			The alternative would be that when Stretch is disabled, but the IK master is out of range, we switch to a different behaviour where the foot roll essentially just rotates the foot without the toes inheriting the rotation, which really sounds not useful at all to me.
 		I wonder if we could fix mismatches between rest pose and true rest pose - it seems mostly to do with bendy bone twisting. Can be noticed when objects are unparented from the armature and the armature is moved, or simply toggling between rest pose and real rest pose. Not a big deal though.
+		
+		The IK prediction overlay uses the active bone on cloud_ik_chain instead of the base bone.
 		- temp_highlight_group from overlay.py gets into the generated rig, ugh.
 			- It feels really good but it's really not worth the trouble. Things like Select Groupped fail, my custom Assign Bone Group operator is annoying to use because of it, etc.
 			- If we can implement this as a gizmo then great, otherwise, cut it.
@@ -38,15 +56,36 @@ CloudRig TODO:
 		Various IK related features *probably* currently only work in certain orientations... Need to list them, test them and fix them:
 			- IK/FK snapping
 			- AutoRubberHose control roll angle
+	Priority 3: Changes that will affect metarigs
 	Priority 4: Code quality
+		Find better way to define and reference bone sets instead of slapping on new properties in ensure_bone_sets(), that's hard to follow.
+		I guess I wouldn't mind an enum class in each rig's file, like
+		class BoneSets:
+			DEF = BoneSet()
+		but idk if that could work.
+
+		It sucks that define_bone_sets() and ensure_bone_sets() are always so far away from each other, and even just the fact that they both have to exist irks me a lot.
+			The reason they both have to exist is because we want to assign them to self, but honestly that's probably not even a good thing to do.
+			We could instead maybe have a self.bone_sets[] that's automatically populated based on class information on initialize(), and then accessed as strings, eg.
+			instead of self.def_chain it'd be self.bone_sets['DEF']. We could make our own class BoneSets(dict) if we want to execute custom code on keyword access.
+			All of this existed before but was deemed clunky - maybe it wasn't.
+		I also hate the "enum" cls.default_layers. it's basically just an immutable dictionary, it's lame af. Would rather just have a class with mutable class vars, ie.
+		class DefaultLayers:
+			IK = 16
+		and then just import that everywhere. Or cls.DefaultLayers.IK. Can we put a class within a class?
+
+		Bring up to date how we pass armature constraints to make_constraint() (D9092)
+			This will break backwards comp though, so should create a tag accordingly.
 		Remove parentheses from if() (search for `if(`)
 		use reparent_bone() in more places. All sorts of places! (ie. root bone of every rig, including cloud_bone)
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
 		Turn the "code crap" wiki page into a proper "Contribute" page - The project is now big enough that I would actually welcome if someone competent wanted to join me in working on this.
+			Describe versioning code
+			Organize better with modules as the headers.
 		Add operators in the UI somewhere, somehow.
-		Add documentation about the new test animation generation parameters.
+		Update cloud_bone being split up to cloud_tweak and cloud_copy.
 		Add gifs to CloudRig Types page (do it at home with ShareX)
 		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
 		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
@@ -54,9 +93,6 @@ CloudRig TODO:
 	Priority 6: Rigify compatibility
 		When enabled, bone groups assigned in cloud_bone seem to get overwritten.
 		Rigify compatibility specific functions should only affect rigify rig types.
-	Priority 7: Upstream fixes and features to Rigify.
-		Get these patches approved and committed
-			D8496 D8519 D9081
 
 CloudRig ideas:
 	Rigs:
@@ -117,12 +153,6 @@ Rigify patch ideas
 	Bugs
 		super_palm seems to parent to the wrong bone when its parent rig has Limb Segments==1.
 
-	Documentation
-		https://docs.blender.org/manual/en/dev/addons/rigging/rigify/basics.html#library-linking is still talking about groups, a la 2.79.
-		https://docs.blender.org/manual/en/latest/addons/rigging/rigify/bone_positioning.html#fingers-bones
-			"If your character’s hand is placed like the above figures" - there are no figures.
-			As https://developer.blender.org/T79833 points out, this section should mention the rotation axis rig parameter, since Manual X might be better than Automatic.
-
 	Code Quality
 		Strip out the entire rot_mode.py into a separate addon. It has nothing to do with Rigify!
 			Do this after D9096.
@@ -139,22 +169,21 @@ Rigify patch ideas
 
 		Set up a centralized way of downloading feature sets for Rigify. 
 			Ideally, feature set maintainers wouldn't have to get commit rights to the addons repo, and wouldn't have to work in the addons repo.
-			See D8519.
-			After that patch, some built-in entries could be added to the FeatureSets list which are not installed but have a download button.
+			Add built-in "dummy" entries to the FeatureSetList feature added in D8519.
+			Candidates:
+				https://gitlab.com/lfs.coop/blender/rigify-pantins
+				https://docs.blender.org/manual/en/dev/addons/rigging/rigify/feature_sets.html
+					https://github.com/cessen/cessen_rigify_ext
+					https://github.com/angavrilov/angavrilov-rigs
 
 	UI
-		Link things to the blender manual
-			D9081 Should be tested, I don't think it worked.
-		Add "Rigify Dev Tools" operators to the UI.
-			They already exist in the sidebar but apparently that is not searchable. Would rather add them to a new sub-menu called Rigify, within the Armature menu in armature edit mode.
-			Generate operator shouldn't be set to 'INTERNAL'.
+		Add operators to the UI.
+			D9094
 
 	Features
 		Rig samples should spawn at cursor instead of object origin.
 		Horse leg crap 
 			D8496 I don't even care about this, I was doing it as a favor and it goes ignored... very cool.
-		Add support for make_constraints for Armature constraints and the targets{} dict.
-			D9092
 		entire mechanism.py contains no reference to id_type. This means Single Property drivers can only ever be referencing Object datablocks.
 			Should get a use case before I go fixing this.
 		driver_add() should not be allowed to halt generation with a useless error message, such as when the data path is invalid. It should just throw a big ol' warning and skip that driver.
@@ -206,6 +235,21 @@ Tutorial ideas:
 	Developing your own Rigify feature set
 		How to set up file structure, how to name classes, etc.
 		Explain generation stages
+	Rigging a character with CloudRig:
+		General overview
+			- Definitions: Rigify, CloudRig, feature set, metarig, rig type/rig element/sub-rig, rig parameter
+			- Quick use: Spawning and generating metarigs and rig samples.
+		The body
+			- How to align the bones
+			- Show off some useful rig parameters
+		Housekeeping (Check Log for warnings, assign layers, make sure bone shapes are visible through the mesh)
+		Weight Painting or lackthereof (a mini showcase of how I weight paint, with a referral to my weight painting 3-part course)
+		The face
+			What does the cloud_bone rig type do
+			How to use cloud_face_chain with Constraint Relinking
+			Quick tangent on how the Armature constraint works and is needed for proper BBone parenting
+
+
 
 Settlers TODO:
 	Phileas:

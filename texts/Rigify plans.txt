@@ -2,6 +2,9 @@ Rigify plans
 
 - Split the space switching into a separate addon
 - Make rig generation not fail when target rig is hidden (use EnsureVisible class).
+- UI improvements
+    - Lowercase words, crappy icons, operators indistinguishable from toggle buttons
+    - Enum drop-downs with the word "manual" in them for no reason.
 
 - Add some Operators
     - Mirror Rigify Parameters
