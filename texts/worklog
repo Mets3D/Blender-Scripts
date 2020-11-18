@@ -1169,6 +1169,6 @@ November
 
         Nov 18:
         - Attempted to implement some feedback on the spine rig and the teeth in a simple way. If that doesn't work out I'll have to try something more complex (ie. redesign and rebuild the spine rig) but that would take too long so I hope it won't be neccessary.
-        - Worked on a script to keep all Sprites character rigs consistent. (To set some settings on the metarig. Lots and lots of settings. Soon we're gonna need a meta-metarig.)
         - Big team meeting with Matthew!
-        
+        - Worked on a script to keep all Sprites character rigs consistent. (To set a lot of settings on the metarig.)
+        - Worked on a script to clean up obsolete data from Metarigs. Could be added to Metarig versioning code.
