@@ -1,0 +1,20 @@
+Addon ideas:
+	Selection Sets + Select Similar
+		Add an operator to Selection Sets addon that lets you select one from a list of selection sets, which is the list of selection sets that any of the currently selected bones are in. On confirm, select all bones belonging to that selection set.
+	
+	Make a better Shift+D (duplicate bone) behaviour, where instead of slamming a .001 at the end of the bone name, it increments whatever number it finds in the bone name, and it does the same on the right side.
+	Add Copy Custom Properties to the Copy Attributes addon.
+
+	Add a proper Rigging panel to the Properties editor.
+		This would have the following panels:
+		- Object->Relations (With no Pass Index or axes)
+		- Armature Display
+			X-ray, axes, shapes, names, group colors, armature display type.
+		- Object Constraints
+		- Bone Constraints
+		- Bone Display
+		 - Put "hide" in the panel header so no need for Custom Shape to be a separate drop-down.
+		- Custom Properties
+			- Object
+			- Armature
+			- Bone

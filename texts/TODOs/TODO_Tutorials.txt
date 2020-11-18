@@ -1,0 +1,17 @@
+Tutorial ideas:
+	Developing your own Rigify feature set
+		How to set up file structure, how to name classes, etc.
+		Explain generation stages
+	Rigging a character with CloudRig:
+		General overview
+			- Definitions: Rigify, CloudRig, feature set, metarig, rig type/rig element/sub-rig, rig parameter
+			- Quick use: Spawning and generating metarigs and rig samples.
+		The body
+			- How to align the bones
+			- Show off some useful rig parameters
+		Housekeeping (Check Log for warnings, assign layers, make sure bone shapes are visible through the mesh)
+		Weight Painting or lackthereof (a mini showcase of how I weight paint, with a referral to my weight painting 3-part course)
+		The face
+			What does the cloud_bone rig type do
+			How to use cloud_face_chain with Constraint Relinking
+			Quick tangent on how the Armature constraint works and is needed for proper BBone parenting

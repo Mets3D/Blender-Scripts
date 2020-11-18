@@ -1,0 +1,7 @@
+Settlers TODO:
+	Phileas:
+		- His mouth bones are named with the wrong sides, and was released that way in V1, yikes!
+	Lunte:
+		- Add new masking tech to the teeth, rename bones.
+		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
+		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?

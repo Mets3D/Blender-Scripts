@@ -1159,3 +1159,16 @@ November
             - Updated outdated Spine rig description
             - Fix text boxes missing the first line of every word... been like that for months, yikes.
             - Bone selector and a warning when Armature Constraint will be used for selecting parent bone for cloud_copy.
+
+        Nov 16:
+        - Made demo videos for the release to showcase overrides
+        - Got started on Rex face
+
+        Nov 17:
+        - Rex face rigging
+
+        Nov 18:
+        - Attempted to implement some feedback on the spine rig and the teeth in a simple way. If that doesn't work out I'll have to try something more complex (ie. redesign and rebuild the spine rig) but that would take too long so I hope it won't be neccessary.
+        - Worked on a script to keep all Sprites character rigs consistent. (To set some settings on the metarig. Lots and lots of settings. Soon we're gonna need a meta-metarig.)
+        - Big team meeting with Matthew!
+        

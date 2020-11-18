@@ -1,4 +1,7 @@
-IK double controls seem to get same layer and group as original, not gud.
+Try to improve the behaviour of the IK spine on Rex
+	Move the chest control higher up again
+	Try to give better control over the belly area, without affecting the hip so much.
+	Worst case scenario, slap a lattice in there, or something :/
 
 Lattice Magic:
 	Camera Lattice errors on Generate Lattice in pose mode
@@ -12,15 +15,12 @@ Lattice Magic:
 
 Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
-	Character feature checklist:
+	Character Checklist:
+		- Consistency script was run on the armature
+		- Might want to remove the Spine cloud_tweak bones, but I guess wait for feedback on Rex first.
 		- Tracking bones are in the right place
-		- Semi-detachable limbs
 		- Quality slider
 		- Arm/Leg Masking
-		- Footroll works!
-		- Make sure Rubber Hose Type is Short
-		- IK-MSTR-C in secondary IK layer
-		- Tongue correctly parents to the jaw (will need to fix this at some point by re-writing cloud_bone.py)
 
 CloudRig TODO:
 	Ellie fanny pack swapping: Want to put drivers on relinked constraints on cloud_face_chain.
@@ -58,6 +58,10 @@ CloudRig TODO:
 			- AutoRubberHose control roll angle
 	Priority 3: Changes that will affect metarigs
 	Priority 4: Code quality
+		Uses of the variable `org_parent` are currently satanic. Should either be avoided, or made uniform, so all BoneInfo instances have an `org_parent` or have a dictionary that keeps track of that relationship. (latter is better I think, can probably be used in other cases)
+		Other satanic variables:
+			org_bone.def_bones
+		
 		Find better way to define and reference bone sets instead of slapping on new properties in ensure_bone_sets(), that's hard to follow.
 		I guess I wouldn't mind an enum class in each rig's file, like
 		class BoneSets:
@@ -81,6 +85,7 @@ CloudRig TODO:
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
+		cloud_chain has new Unlock Deform parameter.
 		Turn the "code crap" wiki page into a proper "Contribute" page - The project is now big enough that I would actually welcome if someone competent wanted to join me in working on this.
 			Describe versioning code
 			Organize better with modules as the headers.
@@ -209,55 +214,4 @@ Bug reports:
 	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
 		Fixing this would totally break Rigify, because it relies on this bug...
 
-Addon ideas:
-	Selection Sets + Select Similar
-		Add an operator to Selection Sets addon that lets you select one from a list of selection sets, which is the list of selection sets that any of the currently selected bones are in. On confirm, select all bones belonging to that selection set.
-	
-	Make a better Shift+D (duplicate bone) behaviour, where instead of slamming a .001 at the end of the bone name, it increments whatever number it finds in the bone name, and it does the same on the right side.
-	Add Copy Custom Properties to the Copy Attributes addon.
 
-	Add a proper Rigging panel to the Properties editor.
-		This would have the following panels:
-		- Object->Relations (With no Pass Index or axes)
-		- Armature Display
-			X-ray, axes, shapes, names, group colors, armature display type.
-		- Object Constraints
-		- Bone Constraints
-		- Bone Display
-		 - Put "hide" in the panel header so no need for Custom Shape to be a separate drop-down.
-		- Custom Properties
-			- Object
-			- Armature
-			- Bone
-
-
-Tutorial ideas:
-	Developing your own Rigify feature set
-		How to set up file structure, how to name classes, etc.
-		Explain generation stages
-	Rigging a character with CloudRig:
-		General overview
-			- Definitions: Rigify, CloudRig, feature set, metarig, rig type/rig element/sub-rig, rig parameter
-			- Quick use: Spawning and generating metarigs and rig samples.
-		The body
-			- How to align the bones
-			- Show off some useful rig parameters
-		Housekeeping (Check Log for warnings, assign layers, make sure bone shapes are visible through the mesh)
-		Weight Painting or lackthereof (a mini showcase of how I weight paint, with a referral to my weight painting 3-part course)
-		The face
-			What does the cloud_bone rig type do
-			How to use cloud_face_chain with Constraint Relinking
-			Quick tangent on how the Armature constraint works and is needed for proper BBone parenting
-
-
-
-Settlers TODO:
-	Phileas:
-		- His mouth bones are named with the wrong sides, and was released that way in V1, yikes!
-	Lunte:
-		- Add new masking tech to the teeth, rename bones.
-		- Teeth names could use some love, but then gotta run the curve renaming script on everything again.
-		- Eye names aren't symmetrical - do it like gabby. I think the right eye's curves should be scaled -1 in edit mode, maybe?
-
-SVN passwords:
-	Sprites: azecungrd56d?Fje
