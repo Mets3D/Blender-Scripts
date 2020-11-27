@@ -101,7 +101,7 @@ for i in range(32):
 		l.name = "FK Secondary"
 		l.row = 2
 	if i == 18:
-		l.name = "Deform"
+		l.name = ""
 		l.row = 3
 	if i == 19:
 		l.name = "Face Secondary"
@@ -179,6 +179,13 @@ for b in metarig.pose.bones:
 		b.rigify_parameters.CR_fk_chain_test_animation_axes[2] = False
 		b.rigify_parameters.CR_fk_chain_parent_candidates = True
 
+	# Eyes
+	if b.name.startswith('Eye.'):
+		b.rigify_type = 'cloud_aim'
+		b.bone.use_deform = False # this shouldn't be needed, added a bug TODO to CloudRig.
+		b.rigify_parameters.CR_aim_deform = True
+		b.rigify_parameters.CR_aim_root = True
+
 	# Fingers
 	if 'Finger' in b.name and b.rigify_type!='':
 		b.rigify_parameters.CR_fk_chain_test_animation_generate = True
@@ -219,6 +226,7 @@ for b in metarig.pose.bones:
 	for key in b.rigify_parameters.keys():
 		if b.rigify_type=='':
 			print("Why does this bone still have rigify parameters when it has no rigify type: " + b.name)
+			del b.rigify_parameters[key]
 			continue
 		value = b.rigify_parameters[key]
 		if hasattr(rigify_params, key):

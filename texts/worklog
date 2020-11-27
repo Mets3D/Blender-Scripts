@@ -1091,13 +1091,13 @@ November
         - Helping out Rik with onboarding
         - Working on rubber hose tech for Pablo (Is usable but could maybe be better still)
         - Started writing description for Cloud assets but ran into a lack of formatting, poked the web department and will pick up later Markdown support arrives :)
-    
+
     Nov 3:
         - Waste some time on stressing about the heating bill
         - Iterate on rigging of the Effect Plane for Pablo
         - Help out Rik with some Rain/Blender stuff
         - Waste some time on coming up with a complex solution for a thing Pablo requested, which is splitting the ankle toon controls in two. In the end I went with a simpler solution that works somewhat.
-    
+
     Nov 4:
         - Set up more development stuff on my home Windows PC so I can commit (arcanist, PHP, SSH all that bs).
         Rigify:
@@ -1109,13 +1109,13 @@ November
         - Rework a bit of the parent switching logic to fix something for Pablo.
         Lattice Smear tech:
         - Got around to some initial UI and bare minimum functionality. Plan to dedicate the rest of the week to this so this is good enough progress.
-    
+
     Nov 5:
         - Worked on Camera Lattice addon, is pretty usable.
-    
+
     Nov 6:
         - Worked on Tweak Lattice addon, is pretty usable.
-    
+
     Nov 9:
         - Improved Camera Lattice and Tweak Lattice addons and merged them into a single Lattice Magic addon.
         - Fixed some issues on Rex.
@@ -1138,7 +1138,7 @@ November
         - Discussions with Alexander on how to proceed on removing Legacy from Rigify, which would be a great code quality task.
         - Discussions with Alexander on his patch D9493.
         - Some override troubleshooting with Simon.
-    
+
     Nov 13:
         CloudRig Refactoring day!
         - Split up cloud_bone into two new rig types: cloud_copy and cloud_tweak.
@@ -1161,14 +1161,65 @@ November
             - Bone selector and a warning when Armature Constraint will be used for selecting parent bone for cloud_copy.
 
         Nov 16:
-        - Made demo videos for the release to showcase overrides
-        - Got started on Rex face
+            - Made demo videos for the release to showcase overrides
+            - Got started on Rex face
 
         Nov 17:
-        - Rex face rigging
+            - Rex face rigging
 
         Nov 18:
-        - Attempted to implement some feedback on the spine rig and the teeth in a simple way. If that doesn't work out I'll have to try something more complex (ie. redesign and rebuild the spine rig) but that would take too long so I hope it won't be neccessary.
-        - Big team meeting with Matthew!
-        - Worked on a script to keep all Sprites character rigs consistent. (To set a lot of settings on the metarig.)
-        - Worked on a script to clean up obsolete data from Metarigs. Could be added to Metarig versioning code.
+            - Attempted to implement some feedback on the spine rig and the teeth in a simple way. If that doesn't work out I'll have to try something more complex (ie. redesign and rebuild the spine rig) but that would take too long so I hope it won't be neccessary.
+            - Worked on a script to keep all Sprites character rigs consistent. (To set a lot of settings on the metarig.)
+
+        Nov 19:
+            - Added Shrinkwrap tech to Rex's face. (as seen before)
+            - Fixed some bugs relating to Shrinkwrap tech, and moving drivers from the metarig to the generated rig.
+            - Worked a little bit on the mouth corner low level behaviour.
+
+        Nov 20:
+            - Restarted on Rex's face without bendy bones.
+
+        Nov 23:
+            - More rex face re-rigging
+
+        Nov 24:
+            - Deliver Rex face MVP with working mouth corner and jaw controls
+
+        Nov 25
+            - Made a Resync+Reload all Overridden collections operator for convenience, not too sure if it works yet.
+            Updated all characters to latest CloudRig, address most animator feedback, clean up CloudRig warnings:
+            Everyone:
+                - New spine set-up
+                - Move hip controls down by a lot
+                - Bone layer organization and display size fixes
+                - Adjust length ratios of upper/lower arm
+            Rex:
+                - Eye highlight follows the eyeball
+                - Place tracking bones properly
+                - Fix some weights on the chest
+            Jay:
+                - Add Hinge toggle for the chain
+                - Add control to top of the hat
+                - Hide hair that was clipping with the hat
+            Victoria:
+                - Fix tilt on foot bone display
+            Phil:
+                - Rename Belly control to Tummy because name clashing
+
+        Nov 26:
+            - Fix tooth parenting on Rex
+            - Make a proxy sprite rig for Pablo
+            - Rigged Rex eyelids (roughly).
+        
+        Nov 27:
+            - Add dummy bones to all the characters
+            - Add widget object troubleshooting to CloudRig
+            Rex:
+                - Implement an idea and feedback from Rik on Rex's jaw
+                - Make the eyebrows separable
+                - Rig the extra cartoon shapes finally
+            LatticeMagic:
+                - Fix error when generating camera lattice from pose mode
+                - Fix breakage on Rex due to rig helper object getting latticed when it shouldn't
+                - Add operators to zero all keyframes and insert keyframes on all shape key values
+                - Update active shape key on frame change (with a toggle to turn this off)

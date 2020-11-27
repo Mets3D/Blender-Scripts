@@ -1,17 +1,15 @@
-Try to improve the behaviour of the IK spine on Rex
-	Move the chest control higher up again
-	Try to give better control over the belly area, without affecting the hip so much.
-	Worst case scenario, slap a lattice in there, or something :/
+Rex:
+	Try to pose some of Julien's extreme poses, see what breaks, see how it can be improved
+
+Update Sprite to latest and add empty bones
 
 Lattice Magic:
-	Camera Lattice errors on Generate Lattice in pose mode
-	Add operator to keyframe all shape key values to 0 (Insert Blank/Reset Grid)
-	Add frame change handler to set current shape key to active
+	Option to create at geometry center instead of 3d cursor?
 	Idea?
 		Generate an armature rig for the lattice, so the guys are animating bones instead of shape key values.
 
 	Tweak Lattice: Add bone selector above "Create Lattice" button.
-	Add button to add and remove objects to and from a tweak lattice
+	Add button to add and remove objects to and from a tweak lattice (maybe even camera lattice)
 
 Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
@@ -26,21 +24,23 @@ CloudRig TODO:
 	Ellie fanny pack swapping: Want to put drivers on relinked constraints on cloud_face_chain.
 		This would mean: Reading constraint drivers in bone.py->bone_info_from_real() thingie function
 			Then in ConstraintInfo.relink() also relink the drivers (mechanism.py already has a copy_and_relink_drivers())
+	Delete Lock Y/Z param from FK chain, is useless af.
+
 
 	Priority 0: Requested
-		- Add Foot Roll 2nd roll activation parameter, or something to that effect (so Victoria can have useful foot roll)
-			Maybe a driver on the roll control forward translation axis.
 	Priority 1: New features
 		Add a date to the generated rig so it can be known when it was generated. Could even be displayed in the cloudrig ui.
-		cloud_leg should have a new foot roll parameter called "secondary activation angle" or something better, which can be adjusted to improve behaviour for high heels, ie. the second bone's rotation will trigger sooner.
+		(Requested) cloud_leg should have a new foot roll parameter called "secondary activation angle" or something better, which can be adjusted to improve behaviour for high heels, ie. the second bone's rotation will trigger sooner.
 		Active layers on the generated rig shouldn't be the same as the metarig afterall - or maybe it should be an option (sometimes we do enable the deform layer because we want to see it on generation)
 		Perhaps some parameters could belong all the way up in CloudBaseRig.
 			- Parent to DEF
 			- Delete ORG bones (can force to False for rigs that need it)
 			- Relink constraints (This may be implemented differently for each rig)
 	Priority 2: Bugs
+		cloud_aim ORG bone use_deform is copied from the metarig, but it should always be False!
 		!!! We need a better heuristic for picking which controller STR-I controls should align with.
 			It can be anything, even if it's stupid, like, pick the shortest bone, or the one with the largest absolute X coordinate, but it has to be SOMETHING, to ensure symmetry.
+			Even better would be something controllable though. Eg., for `STR-I-Bridge_Cheek1_3+Jaw1_3+Jaw3_3.L`, we want the middle one to be the main one for no particular reason.
 
 		Ask animators what they would expect to happen when leg IK stretch is off and then using footroll.
 			Currently in this case, the leg ends up becoming not fully extended.
@@ -120,9 +120,10 @@ CloudRig ideas:
 		Documentation for this would need an update too.
 		It would be amazing if both Bone Sets and BoneInfo stuff was something outside of CloudBaseRig, such that one could just take those files and import them in a regular Rigify rig or their own featureset. But idk if it would really be possible since they rely on modified generator code...
 
+	Logging:
+		Add documentation.
+
 	Actions:
-		Maybe thonk of a way to author and support corrective actions? (Actions that trigger when two other actions are triggering)
-			Could just give users a dummy Influence value that they can slap a dummy driver on, and that driver will be relinked to the action constraints' influences. Not great UX though imo.
 		When adding a new Rigify Action, it should duplicate the data of the previously active one.
 
 	Overlay:
@@ -213,5 +214,3 @@ Rigify patch ideas
 Bug reports:
 	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
 		Fixing this would totally break Rigify, because it relies on this bug...
-
-

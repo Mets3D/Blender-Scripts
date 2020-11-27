@@ -32,7 +32,7 @@
 import bpy
 
 rig = bpy.context.object
-shrinkwrap_object = bpy.data.objects['GEO-rex_head_shrinkwrap']
+shrinkwrap_object = bpy.data.objects['GEO-rex_head_rig_helper']
 threshold = 0.001
 
 # Remove any shrinkwrap constraints.
@@ -58,6 +58,7 @@ for pb in selected_pose_bones:
 # Add shrinkwrap constraints and keep track of which bones they were added to.
 shrinkwrap_bones = []
 for pb in selected_pose_bones:
+    pb.bone.use_inherit_rotation = False
     group = groups[pb.name]
     group_member_with_constraint = None # Prefer to add the shrinkwrap constraint to a group member that already has any constraints.
     group_has_shrinkwrap = False
@@ -73,12 +74,37 @@ for pb in selected_pose_bones:
     constraint_owner = pb
     if group_member_with_constraint:
         constraint_owner = group_member_with_constraint
-    shrinkwrap = constraint_owner.constraints.new(type='SHRINKWRAP')
-    shrinkwrap.shrinkwrap_type = 'TARGET_PROJECT'
-    shrinkwrap.target = shrinkwrap_object
-    shrinkwrap.name = "Srhinkwrap " + pb.name
+    c = constraint_owner.constraints.new(type='SHRINKWRAP')
+    c.shrinkwrap_type = 'TARGET_PROJECT'
+    c.target = shrinkwrap_object
+    c.name = "Shrinkwrap"
     shrinkwrap_bones.append(constraint_owner.name)
+    c.driver_remove('influence')
 
+    # c.distance = 0.005
+    # distance = (pb.bone.head_local - pb.matrix.to_translation()).length
+    # multiplier = 0.5
+    # iterations = 200
+    # for i in reversed(range(iterations)):
+    #     if i==0: continue
+    #     c.distance *= multiplier
+    #     bpy.context.view_layer.update()
+    #     new_distance = (pb.bone.head_local - pb.matrix.to_translation()).length
+    #     if new_distance < distance:
+    #         distance = new_distance
+    #     else:
+    #         c.distance /= multiplier
+    #         if multiplier < 1:
+    #             multiplier = 1.0 + i/iterations/2
+    #         else:
+    #             multiplier = 0.5 + (0.5 - i/iterations/2)
+
+
+    driver = c.driver_add('influence').driver
+    driver.expression = "var"
+    var = driver.variables.new()
+    var.targets[0].id = rig
+    var.targets[0].data_path = 'pose.bones["Properties_Character_Rex"]["Shrinkwrap"]'
 
 bpy.ops.object.mode_set(mode='EDIT')
 
@@ -131,6 +157,7 @@ for zero_x_vec in zero_x_vectors:
     zero_x_vec[0] = 0.0
 
 for eb in bpy.context.selected_editable_bones:
+    eb.use_inherit_rotation = True
     eb.use_connect = connected[eb.name]
     eb.parent = rig.data.edit_bones.get(parents[eb.name])
 
