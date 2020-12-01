@@ -1,20 +1,57 @@
+Camera Lattice:
+	Idea?
+		Generate an armature rig for the lattice, so the guys are animating bones instead of shape key values.
+	Add button to resync objects of a camera lattice
+Tweak Lattice:
+	Allow changing parenting without the tweak lattice flying away.
+
+Rik notes:
+	(still easy to lose work because linked rigs have to be keyframed to save their pose)
+	For Bastien:
+		Duplicated hair spray overrides share their bone selection state, but transform operator works as expected.
+	Rex:
+		Try to make the lip corners stick closer to the actual control.
+		When opening the mouth, there should be a way to have the mouth open not in a rectangular fashion but more circular, creating arcs.
+			Same with lip sharp, the control between the corner and the center should be affected a little bit
+		More lip controls of course
+			Entire upper lip
+			Center of upper lip
+		Be able to do R, X, 45 on the lips and have them all roll in the same direction
+		Investigate if it's possible (low prio) to have 1 deformation adjuster for Rex, that is between the current bottom two.
+		Think over the positions of the FK bones again. They were moved to the halfway points because of bendy bone reasons, but we are no longer using bendy bones. And having them there makes IK/FK switching impossible since they're not in the same place as the IK.
+		Add iris scale shape key
+		Parent control for top 3 eye ring bones
+		Add root bone for the face lines.
+		Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
+		Make the neck behave better when the head is translated.
+		Add a property to control volume preservation on the head chain
+		Disable smooth curvature on rex face chain.
+		Maybe a lattice setup that controls the "Mask area" (eyebrows, eyes, not the forehead)
+			Two controls on the top and bottom, when sliding them left and right they tilt the shape of the lattice into a trapezoid
+		Add cheek controls (for now at the edges of the lips)
+		More detailed control of the tongue (5 FK controls!?)
+			https://i.imgur.com/HWDVeRB.png
+		Add ear controls
+
+	Victoria:
+		metacarpals:
+			Fingers spread control (also include thumb here)
+			arcing of the knuckles
+				This thing https://i.imgur.com/wEVwNWt.png (also twist them a bit)
+			probably with actions
+
 Rex:
 	Try to pose some of Julien's extreme poses, see what breaks, see how it can be improved
 
+Maybe update Pablo's animation layers addon so it supports overrides.
+
+Be ready to put shit on Cloud (maybe prepare some things) when fsiddi pokes us that it's ready.
 Update Sprite to latest and add empty bones
-
-Lattice Magic:
-	Option to create at geometry center instead of 3d cursor?
-	Idea?
-		Generate an armature rig for the lattice, so the guys are animating bones instead of shape key values.
-
-	Tweak Lattice: Add bone selector above "Create Lattice" button.
-	Add button to add and remove objects to and from a tweak lattice (maybe even camera lattice)
 
 Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
 	Character Checklist:
-		- Consistency script was run on the armature
+		- Consistency script was run on the metarig
 		- Might want to remove the Spine cloud_tweak bones, but I guess wait for feedback on Rex first.
 		- Tracking bones are in the right place
 		- Quality slider

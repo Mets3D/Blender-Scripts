@@ -1223,3 +1223,19 @@ November
                 - Fix breakage on Rex due to rig helper object getting latticed when it shouldn't
                 - Add operators to zero all keyframes and insert keyframes on all shape key values
                 - Update active shape key on frame change (with a toggle to turn this off)
+
+        Nov 30:
+            (Had a very long lunchbreak because I had to take care of some stuff, hence the very late finish)
+            - Test Rex face in some of Julien's sculpted poses and note some issues and potential improvements
+            - Fix an issue with the eye highlight but not committed yet
+            - Get feedback from Rik on more Rex face things and some other stuff
+            - Slapped 6 bones on a bbq grill for Hjalti
+            Lattice addon:
+                - Remove redundant and buggy Radius slider from the Falloff popup
+                - Add a not buggy Radius slider above the Create Tweak Lattice button so it can be pre-filled
+                - Add options to parent the created lattice setup to an object or bone. Currently parenting can't easily be changed after creation, could be added later.
+                - Add options to add and remove objects from a tweak lattice
+                - Added option to create tweak lattice at the selection's bounding box center instead of 3D cursor but I doubt its usefulness
+
+December
+    - Fix some floating objects on Rex, Phil & Victoria

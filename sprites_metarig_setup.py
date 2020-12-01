@@ -210,9 +210,13 @@ for b in metarig.pose.bones:
 			if type(value) in [float, int]:
 				# Make library overridable
 				b.property_overridable_library_set(f'["{key}"]', True)
-
-			if key.startswith("CR_"):
-				print(f"Rigify Parameter is custom property: {b.name} -> {key}")
+		# Move to main layer
+		b.bone.layers = [i==0 for i in range(32)]
+		# Assign Properties bone shape
+		shape = bpy.data.objects.get('WGT-Cogwheel')
+		if shape:
+			b.custom_shape = shape
+			b.custom_shape_scale = 2
 
 	# Rigify Parameters: Nuke all if no type assigned.
 	if b.rigify_type=='' and 'rigify_type' in b.keys():
@@ -221,6 +225,11 @@ for b in metarig.pose.bones:
 			print(f"Deleting Rigify Parameters with no rig type: {b.name}")
 			del b['rigify_parameters']
 
+	# CloudRig Parameters: Very old assignments, before they were moved to rigify_parameters.
+	for key in b.keys():
+		if key.startswith("CR_"):
+			del b[key]
+			print(f"CloudRig Parameter was custom property: {b.name} -> {key}")
 
 	# Rigify Parameters
 	for key in b.rigify_parameters.keys():

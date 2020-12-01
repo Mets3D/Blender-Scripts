@@ -1,0 +1,2 @@
+Rigging in Blender could be made a lot less painful with a lot of very small improvements.
+
