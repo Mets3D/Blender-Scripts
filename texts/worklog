@@ -1160,82 +1160,98 @@ November
             - Fix text boxes missing the first line of every word... been like that for months, yikes.
             - Bone selector and a warning when Armature Constraint will be used for selecting parent bone for cloud_copy.
 
-        Nov 16:
-            - Made demo videos for the release to showcase overrides
-            - Got started on Rex face
+    Nov 16:
+        - Made demo videos for the release to showcase overrides
+        - Got started on Rex face
 
-        Nov 17:
-            - Rex face rigging
+    Nov 17:
+        - Rex face rigging
 
-        Nov 18:
-            - Attempted to implement some feedback on the spine rig and the teeth in a simple way. If that doesn't work out I'll have to try something more complex (ie. redesign and rebuild the spine rig) but that would take too long so I hope it won't be neccessary.
-            - Worked on a script to keep all Sprites character rigs consistent. (To set a lot of settings on the metarig.)
+    Nov 18:
+        - Attempted to implement some feedback on the spine rig and the teeth in a simple way. If that doesn't work out I'll have to try something more complex (ie. redesign and rebuild the spine rig) but that would take too long so I hope it won't be neccessary.
+        - Worked on a script to keep all Sprites character rigs consistent. (To set a lot of settings on the metarig.)
 
-        Nov 19:
-            - Added Shrinkwrap tech to Rex's face. (as seen before)
-            - Fixed some bugs relating to Shrinkwrap tech, and moving drivers from the metarig to the generated rig.
-            - Worked a little bit on the mouth corner low level behaviour.
+    Nov 19:
+        - Added Shrinkwrap tech to Rex's face. (as seen before)
+        - Fixed some bugs relating to Shrinkwrap tech, and moving drivers from the metarig to the generated rig.
+        - Worked a little bit on the mouth corner low level behaviour.
 
-        Nov 20:
-            - Restarted on Rex's face without bendy bones.
+    Nov 20:
+        - Restarted on Rex's face without bendy bones.
 
-        Nov 23:
-            - More rex face re-rigging
+    Nov 23:
+        - More rex face re-rigging
 
-        Nov 24:
-            - Deliver Rex face MVP with working mouth corner and jaw controls
+    Nov 24:
+        - Deliver Rex face MVP with working mouth corner and jaw controls
 
-        Nov 25
-            - Made a Resync+Reload all Overridden collections operator for convenience, not too sure if it works yet.
-            Updated all characters to latest CloudRig, address most animator feedback, clean up CloudRig warnings:
-            Everyone:
-                - New spine set-up
-                - Move hip controls down by a lot
-                - Bone layer organization and display size fixes
-                - Adjust length ratios of upper/lower arm
-            Rex:
-                - Eye highlight follows the eyeball
-                - Place tracking bones properly
-                - Fix some weights on the chest
-            Jay:
-                - Add Hinge toggle for the chain
-                - Add control to top of the hat
-                - Hide hair that was clipping with the hat
-            Victoria:
-                - Fix tilt on foot bone display
-            Phil:
-                - Rename Belly control to Tummy because name clashing
+    Nov 25
+        - Made a Resync+Reload all Overridden collections operator for convenience, not too sure if it works yet.
+        Updated all characters to latest CloudRig, address most animator feedback, clean up CloudRig warnings:
+        Everyone:
+            - New spine set-up
+            - Move hip controls down by a lot
+            - Bone layer organization and display size fixes
+            - Adjust length ratios of upper/lower arm
+        Rex:
+            - Eye highlight follows the eyeball
+            - Place tracking bones properly
+            - Fix some weights on the chest
+        Jay:
+            - Add Hinge toggle for the chain
+            - Add control to top of the hat
+            - Hide hair that was clipping with the hat
+        Victoria:
+            - Fix tilt on foot bone display
+        Phil:
+            - Rename Belly control to Tummy because name clashing
 
-        Nov 26:
-            - Fix tooth parenting on Rex
-            - Make a proxy sprite rig for Pablo
-            - Rigged Rex eyelids (roughly).
-        
-        Nov 27:
-            - Add dummy bones to all the characters
-            - Add widget object troubleshooting to CloudRig
-            Rex:
-                - Implement an idea and feedback from Rik on Rex's jaw
-                - Make the eyebrows separable
-                - Rig the extra cartoon shapes finally
-            LatticeMagic:
-                - Fix error when generating camera lattice from pose mode
-                - Fix breakage on Rex due to rig helper object getting latticed when it shouldn't
-                - Add operators to zero all keyframes and insert keyframes on all shape key values
-                - Update active shape key on frame change (with a toggle to turn this off)
+    Nov 26:
+        - Fix tooth parenting on Rex
+        - Make a proxy sprite rig for Pablo
+        - Rigged Rex eyelids (roughly).
+    
+    Nov 27:
+        - Add dummy bones to all the characters
+        - Add widget object troubleshooting to CloudRig
+        Rex:
+            - Implement an idea and feedback from Rik on Rex's jaw
+            - Make the eyebrows separable
+            - Rig the extra cartoon shapes finally
+        LatticeMagic:
+            - Fix error when generating camera lattice from pose mode
+            - Fix breakage on Rex due to rig helper object getting latticed when it shouldn't
+            - Add operators to zero all keyframes and insert keyframes on all shape key values
+            - Update active shape key on frame change (with a toggle to turn this off)
 
-        Nov 30:
-            (Had a very long lunchbreak because I had to take care of some stuff, hence the very late finish)
-            - Test Rex face in some of Julien's sculpted poses and note some issues and potential improvements
-            - Fix an issue with the eye highlight but not committed yet
-            - Get feedback from Rik on more Rex face things and some other stuff
-            - Slapped 6 bones on a bbq grill for Hjalti
-            Lattice addon:
-                - Remove redundant and buggy Radius slider from the Falloff popup
-                - Add a not buggy Radius slider above the Create Tweak Lattice button so it can be pre-filled
-                - Add options to parent the created lattice setup to an object or bone. Currently parenting can't easily be changed after creation, could be added later.
-                - Add options to add and remove objects from a tweak lattice
-                - Added option to create tweak lattice at the selection's bounding box center instead of 3D cursor but I doubt its usefulness
+    Nov 30:
+        (Had a very long lunchbreak because I had to take care of some stuff, hence the very late finish)
+        - Test Rex face in some of Julien's sculpted poses and note some issues and potential improvements
+        - Fix an issue with the eye highlight but not committed yet
+        - Get feedback from Rik on more Rex face things and some other stuff
+        - Slapped 6 bones on a bbq grill for Hjalti
+        Lattice addon:
+            - Remove redundant and buggy Radius slider from the Falloff popup
+            - Add a not buggy Radius slider above the Create Tweak Lattice button so it can be pre-filled
+            - Add options to parent the created lattice setup to an object or bone. Currently parenting can't easily be changed after creation, could be added later.
+            - Add options to add and remove objects from a tweak lattice
+            - Added option to create tweak lattice at the selection's bounding box center instead of 3D cursor but I doubt its usefulness
 
 December
-    - Fix some floating objects on Rex, Phil & Victoria
+    Dec 1:
+        - Fix some floating objects and other issues on Rex, Phil & Victoria
+        - Started making some CloudRig functionality more generic so it works on all rigs. Constraint and driver re-linking, arbitrary parenting and parent switching. Only halfway done though. :/
+    
+    Dec 2:
+        - Bit of pipeline addon troubleshooting in the morning ^^
+        - Finish implementing very generic arbitrary parenting! All that's left is to update all the metarigs with some new parameters. I can now tell the metarig to generate parent switching options from anything to anything! I think! (well, as long as it doesn't create a depcycle... :D)
+    
+    Dec 3:
+        - Adjust Rex finger proportions
+        - Test several patches for Angavrilov
+        - Update metarig consistency script with the new features
+        Rex face:
+        - Put bendy bones back on the eyelids.
+        - Flip bottom lip axis so all lip controls can be rotated on the same axis to roll them.
+        - Experiment with lattice controls for the mask area.
+        - Experiment with whole mouth master control.

@@ -52,6 +52,16 @@ def match_param_to_type(type_name, param_name):
 			return True
 	return False
 
+def assign_parents(pb, parent_dict):
+	bone = pb.bone
+	parent_slots = bone.parent_slots
+	parent_slots.clear()
+	for key in parent_dict.keys():
+		ps = parent_slots.add()
+		ps.name = key
+		ps.bone = parent_dict[key]
+	bone.active_parent_slot_index = 0
+
 # Layers
 metarig.data.layers = [i in [0, 1, 3] for i in range(32)]
 
@@ -131,77 +141,104 @@ for i in range(32):
 
 defaultless = []
 for b in metarig.pose.bones:
+	params = b.rigify_parameters
 	# Arms and Legs
 	if b.rigify_type in ['cloud_limb', 'cloud_leg']:
-		b.rigify_parameters.CR_limb_auto_hose_type = 'ELBOW_IN'
-		b.rigify_parameters.CR_limb_double_ik = True
-		b.rigify_parameters.CR_BG_LAYERS_ik_child_controls = [i==16 for i in range(32)]
-		b.rigify_parameters.CR_fk_chain_test_animation_generate = True
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[0] = -90
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[1] = 90
-		b.rigify_parameters.CR_fk_chain_test_animation_axes[1] = False
+		params.CR_limb_auto_hose_type = 'ELBOW_IN'
+		params.CR_limb_double_ik = True
+		params.CR_BG_LAYERS_ik_child_controls = [i==16 for i in range(32)]
+		params.CR_fk_chain_test_animation_generate = True
+		params.CR_fk_chain_test_animation_rotation_range[0] = -90
+		params.CR_fk_chain_test_animation_rotation_range[1] = 90
+		params.CR_fk_chain_test_animation_axes[1] = False
 		# Just the Legs
 		if b.rigify_type=='cloud_leg':
-			b.rigify_parameters.CR_fk_chain_parent_candidates = True
-			b.rigify_parameters.CR_leg_heel_bone = b.name.replace("Thigh", "HeelPivot")
+			params.CR_fk_chain_parent_candidates = True
+			params.CR_leg_heel_bone = b.name.replace("Thigh", "HeelPivot")
+			params.CR_base_parent_switching = True
+			assign_parents(b, {
+				"Torso" : 'MSTR-Spine_Torso'
+				,"Hips" : 'MSTR-Spine_Hips'
+				,"Thigh" : 'ROOT-' + b.name
+			})
 
 	# Shoulder
 	if 'UpperArm' in b.name:
 		assert b.bone.use_connect == False, "Disconnect the shoulders."
+		params.CR_base_parent = "DEF-Shoulder"+b.name[-2:]
+		params.CR_base_parent_switching = True
+		assign_parents(b, {
+			"Torso" : 'MSTR-Spine_Torso'
+			,"Chest" : 'FK-Chest'
+			,"Shoulder" : 'ROOT-' + b.name
+			,"Head" : 'FK-Head'
+		})
+
+
 	if b.rigify_type == 'cloud_shoulder':
-		b.rigify_parameters.CR_chain_tip_control = False
-		b.rigify_parameters.CR_fk_chain_parent_candidates = True
-		b.rigify_parameters.CR_fk_chain_test_animation_generate = True
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[0] = -45
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[1] = 45
-		b.rigify_parameters.CR_fk_chain_test_animation_axes[2] = False
+		params.CR_chain_tip_control = False
+		params.CR_fk_chain_parent_candidates = True
+		params.CR_fk_chain_test_animation_generate = True
+		params.CR_fk_chain_test_animation_rotation_range[0] = -45
+		params.CR_fk_chain_test_animation_rotation_range[1] = 45
+		params.CR_fk_chain_test_animation_axes[2] = False
 		# Maybe this should use Parent to Deform?
 
 	# Spine
 	if b.rigify_type == 'cloud_spine':
-		b.rigify_parameters.CR_fk_chain_parent_candidates = True
-		b.rigify_parameters.CR_fk_chain_test_animation_generate = True
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[0] = -110
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[1] = 110
+		params.CR_fk_chain_parent_candidates = True
+		params.CR_fk_chain_test_animation_generate = True
+		params.CR_fk_chain_test_animation_rotation_range[0] = -110
+		params.CR_fk_chain_test_animation_rotation_range[1] = 110
 
-		b.rigify_parameters.CR_chain_tip_control = True
-		b.rigify_parameters.CR_chain_bbone_density = 0
-		b.rigify_parameters.CR_chain_unlock_deform = True
-		b.rigify_parameters.CR_BG_LAYERS_deform_controls = [i==2 for i in range(32)]
-		b.rigify_parameters.CR_BG_LAYERS_stretch_controls = [i==28 for i in range(32)]
-		b.rigify_parameters.CR_BG_LAYERS_spine_ik_secondary = [i==28 for i in range(32)]
+		params.CR_chain_tip_control = True
+		params.CR_chain_bbone_density = 0
+		params.CR_chain_unlock_deform = True
+		params.CR_BG_LAYERS_deform_controls = [i==2 for i in range(32)]
+		params.CR_BG_LAYERS_stretch_controls = [i==28 for i in range(32)]
+		params.CR_BG_LAYERS_spine_ik_secondary = [i==28 for i in range(32)]
 
 	# Head
 	if b.name=='Head':
-		b.rigify_parameters.CR_fk_chain_test_animation_generate = True
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[0] = -90
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[1] = 90
-		b.rigify_parameters.CR_fk_chain_test_animation_axes[2] = False
-		b.rigify_parameters.CR_fk_chain_parent_candidates = True
+		params.CR_fk_chain_test_animation_generate = True
+		params.CR_fk_chain_test_animation_rotation_range[0] = -90
+		params.CR_fk_chain_test_animation_rotation_range[1] = 90
+		params.CR_fk_chain_test_animation_axes[2] = False
+		params.CR_fk_chain_parent_candidates = True
 
 	# Eyes
 	if b.name.startswith('Eye.'):
 		b.rigify_type = 'cloud_aim'
 		b.bone.use_deform = False # this shouldn't be needed, added a bug TODO to CloudRig.
-		b.rigify_parameters.CR_aim_deform = True
-		b.rigify_parameters.CR_aim_root = True
+		params.CR_aim_deform = True
+		params.CR_aim_root = True
+		params.CR_base_parent_switching = True
+		assign_parents(b, {
+			"Torso" : 'MSTR-Spine_Torso'
+			,"Chest" : 'FK-Chest'
+			,"Neck" : 'FK-Neck'
+			,"Head" : 'FK-Head'
+		})
+		if params.CR_base_parent=="":
+			params.CR_base_parent = "DEF-Head"
+
 
 	# Fingers
 	if 'Finger' in b.name and b.rigify_type!='':
-		b.rigify_parameters.CR_fk_chain_test_animation_generate = True
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[0] = -10
-		b.rigify_parameters.CR_fk_chain_test_animation_rotation_range[1] = 130
-		b.rigify_parameters.CR_fk_chain_test_animation_axes[1] = False
-		b.rigify_parameters.CR_fk_chain_test_animation_axes[2] = False
+		params.CR_fk_chain_test_animation_generate = True
+		params.CR_fk_chain_test_animation_rotation_range[0] = -10
+		params.CR_fk_chain_test_animation_rotation_range[1] = 130
+		params.CR_fk_chain_test_animation_axes[1] = False
+		params.CR_fk_chain_test_animation_axes[2] = False
 
 	# Teeth
 	if 'Tooth' in b.name:
 		b.bone.layers = [i==20 for i in range(32)]
 	if b.name.startswith('Gum_') and 'rigify_type' in b:
-		b.rigify_parameters.CR_chain_bbone_density = 0
-		b.rigify_parameters.CR_chain_unlock_deform = True
-		b.rigify_parameters.CR_BG_LAYERS_deform_controls = [i==2 for i in range(32)]
-		b.rigify_parameters.CR_BG_LAYERS_stretch_controls = [i==28 for i in range(32)]
+		params.CR_chain_bbone_density = 0
+		params.CR_chain_unlock_deform = True
+		params.CR_BG_LAYERS_deform_controls = [i==2 for i in range(32)]
+		params.CR_BG_LAYERS_stretch_controls = [i==28 for i in range(32)]
 
 	# Custom Properties
 	if 'Properties_Character_' in b.name:
@@ -232,16 +269,16 @@ for b in metarig.pose.bones:
 			print(f"CloudRig Parameter was custom property: {b.name} -> {key}")
 
 	# Rigify Parameters
-	for key in b.rigify_parameters.keys():
+	for key in params.keys():
 		if b.rigify_type=='':
 			print("Why does this bone still have rigify parameters when it has no rigify type: " + b.name)
-			del b.rigify_parameters[key]
+			del params[key]
 			continue
-		value = b.rigify_parameters[key]
+		value = params[key]
 		if hasattr(rigify_params, key):
 			if 'BG' not in key and not match_param_to_type(b.rigify_type, key):
 				print(f"Parameter didn't belong on this rig type: {b.name} -> {key} ({b.rigify_type})")
-				del b.rigify_parameters[key]
+				del params[key]
 				continue
 			definition = getattr(rigify_params, key)
 			default_value = None # Covers PointerProperties
@@ -260,10 +297,10 @@ for b in metarig.pose.bones:
 					defaultless.append(key)
 			if value == default_value:
 				print(f"Set value matched default value: {b.name} -> {key} ({value})")
-				del b.rigify_parameters[key]
+				del params[key]
 		else:
 			print(f"Outdated Rigify Parameter: {b.name} -> {key}")
-			del b.rigify_parameters[key]
+			del params[key]
 	
 	# Neck
 	# if b.name=='Neck':

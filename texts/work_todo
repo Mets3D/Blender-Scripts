@@ -9,39 +9,6 @@ Rik notes:
 	(still easy to lose work because linked rigs have to be keyframed to save their pose)
 	For Bastien:
 		Duplicated hair spray overrides share their bone selection state, but transform operator works as expected.
-	Rex:
-		Try to make the lip corners stick closer to the actual control.
-		When opening the mouth, there should be a way to have the mouth open not in a rectangular fashion but more circular, creating arcs.
-			Same with lip sharp, the control between the corner and the center should be affected a little bit
-		More lip controls of course
-			Entire upper lip
-			Center of upper lip
-		Be able to do R, X, 45 on the lips and have them all roll in the same direction
-		Investigate if it's possible (low prio) to have 1 deformation adjuster for Rex, that is between the current bottom two.
-		Think over the positions of the FK bones again. They were moved to the halfway points because of bendy bone reasons, but we are no longer using bendy bones. And having them there makes IK/FK switching impossible since they're not in the same place as the IK.
-		Add iris scale shape key
-		Parent control for top 3 eye ring bones
-		Add root bone for the face lines.
-		Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
-		Make the neck behave better when the head is translated.
-		Add a property to control volume preservation on the head chain
-		Disable smooth curvature on rex face chain.
-		Maybe a lattice setup that controls the "Mask area" (eyebrows, eyes, not the forehead)
-			Two controls on the top and bottom, when sliding them left and right they tilt the shape of the lattice into a trapezoid
-		Add cheek controls (for now at the edges of the lips)
-		More detailed control of the tongue (5 FK controls!?)
-			https://i.imgur.com/HWDVeRB.png
-		Add ear controls
-
-	Victoria:
-		metacarpals:
-			Fingers spread control (also include thumb here)
-			arcing of the knuckles
-				This thing https://i.imgur.com/wEVwNWt.png (also twist them a bit)
-			probably with actions
-
-Rex:
-	Try to pose some of Julien's extreme poses, see what breaks, see how it can be improved
 
 Maybe update Pablo's animation layers addon so it supports overrides.
 
@@ -49,6 +16,44 @@ Be ready to put shit on Cloud (maybe prepare some things) when fsiddi pokes us t
 Update Sprite to latest and add empty bones
 
 Sprites:
+	Ellie:
+		Move the pivot point to the middle non-dotted line here https://i.imgur.com/yh8lOCr.png
+
+	Rex:
+		Try to pose some of Julien's extreme poses, see what breaks, see how it can be improved
+		Add controls to the watch and experiment with some automation to avoid clipping when the wrist is rotated upwards.
+			Maybe allow the automation to be toggle-able.
+		From Rik:
+			Try to make the lip corners stick closer to the actual control.
+			When opening the mouth, there should be a way to have the mouth open not in a rectangular fashion but more circular, creating arcs.
+				Same with lip sharp, the control between the corner and the center should be affected a little bit
+			More lip controls of course
+				Entire upper lip
+				Center of upper lip
+			Be able to do R, X, 45 on the lips and have them all roll in the same direction
+			Investigate if it's possible (low prio) to have 1 deformation adjuster for Rex, that is between the current bottom two.
+			Think over the positions of the FK bones again. They were moved to the halfway points because of bendy bone reasons, but we are no longer using bendy bones. And having them there makes IK/FK switching impossible since they're not in the same place as the IK.
+			Add iris scale shape key
+			Parent control for top 3 eye ring bones
+			Add root bone for the face lines.
+			Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
+			Make the neck behave better when the head is translated.
+			Add a property to control volume preservation on the head chain
+			Disable smooth curvature on rex face chain.
+			Maybe a lattice setup that controls the "Mask area" (eyebrows, eyes, not the forehead)
+				Two controls on the top and bottom, when sliding them left and right they tilt the shape of the lattice into a trapezoid
+			Add cheek controls (for now at the edges of the lips)
+			More detailed control of the tongue (5 FK controls!?)
+				https://i.imgur.com/HWDVeRB.png
+			Add ear controls
+
+	Everyone (Rik mentioned for Victoria, but it's for everyone):
+		metacarpals:
+			Fingers spread control (also include thumb here)
+			arcing of the knuckles
+				This thing https://i.imgur.com/wEVwNWt.png (also twist them a bit)
+			probably with actions
+
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
 	Character Checklist:
 		- Consistency script was run on the metarig
@@ -58,21 +63,30 @@ Sprites:
 		- Arm/Leg Masking
 
 CloudRig TODO:
-	Ellie fanny pack swapping: Want to put drivers on relinked constraints on cloud_face_chain.
-		This would mean: Reading constraint drivers in bone.py->bone_info_from_real() thingie function
-			Then in ConstraintInfo.relink() also relink the drivers (mechanism.py already has a copy_and_relink_drivers())
 	Delete Lock Y/Z param from FK chain, is useless af.
-
 
 	Priority 0: Requested
 	Priority 1: New features
-		Add a date to the generated rig so it can be known when it was generated. Could even be displayed in the cloudrig ui.
+		Parent Switching (May be implemened differently for each rig):
+			Implement root bone custom parenting in a bunch of rigs.
+		Constraint Relinking (This may be implemented differently for each rig)
+			cloud_chain should override relink() to push constraints and drivers to main STR bones (minus cap control)
+				Some rig assignments on metarigs no longer need to be cloud_face_chain (like Jay's chain)
+			cloud_fk_chain should override relink() to push constraints and drivers to FK bones.
+				Child classes of this probably don't override it further.
+
 		(Requested) cloud_leg should have a new foot roll parameter called "secondary activation angle" or something better, which can be adjusted to improve behaviour for high heels, ie. the second bone's rotation will trigger sooner.
 		Active layers on the generated rig shouldn't be the same as the metarig afterall - or maybe it should be an option (sometimes we do enable the deform layer because we want to see it on generation)
 		Perhaps some parameters could belong all the way up in CloudBaseRig.
-			- Parent to DEF
+			- Add parent switch to UI
+				- Make sure this works with Copy/Mirror Rigify Parameters operators, and possibly the clean-up script.
+				The way this works now:
+					- Root bone parent and Parent Switching options are not mutually exclusive. This is because for rigs like cloud_aim and cloud_limb, we still want to be able to specify a parent for the root bone, but parent switching is meant for different bones (IK master and aim group master, namely)
+					This means we need to add the correct parent set-ups to the Sprites metarig script.
+
+			- Register as Parent
 			- Delete ORG bones (can force to False for rigs that need it)
-			- Relink constraints (This may be implemented differently for each rig)
+			- UI row and column names...
 	Priority 2: Bugs
 		cloud_aim ORG bone use_deform is copied from the metarig, but it should always be False!
 		!!! We need a better heuristic for picking which controller STR-I controls should align with.
@@ -122,12 +136,21 @@ CloudRig TODO:
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
+		Version, clean up and test the metarigs.
+			Add parent switching parameters.
+			Maybe add corrective action set-up to Sintel?
+			Add Rex metarig with the non-bendy-bone face? No shrinkwrap.
+		Explain the face set-ups on Sintel and Rex metarigs.
+		Explain how each rig implements relink() and parent switching.
+		cloud_base now has parameters.
+		cloud_bone split up to cloud_tweak and cloud_copy.
+		cloud_face_chain lost its Relink Constraints parameter.
 		cloud_chain has new Unlock Deform parameter.
+		cloud_fk_chain lost Register Parents parameter.
 		Turn the "code crap" wiki page into a proper "Contribute" page - The project is now big enough that I would actually welcome if someone competent wanted to join me in working on this.
 			Describe versioning code
 			Organize better with modules as the headers.
 		Add operators in the UI somewhere, somehow.
-		Update cloud_bone being split up to cloud_tweak and cloud_copy.
 		Add gifs to CloudRig Types page (do it at home with ShareX)
 		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
 		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
@@ -191,6 +214,8 @@ CloudRig ideas:
 	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
 
 Rigify patch ideas
+	Because of this line: `val[1]['update'] = update_callback(name)` CollectionProperties cannot be registered as rig parameters, which really kills me with my parent switching UIList.
+
 	Make a huge (probably nested) design proposal on Phabricator about Rigify improvements that I'd like to implement (including many CloudRig features)
 
 	Bugs
