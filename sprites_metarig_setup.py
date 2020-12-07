@@ -54,6 +54,7 @@ def match_param_to_type(type_name, param_name):
 
 def assign_parents(pb, parent_dict):
 	bone = pb.bone
+	pb.rigify_parameters.CR_base_parent_switching = True
 	parent_slots = bone.parent_slots
 	parent_slots.clear()
 	for key in parent_dict.keys():
@@ -139,9 +140,32 @@ for i in range(32):
 		l.name = "$ORG"
 		l.row = 32
 
+# Ensure Empty bones group
+empties = metarig.pose.bone_groups.get("Empties")
+if not empties:
+	empties = metarig.pose.bone_groups.new(name="Empties")
+	empties.color_set = 'THEME04'
+
 defaultless = []
 for b in metarig.pose.bones:
 	params = b.rigify_parameters
+	# Attachment bones
+	if 'P-Grab' in b.name:
+		assign_parents(b, {
+			"Wrist" : 'IK-MSTR-Wrist'+b.name[-2:]
+			,"Root" : 'root'
+			,"Torso" : 'MSTR-Spine_Torso'
+		})
+	if 'Empty' in b.name:
+		b.custom_shape_scale = 1
+		b.bone_group = empties
+	if 'P-Empty' in b.name:
+		b.custom_shape_scale = 1.5
+		assign_parents(b, {
+			"Torso" : 'MSTR-Spine_Torso'
+			,"Grab" : 'P-Grab'+b.name[-2:]
+		})
+	
 	# Arms and Legs
 	if b.rigify_type in ['cloud_limb', 'cloud_leg']:
 		params.CR_limb_auto_hose_type = 'ELBOW_IN'
@@ -155,7 +179,6 @@ for b in metarig.pose.bones:
 		if b.rigify_type=='cloud_leg':
 			params.CR_fk_chain_parent_candidates = True
 			params.CR_leg_heel_bone = b.name.replace("Thigh", "HeelPivot")
-			params.CR_base_parent_switching = True
 			assign_parents(b, {
 				"Torso" : 'MSTR-Spine_Torso'
 				,"Hips" : 'MSTR-Spine_Hips'
@@ -166,7 +189,6 @@ for b in metarig.pose.bones:
 	if 'UpperArm' in b.name:
 		assert b.bone.use_connect == False, "Disconnect the shoulders."
 		params.CR_base_parent = "DEF-Shoulder"+b.name[-2:]
-		params.CR_base_parent_switching = True
 		assign_parents(b, {
 			"Torso" : 'MSTR-Spine_Torso'
 			,"Chest" : 'FK-Chest'
@@ -212,7 +234,6 @@ for b in metarig.pose.bones:
 		b.bone.use_deform = False # this shouldn't be needed, added a bug TODO to CloudRig.
 		params.CR_aim_deform = True
 		params.CR_aim_root = True
-		params.CR_base_parent_switching = True
 		assign_parents(b, {
 			"Torso" : 'MSTR-Spine_Torso'
 			,"Chest" : 'FK-Chest'

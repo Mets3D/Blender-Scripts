@@ -16,36 +16,55 @@ Be ready to put shit on Cloud (maybe prepare some things) when fsiddi pokes us t
 Update Sprite to latest and add empty bones
 
 Sprites:
+	Metarig Consistency script:
+		- Make empty bones blue so they are distinct from grab bones.
+
 	Ellie:
 		Move the pivot point to the middle non-dotted line here https://i.imgur.com/yh8lOCr.png
 
 	Rex:
-		Try to pose some of Julien's extreme poses, see what breaks, see how it can be improved
-		Add controls to the watch and experiment with some automation to avoid clipping when the wrist is rotated upwards.
-			Maybe allow the automation to be toggle-able.
-		From Rik:
-			Try to make the lip corners stick closer to the actual control.
-			When opening the mouth, there should be a way to have the mouth open not in a rectangular fashion but more circular, creating arcs.
-				Same with lip sharp, the control between the corner and the center should be affected a little bit
-			More lip controls of course
-				Entire upper lip
-				Center of upper lip
-			Be able to do R, X, 45 on the lips and have them all roll in the same direction
-			Investigate if it's possible (low prio) to have 1 deformation adjuster for Rex, that is between the current bottom two.
-			Think over the positions of the FK bones again. They were moved to the halfway points because of bendy bone reasons, but we are no longer using bendy bones. And having them there makes IK/FK switching impossible since they're not in the same place as the IK.
-			Add iris scale shape key
-			Parent control for top 3 eye ring bones
-			Add root bone for the face lines.
-			Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
-			Make the neck behave better when the head is translated.
-			Add a property to control volume preservation on the head chain
-			Disable smooth curvature on rex face chain.
-			Maybe a lattice setup that controls the "Mask area" (eyebrows, eyes, not the forehead)
-				Two controls on the top and bottom, when sliding them left and right they tilt the shape of the lattice into a trapezoid
-			Add cheek controls (for now at the edges of the lips)
-			More detailed control of the tongue (5 FK controls!?)
-				https://i.imgur.com/HWDVeRB.png
-			Add ear controls
+		New teeth tech with surface deform.
+
+		More lip controls of course
+			Center of upper lip
+				This seems kinda pointless.
+		When opening the mouth, there should be a way to have the mouth open not in a rectangular fashion but more circular, creating arcs.
+			Same with lip sharp, the control between the corner and the center should be affected a little bit
+		Try to make the lip corners stick closer to the actual control.
+			How could we make the corrective actions not totally explode at the extremes?
+			Probably need to re-rig the cheeks altogether... :/
+			Maybe all we need is to swap around the corrective ranges so instead of
+				Wide+UpDown
+				Squash+UpDown
+			we'd have
+				Up+SquashWide
+				Down+SquashWide
+			Would that make any difference? Actually probably not. The issue is the huge discrepancy between pure Wide and Wide+Down or even Wide+Up.
+			Not sure how that discrepancy could be reduced...
+
+		Ask Julien to adjust the eye lattice or do it myself.
+		Parent control for top 3 eye ring bones
+		Add iris scale shape key
+		Add ear controls
+		Add a property to control volume preservation on the head chain
+
+		Add cheek controls (for now at the edges of the lips)
+		More detailed control of the tongue (5 FK controls!?)
+			https://i.imgur.com/HWDVeRB.png
+
+		Add root bone for the face lines.
+			This would require moving the Root Control parameter from cloud_fk_chain to cloud_chain, which is good. In fact, we probably want to move it all the way to cloud_base since cloud_copy and cloud_aim could use it too.
+		Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
+		Make the neck behave better when the head is translated.
+		Maybe a lattice setup that controls the "Mask area" (eyebrows, eyes, not the forehead)
+			Two controls on the top and bottom, when sliding them left and right they tilt the shape of the lattice into a trapezoid
+
+		Investigate if it's possible (low prio) to have 1 deformation adjuster for Rex's spine, that is between the current bottom two.
+		Think over the positions of the spine FK bones again. They were moved to the halfway points because of bendy bone reasons, but we are no longer using bendy bones. And having them there makes IK/FK switching impossible since they're not in the same place as the IK.
+
+		After retopo is finished:
+			Add controls to the watch and experiment with some automation to avoid clipping when the wrist is rotated upwards.
+				Maybe allow the automation to be toggle-able.
 
 	Everyone (Rik mentioned for Victoria, but it's for everyone):
 		metacarpals:

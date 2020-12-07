@@ -1241,17 +1241,28 @@ December
     Dec 1:
         - Fix some floating objects and other issues on Rex, Phil & Victoria
         - Started making some CloudRig functionality more generic so it works on all rigs. Constraint and driver re-linking, arbitrary parenting and parent switching. Only halfway done though. :/
-    
+
     Dec 2:
         - Bit of pipeline addon troubleshooting in the morning ^^
         - Finish implementing very generic arbitrary parenting! All that's left is to update all the metarigs with some new parameters. I can now tell the metarig to generate parent switching options from anything to anything! I think! (well, as long as it doesn't create a depcycle... :D)
-    
+
     Dec 3:
         - Adjust Rex finger proportions
         - Test several patches for Angavrilov
         - Update metarig consistency script with the new features
-        Rex face:
-        - Put bendy bones back on the eyelids.
-        - Flip bottom lip axis so all lip controls can be rotated on the same axis to roll them.
-        - Experiment with lattice controls for the mask area.
-        - Experiment with whole mouth master control.
+        - Re-rig Rex's eyelids with bendy bones (again)
+
+    Dec 4:
+        - Some troubleshooting and updating on Phil&Ellie for Hjalti&Pablo
+        - Some CloudRig bugfixes relating to the above
+        - Rex eyelid improvements
+        - Cloud posts and testing and feedback
+    
+    Dec 7:
+        - Re-rigged lips with bendy bones.
+        - Lip controls can now be rotated uniformally to get somewhat of a lip roll effect.
+        - Controls for entire Upper and lower lip.
+        - Some troubleshooting for Hjalti and weight paint chats with Sybren
+        - Worked on some documentation for CloudRig actions for my own sanity so I remember what my features do
+        - 6 tiny bug fixes
+        - Current state of Rex can be committed if needed, but not much of the feedback has been addressed yet (since I started with the hard bits, like re-doing the lips completely)
