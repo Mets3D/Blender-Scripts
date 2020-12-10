@@ -1266,3 +1266,27 @@ December
         - Worked on some documentation for CloudRig actions for my own sanity so I remember what my features do
         - 6 tiny bug fixes
         - Current state of Rex can be committed if needed, but not much of the feedback has been addressed yet (since I started with the hard bits, like re-doing the lips completely)
+    
+    Dec 8:
+        - Update outdated CloudRig documentation
+        Rex:
+        - Second round of weight painting on lips, cheeks and forehead.
+        - Experiment with Surface Deform teeth, waiting on confirmation whether this is good and then I'll complete it, but this way there's no way to control the teeth individually.
+        - Parent control for top and bottom 3 eye ring bones
+        - 5 FK controls for the tongue instead of 2.
+        - Add root controls for the face lines
+    
+    Dec 9:
+        - Finish new teeth tech
+        - Catch up on writing production logs
+        - Add mask lattice
+        - Add lip roll
+        Spent half the day troubleshooting something stupid with the lips :/
+    
+    Dec 10:
+        Rex:
+        - Ears
+        - Overall head controls
+        - Head squash property
+        - Hand splay controls
+        Ditching bendy bones was a mistake, I see the light now. Before I add cheek controls, I want to re-do the deformation layer with good old bbones.

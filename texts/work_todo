@@ -23,41 +23,13 @@ Sprites:
 		Move the pivot point to the middle non-dotted line here https://i.imgur.com/yh8lOCr.png
 
 	Rex:
-		New teeth tech with surface deform.
+		Cheek Puff with actions (and later a shape key)
 
-		More lip controls of course
-			Center of upper lip
-				This seems kinda pointless.
-		When opening the mouth, there should be a way to have the mouth open not in a rectangular fashion but more circular, creating arcs.
-			Same with lip sharp, the control between the corner and the center should be affected a little bit
-		Try to make the lip corners stick closer to the actual control.
-			How could we make the corrective actions not totally explode at the extremes?
-			Probably need to re-rig the cheeks altogether... :/
-			Maybe all we need is to swap around the corrective ranges so instead of
-				Wide+UpDown
-				Squash+UpDown
-			we'd have
-				Up+SquashWide
-				Down+SquashWide
-			Would that make any difference? Actually probably not. The issue is the huge discrepancy between pure Wide and Wide+Down or even Wide+Up.
-			Not sure how that discrepancy could be reduced...
+		Ask Julien to adjust the eye lattice or do it myself. 
+			Add iris scale shape key
 
-		Ask Julien to adjust the eye lattice or do it myself.
-		Parent control for top 3 eye ring bones
-		Add iris scale shape key
-		Add ear controls
-		Add a property to control volume preservation on the head chain
-
-		Add cheek controls (for now at the edges of the lips)
-		More detailed control of the tongue (5 FK controls!?)
-			https://i.imgur.com/HWDVeRB.png
-
-		Add root bone for the face lines.
-			This would require moving the Root Control parameter from cloud_fk_chain to cloud_chain, which is good. In fact, we probably want to move it all the way to cloud_base since cloud_copy and cloud_aim could use it too.
 		Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
 		Make the neck behave better when the head is translated.
-		Maybe a lattice setup that controls the "Mask area" (eyebrows, eyes, not the forehead)
-			Two controls on the top and bottom, when sliding them left and right they tilt the shape of the lattice into a trapezoid
 
 		Investigate if it's possible (low prio) to have 1 deformation adjuster for Rex's spine, that is between the current bottom two.
 		Think over the positions of the spine FK bones again. They were moved to the halfway points because of bendy bone reasons, but we are no longer using bendy bones. And having them there makes IK/FK switching impossible since they're not in the same place as the IK.
@@ -155,17 +127,14 @@ CloudRig TODO:
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
+		cloud_fk_chain new param: inherit scale
+		Relink Constraints never really needs to be disabled. I know we had a philosophy before of "Add useless checkboxes so we can have useful tooltips" but eh, icky.
+			If we keep the checkbox, it should also disable relinking on cloud_tweak and cloud_bone (and be documented as such, ie. it doesn't have to be mentioned explicitly)
 		Version, clean up and test the metarigs.
 			Add parent switching parameters.
 			Maybe add corrective action set-up to Sintel?
 			Add Rex metarig with the non-bendy-bone face? No shrinkwrap.
 		Explain the face set-ups on Sintel and Rex metarigs.
-		Explain how each rig implements relink() and parent switching.
-		cloud_base now has parameters.
-		cloud_bone split up to cloud_tweak and cloud_copy.
-		cloud_face_chain lost its Relink Constraints parameter.
-		cloud_chain has new Unlock Deform parameter.
-		cloud_fk_chain lost Register Parents parameter.
 		Turn the "code crap" wiki page into a proper "Contribute" page - The project is now big enough that I would actually welcome if someone competent wanted to join me in working on this.
 			Describe versioning code
 			Organize better with modules as the headers.
@@ -173,7 +142,6 @@ CloudRig TODO:
 		Add gifs to CloudRig Types page (do it at home with ShareX)
 		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
 		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
-		Add a template for reporting issues - only important when we go wide public, so probably after Sprites. https://gitlab.com/help/user/project/description_templates
 	Priority 6: Rigify compatibility
 		When enabled, bone groups assigned in cloud_bone seem to get overwritten.
 		Rigify compatibility specific functions should only affect rigify rig types.
