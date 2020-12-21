@@ -1,3 +1,5 @@
+Blender Manual is claiming that Auto-Normalize is not used because it's "complicated"??? Could probably use an update from me personally.
+
 Camera Lattice:
 	Idea?
 		Generate an armature rig for the lattice, so the guys are animating bones instead of shape key values.
@@ -5,38 +7,38 @@ Camera Lattice:
 Tweak Lattice:
 	Allow changing parenting without the tweak lattice flying away.
 
-Rik notes:
-	(still easy to lose work because linked rigs have to be keyframed to save their pose)
-	For Bastien:
-		Duplicated hair spray overrides share their bone selection state, but transform operator works as expected.
-
 Maybe update Pablo's animation layers addon so it supports overrides.
 
-Be ready to put shit on Cloud (maybe prepare some things) when fsiddi pokes us that it's ready.
-Update Sprite to latest and add empty bones
-
 Sprites:
+	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
+
 	Metarig Consistency script:
 		- Make empty bones blue so they are distinct from grab bones.
+
+	Sprite:
+		Update Sprite rig if Julien is done with the mesh adjustments.
+		Add empty bones (Are they still necessary if the grab bones have parent switching?)
 
 	Ellie:
 		Move the pivot point to the middle non-dotted line here https://i.imgur.com/yh8lOCr.png
 
 	Rex:
-		Cheek Puff with actions (and later a shape key)
+		Bring in new face mesh, I'm assuming it's ready.
+			Cheek Puff with actions (and later a shape key)
+			Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
+			Not nice creases underneath the eyebrows when the eyebrows are pulled down.
+				Without touching the eyelid itself.
+				Would be nice to have an action trigger when the eyebrow master is moved down, that adjusts the eye ring bones, but does not touch the eyelid bones.
+			Thonk of how eyebrows could become completely detachable from the skin.
 
-		Ask Julien to adjust the eye lattice or do it myself. 
-			Add iris scale shape key
+		Add controls to the watch and experiment with some automation to avoid clipping when the wrist is rotated upwards.
+			Maybe allow the automation to be toggle-able.
 
-		Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
 		Make the neck behave better when the head is translated.
+			I don't know how!
 
 		Investigate if it's possible (low prio) to have 1 deformation adjuster for Rex's spine, that is between the current bottom two.
 		Think over the positions of the spine FK bones again. They were moved to the halfway points because of bendy bone reasons, but we are no longer using bendy bones. And having them there makes IK/FK switching impossible since they're not in the same place as the IK.
-
-		After retopo is finished:
-			Add controls to the watch and experiment with some automation to avoid clipping when the wrist is rotated upwards.
-				Maybe allow the automation to be toggle-able.
 
 	Everyone (Rik mentioned for Victoria, but it's for everyone):
 		metacarpals:
@@ -45,17 +47,7 @@ Sprites:
 				This thing https://i.imgur.com/wEVwNWt.png (also twist them a bit)
 			probably with actions
 
-	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
-	Character Checklist:
-		- Consistency script was run on the metarig
-		- Might want to remove the Spine cloud_tweak bones, but I guess wait for feedback on Rex first.
-		- Tracking bones are in the right place
-		- Quality slider
-		- Arm/Leg Masking
-
 CloudRig TODO:
-	Delete Lock Y/Z param from FK chain, is useless af.
-
 	Priority 0: Requested
 	Priority 1: New features
 		Parent Switching (May be implemened differently for each rig):
@@ -69,32 +61,11 @@ CloudRig TODO:
 		(Requested) cloud_leg should have a new foot roll parameter called "secondary activation angle" or something better, which can be adjusted to improve behaviour for high heels, ie. the second bone's rotation will trigger sooner.
 		Active layers on the generated rig shouldn't be the same as the metarig afterall - or maybe it should be an option (sometimes we do enable the deform layer because we want to see it on generation)
 		Perhaps some parameters could belong all the way up in CloudBaseRig.
-			- Add parent switch to UI
-				- Make sure this works with Copy/Mirror Rigify Parameters operators, and possibly the clean-up script.
-				The way this works now:
-					- Root bone parent and Parent Switching options are not mutually exclusive. This is because for rigs like cloud_aim and cloud_limb, we still want to be able to specify a parent for the root bone, but parent switching is meant for different bones (IK master and aim group master, namely)
-					This means we need to add the correct parent set-ups to the Sprites metarig script.
-
-			- Register as Parent
-			- Delete ORG bones (can force to False for rigs that need it)
-			- UI row and column names...
+			- Create ORG bones (False by default, can force to True for rigs that need it)
+			- UI row and column names...?
 	Priority 2: Bugs
 		cloud_aim ORG bone use_deform is copied from the metarig, but it should always be False!
-		!!! We need a better heuristic for picking which controller STR-I controls should align with.
-			It can be anything, even if it's stupid, like, pick the shortest bone, or the one with the largest absolute X coordinate, but it has to be SOMETHING, to ensure symmetry.
-			Even better would be something controllable though. Eg., for `STR-I-Bridge_Cheek1_3+Jaw1_3+Jaw3_3.L`, we want the middle one to be the main one for no particular reason.
 
-		Ask animators what they would expect to happen when leg IK stretch is off and then using footroll.
-			Currently in this case, the leg ends up becoming not fully extended.
-			It's always been like this (since Rain) so I wonder if this behaviour is expected.
-			The alternative would be that when Stretch is disabled, but the IK master is out of range, we switch to a different behaviour where the foot roll essentially just rotates the foot without the toes inheriting the rotation, which really sounds not useful at all to me.
-		I wonder if we could fix mismatches between rest pose and true rest pose - it seems mostly to do with bendy bone twisting. Can be noticed when objects are unparented from the armature and the armature is moved, or simply toggling between rest pose and real rest pose. Not a big deal though.
-		
-		The IK prediction overlay uses the active bone on cloud_ik_chain instead of the base bone.
-		- temp_highlight_group from overlay.py gets into the generated rig, ugh.
-			- It feels really good but it's really not worth the trouble. Things like Select Groupped fail, my custom Assign Bone Group operator is annoying to use because of it, etc.
-			- If we can implement this as a gizmo then great, otherwise, cut it.
-			- Will also stick around when saving the file which I'm not a fan of. (Someone without the addon could end up with it and wonder wtf it is)
 		Various IK related features *probably* currently only work in certain orientations... Need to list them, test them and fix them:
 			- IK/FK snapping
 			- AutoRubberHose control roll angle
@@ -131,15 +102,10 @@ CloudRig TODO:
 		Relink Constraints never really needs to be disabled. I know we had a philosophy before of "Add useless checkboxes so we can have useful tooltips" but eh, icky.
 			If we keep the checkbox, it should also disable relinking on cloud_tweak and cloud_bone (and be documented as such, ie. it doesn't have to be mentioned explicitly)
 		Version, clean up and test the metarigs.
-			Add parent switching parameters.
 			Maybe add corrective action set-up to Sintel?
 			Add Rex metarig with the non-bendy-bone face? No shrinkwrap.
 		Explain the face set-ups on Sintel and Rex metarigs.
-		Turn the "code crap" wiki page into a proper "Contribute" page - The project is now big enough that I would actually welcome if someone competent wanted to join me in working on this.
-			Describe versioning code
-			Organize better with modules as the headers.
 		Add operators in the UI somewhere, somehow.
-		Add gifs to CloudRig Types page (do it at home with ShareX)
 		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
 		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
 	Priority 6: Rigify compatibility
@@ -167,28 +133,8 @@ CloudRig ideas:
 		Documentation for this would need an update too.
 		It would be amazing if both Bone Sets and BoneInfo stuff was something outside of CloudBaseRig, such that one could just take those files and import them in a regular Rigify rig or their own featureset. But idk if it would really be possible since they rely on modified generator code...
 
-	Logging:
-		Add documentation.
-
 	Actions:
 		When adding a new Rigify Action, it should duplicate the data of the previously active one.
-
-	Overlay:
-		- Convert existing overlay into a gizmo instead. Less hacky.
-		- Display bone shape size as a circle around bones
-	
-		cloud_limb
-			- Display AutoRubberHose control position
-		cloud_aim
-			- Display aim target position and group aim target position
-		cloud_eyelid
-			- Display lines representing ROT bones
-
-		Interactable widgets?
-			These are indeed possible, see auto_fmap_widgets, bpy.types.GizmoGroup.
-			- Make the pole target thing into an interactable widget.
-			- Heel position
-		- Picker UI? This could rely on an external addon, and we'd just generate data for that addon. But maybe even cooler if it's just included in cloudrig.py. That's probably a LOT of code to include though.
 
 	Customizing bone shapes would be pretty neat.
 		I'm thinking an enum dropdown where we list out all the available widget names from Widgets.blend.
@@ -201,8 +147,6 @@ CloudRig ideas:
 	Bring back BoolProperties? Issue is animating them works badly. (doesn't work) because they rely on the update callback which is not called when changed by a keyframe.
 
 Rigify patch ideas
-	Because of this line: `val[1]['update'] = update_callback(name)` CollectionProperties cannot be registered as rig parameters, which really kills me with my parent switching UIList.
-
 	Make a huge (probably nested) design proposal on Phabricator about Rigify improvements that I'd like to implement (including many CloudRig features)
 
 	Bugs
@@ -263,3 +207,25 @@ Rigify patch ideas
 Bug reports:
 	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
 		Fixing this would totally break Rigify, because it relies on this bug...
+
+Addon Ideas
+	Local Shape Keys
+		An extension or alteration of the pipeline addon to allow localizing objects, adding shape keys to them, but then still pulling in data from upstream.
+
+		I think overridden objects are aware of the library they are overriding, and can be made local. So the addon would detect whether it's overriding, and provide its own Make Local operator that does some extra stuff, such as, saving a reference to the library that we are linking from.
+		Then, on such local objects, we display a button to update from upstream. This will update any selected objects that have the addon's data (ie. library to link from).
+		The object's name must not change, as it will be used to match the datablock.
+
+		So, when the button is pressed, all compatible objects are renamed with a suffix. The objects with the same names are appended from their relevant libraries.
+		A dictionary is created to map the objects.
+		Method 1:
+			The data from the linked objects is transferred to the local objects. (Maybe the linked objects need to be made local again for some of this transferring to work? Hopefully not)
+			The linked objects are deleted
+		Method 2:
+			The linked object is made local again. So actually we would just be appending at that point.
+			The shape keys on the local object that don't exist on the linked object are transferred over, along with any keyframes and even drivers.
+			The old object with the suffix is deleted.
+			If there was a change in vertex order, this will of course fail miserably.
+	
+	A different approach
+		Maybe shape keys can be added and authored through python only. In this case, we could just have the local object hold the shape keys, which are transferred to the override object on file load. Would be slow as shit though.

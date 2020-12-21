@@ -55,13 +55,15 @@ def match_param_to_type(type_name, param_name):
 def assign_parents(pb, parent_dict):
 	bone = pb.bone
 	pb.rigify_parameters.CR_base_parent_switching = True
-	parent_slots = bone.parent_slots
+	parent_slots = pb.rigify_parameters.CR_base_parent_slots
 	parent_slots.clear()
 	for key in parent_dict.keys():
-		ps = parent_slots.add()
-		ps.name = key
-		ps.bone = parent_dict[key]
-	bone.active_parent_slot_index = 0
+		parent_bone = rig.pose.bones.get(parent_dict[key])
+		if parent_bone:
+			ps = parent_slots.add()
+			ps.name = key
+			ps.bone = parent_dict[key]
+	pb.rigify_parameters.CR_base_active_parent_slot_index = 0
 
 # Layers
 metarig.data.layers = [i in [0, 1, 3] for i in range(32)]
@@ -73,6 +75,7 @@ metarig.data.rigify_force_widget_update = True
 
 # Rigify Layer names
 for i in range(32):
+	if 'Sprite' in rig.name: break
 	if len(metarig.data.rigify_layers) < i:
 		metarig.data.rigify_layers.add()
 	l = metarig.data.rigify_layers[i]
@@ -186,7 +189,7 @@ for b in metarig.pose.bones:
 			})
 
 	# Shoulder
-	if 'UpperArm' in b.name:
+	if 'UpperArm.' in b.name:
 		assert b.bone.use_connect == False, "Disconnect the shoulders."
 		params.CR_base_parent = "DEF-Shoulder"+b.name[-2:]
 		assign_parents(b, {
@@ -230,7 +233,7 @@ for b in metarig.pose.bones:
 
 	# Eyes
 	if b.name.startswith('Eye.'):
-		b.rigify_type = 'cloud_aim'
+		b.rigify_type = 'sprite_fright.eye'
 		b.bone.use_deform = False # this shouldn't be needed, added a bug TODO to CloudRig.
 		params.CR_aim_deform = True
 		params.CR_aim_root = True

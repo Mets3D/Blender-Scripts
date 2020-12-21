@@ -1,2 +1,10 @@
 Rigging in Blender could be made a lot less painful with a lot of very small improvements.
 
+Bone naming
+    On extrude and duplicate, increment last number instead of adding .001 (also with symmetry)
+    When renaming a bone with Symmetry on, rename the opposite bone as well.
+
+Display
+    BBone Segments should be displayed in all bone display types (yikes! probably a lot of work, and maybe doesn't make sense for envelopes)
+    Might be nice to have a bone display type per individual bone rather than the entire armature. Maybe I want some bones to display as orchatedral and some as bendy bones.
+    

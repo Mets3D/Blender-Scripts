@@ -82,13 +82,9 @@ VERY small things:
 
 Defaults:
 - In the Normalize All Vertex Groups operator, Lock Active should be disabled by default.
-- In Transformation constraints, the scale min/max values should all default to 1.
-    I think this was done.
 - All constraints transform space should default to Local Space. At least for bones, but probably for objects too.
 - Local View should not focus the viewport camera
 - IK constraint chain length should be 2.
-
-
 
 Big things:
 - Constraints as nodes(Solver nodes), or in general a node-based rigging system, which can still be abstracted by the old constraint interface.

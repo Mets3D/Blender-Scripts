@@ -1,10 +1,10 @@
 import bpy
 
 bone_dict = {
-	"IK-MSTR-P-Wrist.L" : "IK-MSTR-Wrist.L",
-	"IK-MSTR-P-Wrist.R" : "IK-MSTR-Wrist.R",
-	"IK-MSTR-P-Foot.L" : "IK-MSTR-Foot.L",
-	"IK-MSTR-P-Foot.R" : "IK-MSTR-Foot.R",
+	"STR-I-Cap+_Ring2.L" : "STR-I-Cap_Base+Edge2.L",
+	"STR-I-Cap+_Ring4.R" : "STR-I-Cap_Base+Edge2.R",
+	"STR-I-Cap_Front+Ring1" : "STR-I-Cap_Base_Front+Edge1",
+	"STR-I-Cap_Back+Ring3" : "STR-I-Cap_Base_Back+Edge2",
 }
 
 for a in bpy.data.actions:

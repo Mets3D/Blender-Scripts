@@ -1257,7 +1257,7 @@ December
         - Some CloudRig bugfixes relating to the above
         - Rex eyelid improvements
         - Cloud posts and testing and feedback
-    
+
     Dec 7:
         - Re-rigged lips with bendy bones.
         - Lip controls can now be rotated uniformally to get somewhat of a lip roll effect.
@@ -1266,7 +1266,7 @@ December
         - Worked on some documentation for CloudRig actions for my own sanity so I remember what my features do
         - 6 tiny bug fixes
         - Current state of Rex can be committed if needed, but not much of the feedback has been addressed yet (since I started with the hard bits, like re-doing the lips completely)
-    
+
     Dec 8:
         - Update outdated CloudRig documentation
         Rex:
@@ -1275,14 +1275,14 @@ December
         - Parent control for top and bottom 3 eye ring bones
         - 5 FK controls for the tongue instead of 2.
         - Add root controls for the face lines
-    
+
     Dec 9:
         - Finish new teeth tech
         - Catch up on writing production logs
         - Add mask lattice
         - Add lip roll
         Spent half the day troubleshooting something stupid with the lips :/
-    
+
     Dec 10:
         Rex:
         - Ears
@@ -1290,3 +1290,51 @@ December
         - Head squash property
         - Hand splay controls
         Ditching bendy bones was a mistake, I see the light now. Before I add cheek controls, I want to re-do the deformation layer with good old bbones.
+
+    Dec 11: Day off.
+
+    Dec 14:
+        - Moved back into the office, updating blender, vsc, git repo's, svn, the usual stuff.
+
+    Dec 15:
+        - Production Log catch-up
+        - Struggle with Notion and Dropbox, but got them working eventually.
+        - Panic fix Rex head hinge :D
+        - Properly fix Rex head hinge.
+        - Fix eyelids going wonky when head squashes a lot. It will still go wonky if the head squashes a LOT lot, but it takes a lot more punishment now.
+        - Implement Mouth master control
+        - Make lip controls push around their surrounding controls
+        - Make lip controls look prettier. Because they're worth it.
+
+    Dec 16:
+        Rex:
+        - Add middle-lip controls
+        - Fix and improve lip corner controls
+        - Finish rigging the new clothes
+        - Tweak mask lattice
+        Rex is committed with all the face updates from this week and the new clothes! (Still the old face topo)
+        NOTE: Shading will be busted until the shading department returns! If you need materials, revert! :D
+
+    Dec 17:
+        Rex:
+        - Fix/improve some issues Rik&Pablo found on middle-lip controls
+        - Split Shrinkwrap toggle up to Shrinkwrap, Shrinkwrap Mesh, Shrinkwrap Lips, CorrectiveSmooth toggles.
+        - Add Quality slider
+        - Eyes: Fix weird pivot point, cross-eyedness/wrong behaviour of target scaling, add iris scaling shape keys.
+        The beahviour of each of these values can be a bit confusing, so I put tooltips on all of them to hopefully make it pretty clear what they do.(+ fancy UI from a previous life)
+        - Animation Module meeting, hosted by Sybren! :D
+    
+    Dec 18:
+        Tested T83908 for AnGavrilov.
+        Checked out a dev grant proposal sent to me by Ton, chatted a bunch with some riggers :).
+        Fixed some small issues on Rex.
+        Fixed some small issues on CloudRig. There's pretty much no low-hanging fruit left, only big headhurty stuff.
+        Added the square teeth.
+        Next week: Sprite rig update, Rex face deformation layer, cheek and eyebrow notes, and whatever else.
+    
+    Dec 21:
+        Documented CouldRig's troubleshooting features to ask other Rigify users what they think about it
+        Fixed an issue on Rex face
+        Implemented a sprite_fright.eye rig type so the eye+highlight set-up is easy to tweak in future.
+        Rigged new Sprite (not yet done: face ofc, but also the arm bridge tech. That takes some effort and would rather leave to modelling department if it's not too urgent)
+        Tweaked Ellie leg proportions
