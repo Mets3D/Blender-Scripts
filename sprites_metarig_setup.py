@@ -25,7 +25,9 @@ rig_type_hierarchy = {
 		'cloud_curve' : {
 			'cloud_spline_ik' : {}
 		},
-		'cloud_aim' : {},
+		'cloud_aim' : {
+			'sprite_fright.eye' : {}
+		},
 		'cloud_copy' : {},
 		'cloud_tweak' : {}
 	}
@@ -46,6 +48,7 @@ def get_rig_type_hierarchy(search, parent_list=[], hierarchy=rig_type_hierarchy)
 def match_param_to_type(type_name, param_name):
 	"""Determine whether a rigify parameter belongs on a given rig type."""
 	matching_types = get_rig_type_hierarchy(type_name, parent_list=[], hierarchy=rig_type_hierarchy)
+	if not matching_types: return True
 	param_name = param_name.replace("CR_", "")
 	for t in matching_types:
 		if param_name.startswith(t.replace("cloud_", "")):
@@ -153,6 +156,8 @@ defaultless = []
 for b in metarig.pose.bones:
 	params = b.rigify_parameters
 	# Attachment bones
+	if 'Grab' in b.name:
+		b.bone_group = empties
 	if 'P-Grab' in b.name:
 		assign_parents(b, {
 			"Wrist" : 'IK-MSTR-Wrist'+b.name[-2:]

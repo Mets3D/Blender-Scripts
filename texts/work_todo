@@ -1,4 +1,11 @@
-Blender Manual is claiming that Auto-Normalize is not used because it's "complicated"??? Could probably use an update from me personally.
+Find out why the hair script has to be run manually before it starts functioning.
+
+The hair script needs to run for each character in a scene to update their particle hair to follow the rig.
+	Is this unoptimized, and would it be better for this to be an addon?
+		Would be nice to avoid having to force everyone to install an addon.
+	How could we keep the hair script centralized, and not have to hard-code the object name into the script?
+	It could be handled from each character's post-generation script:
+		Append or re-append the text file from a centralized source, then modify just one string (the object name) to the desired one.
 
 Camera Lattice:
 	Idea?
@@ -12,33 +19,12 @@ Maybe update Pablo's animation layers addon so it supports overrides.
 Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
 
-	Metarig Consistency script:
-		- Make empty bones blue so they are distinct from grab bones.
-
-	Sprite:
-		Update Sprite rig if Julien is done with the mesh adjustments.
-		Add empty bones (Are they still necessary if the grab bones have parent switching?)
-
 	Ellie:
-		Move the pivot point to the middle non-dotted line here https://i.imgur.com/yh8lOCr.png
+		Copy Actions set-up from Rex.
+		Set up eyes, teeth, tongue, Lattices, hair.
 
 	Rex:
-		Bring in new face mesh, I'm assuming it's ready.
-			Cheek Puff with actions (and later a shape key)
-			Maybe add more sub-controls for the eyebrow (upper and lower lines, like on Rain)
-			Not nice creases underneath the eyebrows when the eyebrows are pulled down.
-				Without touching the eyelid itself.
-				Would be nice to have an action trigger when the eyebrow master is moved down, that adjusts the eye ring bones, but does not touch the eyelid bones.
-			Thonk of how eyebrows could become completely detachable from the skin.
-
-		Add controls to the watch and experiment with some automation to avoid clipping when the wrist is rotated upwards.
-			Maybe allow the automation to be toggle-able.
-
-		Make the neck behave better when the head is translated.
-			I don't know how!
-
-		Investigate if it's possible (low prio) to have 1 deformation adjuster for Rex's spine, that is between the current bottom two.
-		Think over the positions of the spine FK bones again. They were moved to the halfway points because of bendy bone reasons, but we are no longer using bendy bones. And having them there makes IK/FK switching impossible since they're not in the same place as the IK.
+		Add toggle-able automation to the watch, and better bone shapes.
 
 	Everyone (Rik mentioned for Victoria, but it's for everyone):
 		metacarpals:
@@ -46,6 +32,8 @@ Sprites:
 			arcing of the knuckles
 				This thing https://i.imgur.com/wEVwNWt.png (also twist them a bit)
 			probably with actions
+
+Blender Manual is claiming that Auto-Normalize is not used because it's "complicated"??? Could probably use an update from me personally.
 
 CloudRig TODO:
 	Priority 0: Requested
@@ -135,6 +123,11 @@ CloudRig ideas:
 
 	Actions:
 		When adding a new Rigify Action, it should duplicate the data of the previously active one.
+		Button to automatically set the Action frame range
+			For this the Frame Start/End UI could be collapsed into a single row, "Frame Range", displaying the start/end numbers next to each other, with the automatic setting operator on the far right.
+		Add Rigify Log warnings when a frame range is an odd number, or a curve is missing a keyframe in the center frame.
+		Add Rigify Log warnings for curves on bones that no longer exist.
+		Maybe warn for curve handles that are set to something other than Linear? Not sure about this.
 
 	Customizing bone shapes would be pretty neat.
 		I'm thinking an enum dropdown where we list out all the available widget names from Widgets.blend.

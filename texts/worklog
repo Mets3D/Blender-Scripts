@@ -1338,3 +1338,114 @@ December
         Implemented a sprite_fright.eye rig type so the eye+highlight set-up is easy to tweak in future.
         Rigged new Sprite (not yet done: face ofc, but also the arm bridge tech. That takes some effort and would rather leave to modelling department if it's not too urgent)
         Tweaked Ellie leg proportions
+    
+    Dec 22:
+        (Had to take 3 hours off due to orthodontist, similar deal tomorrow)
+        Fix some issues on the Sprite
+        Got started on new Rex face topo and deform layer
+    
+    Dec 23:
+        Continued re-rigging Rex face with bendy bones.
+
+    Dec 24:
+        More of the same. Almost back to the state where I left off, then I can start improving!
+
+    Dec 28:
+        Rex face should be pretty much back at full capacity, now hopefully deforming better and functioning more "conventionally" (if Rain was conventional)
+
+    Dec 29:
+        Rex face improvements/fixes
+
+    Dec 30:
+        More Rex improvements... although this bendy bone setup is deforming better, it is terribly painful to control and to create the Action set-ups for...
+        Might end up scrapping the whole thing because of that and go back to what I had before.
+    
+    Dec 31:
+        Trying to come up with a new way to mix in corrective actions.
+        Currently, correctives activate "on top of" the existing action. I wonder if it would be better if they activated "instead of" the existing actions.
+
+January
+    Jan 4:
+        - Scrap new Rex face.
+        - Scrap new Corrective Action set-up.
+        These were both fruitless efforts where the downsides outweighed the upsides. The new corrective action set-up would've just been convoluting an already convoluted system.
+
+        - Fix some Rex pipeline discrepancies
+        - Shrinkwrap Lips now a proper slider instead of on/off toggle.
+        - As an experiment, added controls that can control the shrinkwrap helper mesh. Just 3 for now to see how it will work. These are on a new layer called "Silhouette". The face controls now make up 5 layers, oof... :P
+            - Also a new toggle for the visibility of said helper mesh (as a wireframe)
+
+    Jan 5:
+        Rex body deformation feedback:
+        - Weight painted and didn't hurt myself
+        - Reduced spine bones from 4 to 3
+        - Moved a lot of pivot points back and forth with feedback from Pablo
+        - Crossed a lot of things off from the TODO list, rest may be possible to finish tomorrow.
+
+    Jan 6:
+        Crossed off almost all Rex face feedback points from the list, only a couple points remain regarding cheek puffing and eyelid rotating.
+
+    Jan 7:
+        Rex:
+            Added eyelid rotation controls
+            Got started on improving the eyebrows and adding cheek controls, then got some feedback from Pablo which made me reconsider some life choices.
+            I decided to add more controls, and I ended up reorganizing pretty much everything on the cheeks, nose and forehead, then re-doing the weight painting. This way the new silhouette controls line up a lot better with actual bones, which should help the deformation.
+            Also brought in the updated rig helper mesh by Angela.
+
+    Jan 8:
+        Rex:
+            Improve (greatly) eyebrow area.
+            Re-do the lip actions with the new cheek control layout.
+                For some reason there is a bit of asymmetry going on right now, will fix later, is small though.
+            Made corner outer lip controls be affected (a little) by halfway lip controls at Pablo's request
+            Cheek controls:
+                - A pretty arbitrary lattice set-up, but positioned by default to function as a cheek puff.
+                - Two new cheek controls that control some sub-controls. This slightly hurts the behaviour of `MSTR-Head_Top`.
+        Fixed a CloudRig typo that made the eye highlights not spawn :)
+
+    Jan 11:
+        - Production log catch-up
+        - Some polish on the CloudRig SpriteFright Eye
+        - Fix asymmetry on the lips from last week
+        - Got a round of Rex face feedback from Rik&Pablo, some of it's done, rest hopefully done tomorrow and then I can start on Ellie:
+            - Fix a tiny double parenting bug
+            - Fix accidently directly keyframed lip bones for actions, when a helper bone should be keyframed instead
+            - Adjust weights and actions to preserve nose crease when lips are stretched wide
+            - Adjust weights and actions to avoid a pinching that was getting created on the lip edge when the lips are stretched wide and up.
+
+    Jan 12:
+        - Spent some time on hair pipeline thinking/discussing/testing/helping
+        Rex:
+        - Bring in new eye mesh with some tweaks I requested from Angela + make eye highlight not inherit scale from eye control
+        - Get some MORE Rex feedback from Pablo&Rik
+        - Enable Neck Hinge
+        - Shift head pivot and weights again
+        - Add upper cheek control (he has so much cheek that it's more like a middle cheek...)
+        - Add armpit lattices
+        - Fix inner mouth sticking out when lip pulled to extreme wide and mouth is open
+        - Fix Moving the top lip up creates clipping on the nose
+        - Add nostril and nose tip bones, promote old nose control to Face Primary
+        - Make top cheek silhouette control's influence have a more spherical falloff instead of sharp.
+        - Bone shape and organization tweaks for eyebrows, nose, jaw, chin, teeth, everything!
+        - Rigged the watch.
+        The remaining things on the TODO list may need some more discussion...
+
+    Jan 13:
+        - Realized that for future characters I'd like to have a powerful armature merging functionality, so I wrote a custom operator for it.
+        - Realized that other people might also want to have a powerful armature merging functionality, so I wrote a design doc for it. Didn't post it yet, waiting for confirmation from Sybren first.
+        - Split off Rex's face from his rig, merged it into Ellie's, and and started cleaning it up!
+
+    Jan 14:
+        - More work on transferring Rex's face rig and some body rig features to Ellie.
+        - Made a hair rig helper for Rex, testing Simon's work on pipeline ^^
+
+    Jan 15:
+        - Got an VERY initial pass of Ellie's face rig somewhat functioning. (no errors! no double transforms! no invalid drivers!)
+        - Made a small addon for making it quicker to edit bone shapes... something I've wanted to do since for ever!
+        - Figure out a way to keep the hair particle rigging script in a centralized place(on shared) without having to install an addon. But, it might be better to make it an addon, we'll see.
+
+    Jan 18:
+        - Cloud+Dev communications (Production Log, comment replies, dev.b.o discussions)
+        - Get a couple small Rex TODO's, fix a couple small Rex things
+        - Managed to get a little progress in on Ellie, and asked Angela for some eye tweaks.
+        - Some fixing and compatibility for shading department :)
