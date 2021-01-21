@@ -1,12 +1,3 @@
-Find out why the hair script has to be run manually before it starts functioning.
-
-The hair script needs to run for each character in a scene to update their particle hair to follow the rig.
-	Is this unoptimized, and would it be better for this to be an addon?
-		Would be nice to avoid having to force everyone to install an addon.
-	How could we keep the hair script centralized, and not have to hard-code the object name into the script?
-	It could be handled from each character's post-generation script:
-		Append or re-append the text file from a centralized source, then modify just one string (the object name) to the desired one.
-
 Camera Lattice:
 	Idea?
 		Generate an armature rig for the lattice, so the guys are animating bones instead of shape key values.
@@ -14,17 +5,23 @@ Camera Lattice:
 Tweak Lattice:
 	Allow changing parenting without the tweak lattice flying away.
 
-Maybe update Pablo's animation layers addon so it supports overrides.
+Update Pablo's animation layers addon so it supports overrides.
 
 Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
 
 	Ellie:
 		Copy Actions set-up from Rex.
-		Set up eyes, teeth, tongue, Lattices, hair.
 
 	Rex:
 		Add toggle-able automation to the watch, and better bone shapes.
+		make shoulder deform smoother when bent downwards.
+		make collars not follow shoulders as much (partial parenting to chest or neck).
+		put bendy bone segments on the shoulder so it can be noodled.
+			Maybe add auto-shoulder-noodling tech in the form of some Transformation constraints so that when the upperarm is rotated downward, the STR bone translates down and rotates to make a noodly shoulder.
+		maybe add a shape key to preserve the V shape in the simple case when the shoulder is bent down.
+		Make sure the base of the collar and the top of the shirt is rigged identically so there's no intersection
+		Should probably either add a toggle for eyebrow shrinkwrap or just get rid of it, because it messes up the behaviour of the mask lattice and causes double-transforms.
 
 	Everyone (Rik mentioned for Victoria, but it's for everyone):
 		metacarpals:
@@ -200,6 +197,9 @@ Rigify patch ideas
 Bug reports:
 	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
 		Fixing this would totally break Rigify, because it relies on this bug...
+	Lattice bugs:
+	- Changing lattice resolution from 1 to anything other than 2 causes the scaling to go out of whack.
+	- When there is a hook modifier and the object is disabled, scaling from python by changing object.scale behaves differently than changing object scale by matrix multiplication on objec.matrix_world.
 
 Addon Ideas
 	Local Shape Keys

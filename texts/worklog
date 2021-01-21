@@ -1449,3 +1449,19 @@ January
         - Get a couple small Rex TODO's, fix a couple small Rex things
         - Managed to get a little progress in on Ellie, and asked Angela for some eye tweaks.
         - Some fixing and compatibility for shading department :)
+    
+    Jan 19:
+        CloudRig:
+        - Compatibility with latest Rigify patches
+        - Fixed an issue where all rig UI operators would be grayed out (a 7 month old TODO comment lead the way)
+
+        - Ellie face now deforms(could technically be tested, but it would be more productive/efficient to wait a bit more), with tweaked eyes from Angela. Also tested some old but untested pipeline tech in geometry.blend, it worked nicely!
+
+    Jan 20:
+        - Putting out fires to do with Rex and lattices, which prompted me to:
+        - Implement a new rig type in CloudRig, cloud_lattice, which basically sets up a tweak lattice, similar to the lattice addon. Since these lattices seem pretty popular with the animators, this makes it a lot nicer to manage them.
+        - Applied this on Ellie and Rex.
+    
+    Jan 21:
+        - Testing D7511 on Sybren's request
+        
