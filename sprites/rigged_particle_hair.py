@@ -1,5 +1,4 @@
 import bpy
-
 ################################################################################
 # Script written initially by Sergey Sharybin to bind hair particles to a proxy mesh.
 # This is done because although hair particles cannot directly be rigged with an armature, the proxy mesh can.
@@ -42,19 +41,22 @@ def depsgraph_update_post_handler(scene, depsgraph):
     global hair_object_names
 
     for hairname in hair_object_names:
-        hair_object = bpy.data.objects.get(hairname)
-        if not hair_object:
-            print("ERROR: Hair object not found: " + hairname)
-            continue
-        if not hair_object.visible_get(): continue
-
-        for particle_system in hair_object.particle_systems:
-            mesh_object = bpy.data.objects.get(hair_object.name + "-" + particle_system.name)
-            if not mesh_object:
+        for hair_object in bpy.data.objects:
+            if hair_object.name != hairname:
+                continue
+            if not hair_object.visible_get():
                 continue
 
-            mesh_object_eval = mesh_object.evaluated_get(depsgraph)
-            mesh_to_hair(depsgraph, mesh_object_eval, hair_object, particle_system)
+            for particle_system in hair_object.particle_systems:
+                mesh_object_name = hair_object.name + "-" + particle_system.name
+                for mesh_object in bpy.data.objects:
+                    if mesh_object.name != mesh_object_name:
+                        continue
+                    if not mesh_object.visible_get():
+                        continue
+
+                    mesh_object_eval = mesh_object.evaluated_get(depsgraph)
+                    mesh_to_hair(depsgraph, mesh_object_eval, hair_object, particle_system)
 
 def render_pre(scene):
     for hairname in hair_object_names:
