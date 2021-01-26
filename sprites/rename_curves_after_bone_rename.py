@@ -1,10 +1,9 @@
 import bpy
 
 bone_dict = {
-	"STR-I-Cap+_Ring2.L" : "STR-I-Cap_Base+Edge2.L",
-	"STR-I-Cap+_Ring4.R" : "STR-I-Cap_Base+Edge2.R",
-	"STR-I-Cap_Front+Ring1" : "STR-I-Cap_Base_Front+Edge1",
-	"STR-I-Cap_Back+Ring3" : "STR-I-Cap_Base_Back+Edge2",
+	"DEF_CTR-Spine" : "CTR-DEF-Spine",
+	"DEF_CTR-Belly" : "CTR-DEF-Belly",
+	"DEF_CTR-Chest" : "CTR-DEF-Chest",
 }
 
 for a in bpy.data.actions:

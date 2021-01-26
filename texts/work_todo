@@ -1,3 +1,8 @@
+Need to come up with more foolproof symmetry workflow. Right now if I break weight paint symmetry by accident, I'm fucked.
+
+Expand functionality of "Keyframe All" operator to include custom properties not on the main properties bone...
+Move the "Teeth Follow Mouth" option to the rig settings instead of Character settings.
+
 Camera Lattice:
 	Idea?
 		Generate an armature rig for the lattice, so the guys are animating bones instead of shape key values.
@@ -11,17 +16,16 @@ Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
 
 	Ellie:
-		Copy Actions set-up from Rex.
+		Down+SquashWide
+		Eyelids and eyebrows
+		For the eye ring, try partial parenting for the side bones instead of 1:1. If animators like it, also do it on Rex, might help.
 
 	Rex:
-		Add toggle-able automation to the watch, and better bone shapes.
-		make shoulder deform smoother when bent downwards.
-		make collars not follow shoulders as much (partial parenting to chest or neck).
+		Add a permanently active transformation constraint to the shoulders to rotate them +-10 degrees on Z.
+			Maybe hook it up to rig property, just in case...
+		Add toggle-able automation to the watch.
 		put bendy bone segments on the shoulder so it can be noodled.
 			Maybe add auto-shoulder-noodling tech in the form of some Transformation constraints so that when the upperarm is rotated downward, the STR bone translates down and rotates to make a noodly shoulder.
-		maybe add a shape key to preserve the V shape in the simple case when the shoulder is bent down.
-		Make sure the base of the collar and the top of the shirt is rigged identically so there's no intersection
-		Should probably either add a toggle for eyebrow shrinkwrap or just get rid of it, because it messes up the behaviour of the mask lattice and causes double-transforms.
 
 	Everyone (Rik mentioned for Victoria, but it's for everyone):
 		metacarpals:
@@ -83,6 +87,7 @@ CloudRig TODO:
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
+		cloud_aim new param: Eye Highlight
 		cloud_fk_chain new param: inherit scale
 		Relink Constraints never really needs to be disabled. I know we had a philosophy before of "Add useless checkboxes so we can have useful tooltips" but eh, icky.
 			If we keep the checkbox, it should also disable relinking on cloud_tweak and cloud_bone (and be documented as such, ie. it doesn't have to be mentioned explicitly)
@@ -220,5 +225,11 @@ Addon Ideas
 			The old object with the suffix is deleted.
 			If there was a change in vertex order, this will of course fail miserably.
 	
-	A different approach
-		Maybe shape keys can be added and authored through python only. In this case, we could just have the local object hold the shape keys, which are transferred to the override object on file load. Would be slow as shit though.
+		A different approach
+			Maybe shape keys can be added and authored through python only. In this case, we could just have the local object hold the shape keys, which are transferred to the override object on file load. Would be slow as shit though.
+
+	Zenimator
+		As I will have 7 animators with probably a varying degree of understanding of Blender, it would be nice to have an addon that makes Blender not shit.
+		- Purge unused data on file load to avoid missing library errors
+		- Reload and Resync libraries on file load so they don't have to do it manually and harass me about it all the fucking time
+		- Save and load Selection Sets to/from text datablocks

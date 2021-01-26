@@ -1463,5 +1463,44 @@ January
         - Applied this on Ellie and Rex.
     
     Jan 21:
-        - Testing D7511 on Sybren's request
-        
+        - Test D7511 and update LatticeMagic addon to be compatible when(if) it is committed
+        Worked on Ellie, she can now somewhat open her mouth and has actions that totally fuck her face up.
+        Animation Module meeting.
+        Fire department:
+        - Fix particle hair not working when starting render with it hidden in the viewport
+        - Fix new generated lattices not being the same size as before
+    
+    Jan 22:
+        - Little bit of progress on Ellie's lips.
+        Rex:
+        - Fix some rogue weights
+        - Fix mouth assymmetry resulting in clipping
+        - Improve shoulders all the way, shape keys and everything. Iterating on this is time consuming, so hopefully this is good.
+        - Rename some spine bones so they don't get excluded from Whole Character keying set
+        - Add script that should auto-run to rename the animation curves of those spine bones, so hopefully nothing breaks.
+        - Add waist lattices
+        - Add an additional spine control at the hips, `CTR-DEF-Hips`
+        - Fix little bug where grab bone was parented to IK wrist but not FK
+        - Added a 3rd lattice on the face for convenience so no need to cheat a cheek lattice for the lips (since they're easy to add now)
+    
+    Jan 25:
+        - Usual fire department stuff in the morning
+        Ellie:
+        - Mouth opens betterer
+        - Can smile and frown (not too big of a frown)
+        - Lattices, hair, cleanup
+        - Is committed if anyone wants to test what works so far.
+        Tomorrow:
+        - Cloud posting... 
+        - Bigger frown
+        - Eyelids & eyebrows
+    
+    Jan 26:
+        Ellie:
+        - Noticed the eye was inheriting scale poorly, interacting badly with the lattice. Sent me down a bit of a rabbit hole as it was a bug in CloudRig (also present on Rex). But, it's fixed.
+        Rex TODO list nuking:
+        - Bring in new meshes, adjust the eyes accordingly
+        - Fix mask lattice causing double transforms on eyebrows
+        - Same eye scale fix as Ellie above
+        - Fix hip helper bone parenting properly
+        - 

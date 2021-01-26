@@ -29,7 +29,8 @@ rig_type_hierarchy = {
 			'sprite_fright.eye' : {}
 		},
 		'cloud_copy' : {},
-		'cloud_tweak' : {}
+		'cloud_tweak' : {},
+		'cloud_lattice' : {}
 	}
 }
 
@@ -160,7 +161,7 @@ for b in metarig.pose.bones:
 		b.bone_group = empties
 	if 'P-Grab' in b.name:
 		assign_parents(b, {
-			"Wrist" : 'IK-MSTR-Wrist'+b.name[-2:]
+			"Wrist" : 'ORG-Wrist'+b.name[-2:]
 			,"Root" : 'root'
 			,"Torso" : 'MSTR-Spine_Torso'
 		})
