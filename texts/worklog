@@ -1461,7 +1461,7 @@ January
         - Putting out fires to do with Rex and lattices, which prompted me to:
         - Implement a new rig type in CloudRig, cloud_lattice, which basically sets up a tweak lattice, similar to the lattice addon. Since these lattices seem pretty popular with the animators, this makes it a lot nicer to manage them.
         - Applied this on Ellie and Rex.
-    
+
     Jan 21:
         - Test D7511 and update LatticeMagic addon to be compatible when(if) it is committed
         Worked on Ellie, she can now somewhat open her mouth and has actions that totally fuck her face up.
@@ -1469,7 +1469,7 @@ January
         Fire department:
         - Fix particle hair not working when starting render with it hidden in the viewport
         - Fix new generated lattices not being the same size as before
-    
+
     Jan 22:
         - Little bit of progress on Ellie's lips.
         Rex:
@@ -1482,7 +1482,7 @@ January
         - Add an additional spine control at the hips, `CTR-DEF-Hips`
         - Fix little bug where grab bone was parented to IK wrist but not FK
         - Added a 3rd lattice on the face for convenience so no need to cheat a cheek lattice for the lips (since they're easy to add now)
-    
+
     Jan 25:
         - Usual fire department stuff in the morning
         Ellie:
@@ -1490,11 +1490,7 @@ January
         - Can smile and frown (not too big of a frown)
         - Lattices, hair, cleanup
         - Is committed if anyone wants to test what works so far.
-        Tomorrow:
-        - Cloud posting... 
-        - Bigger frown
-        - Eyelids & eyebrows
-    
+
     Jan 26:
         Ellie:
         - Noticed the eye was inheriting scale poorly, interacting badly with the lattice. Sent me down a bit of a rabbit hole as it was a bug in CloudRig (also present on Rex). But, it's fixed.
@@ -1503,4 +1499,33 @@ January
         - Fix mask lattice causing double transforms on eyebrows
         - Same eye scale fix as Ellie above
         - Fix hip helper bone parenting properly
-        - 
+        - Add another lattice to the torso
+        - Make armpit lattice not influence the skin, only the clothes
+        - Add CTR-DEF- controls to the shoulders
+        - Shoulders are now rotated down by 10 degrees at all times
+        - Eye target parent now parented to the top half of the head rather than the bottom half, when the "Head" parent option is picked.
+
+    Jan 27:
+        CloudRig:
+        - Added a new CR_aim_flatten parameter to the eye rig to allow aim targets to be directly "in front" of the eye bones, irrespective of the eye bone's default rotation. This may result in an "inaccurate" feeling control (eyes don't look exactly where their targets are), we'll see how animators feel.
+        Another alternative to this, is to still place the targets this way, but let the eyes actually look precisely at the targets instead of offsetting them back to their default rotation. This would result in an accurate aim direction, but the eyes would lose their default rotation in the rest pose so they would be wonky until posed. I think this might actually be better, and is an easy thing to change.
+        Ellie:
+        - Can frown big time.
+        - Can blink and stuff
+        - Is basically ready for some more proper testing!
+        Except I couldn't commit because people are coming to destroy the building! :D
+
+    Jan 28: Day off
+
+    Jan 29:
+        - Update all characters to latest CloudRig.
+        - Some small fixes on Rex.
+        - Cloud posts, finally! For both this and last week.
+
+February
+    Feb 1
+        - Fix an old bug in my constraint symmetry operator
+        Rex:
+        - Hook up new eye shape keys
+        - Fail an experiment with splitting up the effect of the mouth corner control to two controls
+        - Tiny tweaks (disable some modifiers, slightly change eye ring control behaviour)

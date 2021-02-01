@@ -25,9 +25,7 @@ rig_type_hierarchy = {
 		'cloud_curve' : {
 			'cloud_spline_ik' : {}
 		},
-		'cloud_aim' : {
-			'sprite_fright.eye' : {}
-		},
+		'cloud_aim' : {},
 		'cloud_copy' : {},
 		'cloud_tweak' : {},
 		'cloud_lattice' : {}
@@ -239,7 +237,8 @@ for b in metarig.pose.bones:
 
 	# Eyes
 	if b.name.startswith('Eye.'):
-		b.rigify_type = 'sprite_fright.eye'
+		b.rigify_type = 'cloud_aim'
+		params.CR_aim_highlight = True
 		b.bone.use_deform = False # this shouldn't be needed, added a bug TODO to CloudRig.
 		params.CR_aim_deform = True
 		params.CR_aim_root = True

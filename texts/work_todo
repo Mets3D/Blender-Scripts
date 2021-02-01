@@ -1,7 +1,25 @@
+Test D10239
+Update CloudRig documentation
+
+Ellie
+	Bring in new eyebrow mesh
+	Bring in ALL the meshes!
+
 Need to come up with more foolproof symmetry workflow. Right now if I break weight paint symmetry by accident, I'm fucked.
+
+Think of what things I personally want from Overrides, including realistic and unrealistic goals that could be done for Sprites.
+	Thing is, I'm not actually using overrides, the animators do, but they don't know how it works. (I also only barely know)
+	I just want the animators to be happy and bother me as little as possible, so automatic syncing is most important for me.
+	Local shape keys would also be pretty damn nice. I know that means re-designing shape key storage though, but maybe someone could actually start thinking about that.
+
+Figure out how to rig a bird!
+	Needs to open and close its wings and not look shit in both poses
+	The wing is extremely close to the head and there is effectively no neck, but the head needs to rotate a lot.
 
 Expand functionality of "Keyframe All" operator to include custom properties not on the main properties bone...
 Move the "Teeth Follow Mouth" option to the rig settings instead of Character settings.
+
+Would be incredible to have a toggle that switches between hiding/unhiding the generated and the meta rig.
 
 Camera Lattice:
 	Idea?
@@ -16,13 +34,10 @@ Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
 
 	Ellie:
-		Down+SquashWide
-		Eyelids and eyebrows
+		eyebrows
 		For the eye ring, try partial parenting for the side bones instead of 1:1. If animators like it, also do it on Rex, might help.
 
 	Rex:
-		Add a permanently active transformation constraint to the shoulders to rotate them +-10 degrees on Z.
-			Maybe hook it up to rig property, just in case...
 		Add toggle-able automation to the watch.
 		put bendy bone segments on the shoulder so it can be noodled.
 			Maybe add auto-shoulder-noodling tech in the form of some Transformation constraints so that when the upperarm is rotated downward, the STR bone translates down and rotates to make a noodly shoulder.
@@ -35,6 +50,10 @@ Sprites:
 			probably with actions
 
 Blender Manual is claiming that Auto-Normalize is not used because it's "complicated"??? Could probably use an update from me personally.
+	I looked into this and was immediately shocked to find Weight Painting under "Scultping and Painting". The high-level organization of the entire manual is absolutely baffling to me. It feels more geared towards developers than users. The grouping of categories seems strictly technical rather than grounded in a workflow. What the hell!
+	"Normalize All" is utterly mistaken for "Normalize All Vertex Groups" which are not the same thing.
+		https://docs.blender.org/manual/en/latest/sculpt_paint/weight_paint/editing.html#normalize-all
+		https://docs.blender.org/manual/en/latest/sculpt_paint/weight_paint/introduction.html#normalized-weight-workflow
 
 CloudRig TODO:
 	Priority 0: Requested
@@ -87,6 +106,7 @@ CloudRig TODO:
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
+		New rig type: cloud_lattice
 		cloud_aim new param: Eye Highlight
 		cloud_fk_chain new param: inherit scale
 		Relink Constraints never really needs to be disabled. I know we had a philosophy before of "Add useless checkboxes so we can have useful tooltips" but eh, icky.
@@ -228,8 +248,15 @@ Addon Ideas
 		A different approach
 			Maybe shape keys can be added and authored through python only. In this case, we could just have the local object hold the shape keys, which are transferred to the override object on file load. Would be slow as shit though.
 
-	Zenimator
+	Zenimator / Blender Animation Studio Onboarding Addon (not as catchy)
 		As I will have 7 animators with probably a varying degree of understanding of Blender, it would be nice to have an addon that makes Blender not shit.
 		- Purge unused data on file load to avoid missing library errors
 		- Reload and Resync libraries on file load so they don't have to do it manually and harass me about it all the fucking time
 		- Save and load Selection Sets to/from text datablocks
+		- Disable curve name color user preference
+		- Set all newly created Actions to use fake user
+		- If new text datablocks are added and they have Register enabled, run them.
+		- If a text datablock has Register enabled but doesn't end in .py, still run it!
+		- Prevent saving a file when there are broken library links, as this can result in lost data.
+		- Set Simplify max subdivs to 0.
+		- Maybe enable Simplify on file load?
