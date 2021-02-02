@@ -1525,7 +1525,19 @@ January
 February
     Feb 1
         - Fix an old bug in my constraint symmetry operator
+        - Update CloudRig documentation with latest rig types and parameters
+        - Tested D10239
+        - Kicked developers
         Rex:
         - Hook up new eye shape keys
         - Fail an experiment with splitting up the effect of the mouth corner control to two controls
         - Tiny tweaks (disable some modifiers, slightly change eye ring control behaviour)
+
+    Feb 2
+        - Spent a very unfortunate amount of time troubleshooting a CloudRig parameter registration issue... and to be fair, it was caused by a random unrelated import... I don't even?
+        - Fix (with a hatchet) actions getting .001 in character files (Proper fix would be to only append what we need)
+        - Made a script to operate on multiple blend files at once, so when something crops up that affects every rig, I can do it in one go.
+        - Fixed eye settings of all characters using aforementioned .py.
+        Rex:
+        - Improve mouth corner deformation
+        - Fix eyelid assymmetry and clipping

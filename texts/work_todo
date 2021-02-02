@@ -1,16 +1,13 @@
-Test D10239
-Update CloudRig documentation
+PabloDobarro told me to kick someone around here to implement T84520
+	I kicked Sebastian to ask if he's up for it.
+	He told me to kick Francesco to ask if this can go on Sebastian's list.
+	I kicked Francesco.
 
 Ellie
 	Bring in new eyebrow mesh
 	Bring in ALL the meshes!
 
 Need to come up with more foolproof symmetry workflow. Right now if I break weight paint symmetry by accident, I'm fucked.
-
-Think of what things I personally want from Overrides, including realistic and unrealistic goals that could be done for Sprites.
-	Thing is, I'm not actually using overrides, the animators do, but they don't know how it works. (I also only barely know)
-	I just want the animators to be happy and bother me as little as possible, so automatic syncing is most important for me.
-	Local shape keys would also be pretty damn nice. I know that means re-designing shape key storage though, but maybe someone could actually start thinking about that.
 
 Figure out how to rig a bird!
 	Needs to open and close its wings and not look shit in both poses
@@ -33,14 +30,19 @@ Update Pablo's animation layers addon so it supports overrides.
 Sprites:
 	https://docs.google.com/spreadsheets/d/1I6sVPwdcoB9gdht9Zqdl4kx7EKbYgqyb9I6EFUdJO3E/edit#gid=1265024552
 
-	Ellie:
-		eyebrows
-		For the eye ring, try partial parenting for the side bones instead of 1:1. If animators like it, also do it on Rex, might help.
+	- Re-generate all characters with eye targets far from each other. (Flatten X turned OFF)
 
 	Rex:
+		- Make flat eye lines darker and less specular in viewport
+
 		Add toggle-able automation to the watch.
 		put bendy bone segments on the shoulder so it can be noodled.
 			Maybe add auto-shoulder-noodling tech in the form of some Transformation constraints so that when the upperarm is rotated downward, the STR bone translates down and rotates to make a noodly shoulder.
+
+	Ellie
+		- add "IK" head control
+			- Make neck bendy bone and connected
+			- Add an extra head control that is parented to the chest but displays at the head. When rotated, the neck and head both rotate a bit.
 
 	Everyone (Rik mentioned for Victoria, but it's for everyone):
 		metacarpals:
@@ -48,12 +50,6 @@ Sprites:
 			arcing of the knuckles
 				This thing https://i.imgur.com/wEVwNWt.png (also twist them a bit)
 			probably with actions
-
-Blender Manual is claiming that Auto-Normalize is not used because it's "complicated"??? Could probably use an update from me personally.
-	I looked into this and was immediately shocked to find Weight Painting under "Scultping and Painting". The high-level organization of the entire manual is absolutely baffling to me. It feels more geared towards developers than users. The grouping of categories seems strictly technical rather than grounded in a workflow. What the hell!
-	"Normalize All" is utterly mistaken for "Normalize All Vertex Groups" which are not the same thing.
-		https://docs.blender.org/manual/en/latest/sculpt_paint/weight_paint/editing.html#normalize-all
-		https://docs.blender.org/manual/en/latest/sculpt_paint/weight_paint/introduction.html#normalized-weight-workflow
 
 CloudRig TODO:
 	Priority 0: Requested
@@ -106,16 +102,13 @@ CloudRig TODO:
 		Try splitting up cloud_bone into cloud_tweak and cloud_copy.
 		cloud_base should define a deformation bone set and every rig should just use that one.
 	Priority 5: UI, UX & documentation
-		New rig type: cloud_lattice
-		cloud_aim new param: Eye Highlight
-		cloud_fk_chain new param: inherit scale
 		Relink Constraints never really needs to be disabled. I know we had a philosophy before of "Add useless checkboxes so we can have useful tooltips" but eh, icky.
 			If we keep the checkbox, it should also disable relinking on cloud_tweak and cloud_bone (and be documented as such, ie. it doesn't have to be mentioned explicitly)
 		Version, clean up and test the metarigs.
-			Maybe add corrective action set-up to Sintel?
 			Add Rex metarig with the non-bendy-bone face? No shrinkwrap.
 		Explain the face set-ups on Sintel and Rex metarigs.
 		Add operators in the UI somewhere, somehow.
+			Would be nicer to upstream most of these instead.
 		Hidden layers shouldn't be set by starting them with a dollar$ign but instead with an eye icon... Not sure if easily possible though since we'd have to hack into the rigify layers propertygroup which I don't want to do.
 		Using a UIList for BoneSets would be great but I tried and it seemed impossible to do it in a nice enough way.
 	Priority 6: Rigify compatibility
@@ -191,13 +184,25 @@ Rigify patch ideas
 					https://github.com/angavrilov/angavrilov-rigs
 
 	UI
-		Add operators to the UI.
-			D9094
+		- Searchable Operators (D9094)
+		Rigify Buttons
+			- Get rid of Advanced Options toggle, Overwrite/New enum, utterly useless, adds clutter.
+			- Single Column layout
+		Rigify Layer Names
+			- Add a preview
+			- Further improvements can only be made if the BoneSet feature is added to all rig elements:
+				- Bone Group selection becomes irrelevant and can be removed.
+				- DEF/MCH/ORG no longer needs to be hardcoded.
+		Rigify Bone Groups
+			- Unified Selected/Active colors should get the same layout as on CloudRig.
+			- rigify_use_standard_colors() and rigify_apply_selection_colors() can be nuked.
+			- When Unified checkbox is enabled, the relevant code should use those color selectors instead of of the rigify_color that's being iterated over.
+			- rigify_theme_to_add should be a parameter shown in a pop-up window of rigify_bone_group_add_theme() operator.
+			- Add/Remove icons should have plus and minus icons instead of zoom in/zoom out icons...
+			- 
 
 	Features
 		Rig samples should spawn at cursor instead of object origin.
-		Horse leg crap 
-			D8496 I don't even care about this, I was doing it as a favor and it goes ignored... very cool.
 		entire mechanism.py contains no reference to id_type. This means Single Property drivers can only ever be referencing Object datablocks.
 			Should get a use case before I go fixing this.
 		driver_add() should not be allowed to halt generation with a useless error message, such as when the data path is invalid. It should just throw a big ol' warning and skip that driver.
@@ -205,7 +210,6 @@ Rigify patch ideas
 		From CloudRig: 
 			The ultimate long term goal would be that we should be able to remove the CloudGenerator class without any compromises. This would require upstreaming lots of functionality, without stepping on any toes.
 			Add bbone scale drivers for BBones(maybe as parameter) for all chain rigs.
-			add copy_driver() from cloud_utils to mechanism.py, and use it from the legacy code that copies drivers.
 
 			Add all my operators.
 				Waiting for D9094 first.
@@ -218,13 +222,6 @@ Rigify patch ideas
 
 			Rework the bone group system to be like mine.
 				Actually, rigify/utils/layers.py implements a class that reminds me a lot of BoneSet, just calls it ControlLayersOption. Interesting.
-
-Bug reports:
-	- Putting a driver on data.bones["Bone"].bbone_scaleoutx and such bbone scale values doesn't affect the pose deformation being applied to the meshes. This value effectively acts as a bbone display size - which actually sort of makes sense. What's strange though, is that drivers on the curve values behaves identical as if they were on the pose bone properties.
-		Fixing this would totally break Rigify, because it relies on this bug...
-	Lattice bugs:
-	- Changing lattice resolution from 1 to anything other than 2 causes the scaling to go out of whack.
-	- When there is a hook modifier and the object is disabled, scaling from python by changing object.scale behaves differently than changing object scale by matrix multiplication on objec.matrix_world.
 
 Addon Ideas
 	Local Shape Keys
